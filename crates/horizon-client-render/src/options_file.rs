@@ -8,6 +8,11 @@ use crate::{
 };
 use std::sync::LazyLock;
 
+/// The browser build starts with less to hold (a tablet's tab has little memory to
+/// spare): nearer render and simulation distances, fewer mipmaps, nearer clouds.
+/// Only the defaults: a player's own options stay as they set them.
+const WEB: bool = cfg!(target_arch = "wasm32");
+
 /// A stored option value.
 #[derive(Clone, Debug, PartialEq)]
 pub enum V {
@@ -156,14 +161,19 @@ static TABLE: LazyLock<Vec<Def>> = LazyLock::new(|| {
         def("maxFps", O(FrameLimit), V::Int(120)),
         b("improvedTransparency", false),
         n("inactivityFpsLimit", INACTIVITY, 1),
-        i("mipmapLevels", 0, 4, 4),
+        i("mipmapLevels", 0, 4, if WEB { 2 } else { 4 }),
         id("narrator", 4, 0),
         id("particles", 3, 0),
         b("reducedDebugInfo", false),
         def("renderClouds", O(Clouds), V::Int(2)),
-        i("cloudRange", 2, 128, 128),
-        i("renderDistance", 2, MAX_RENDER_DISTANCE, 12),
-        i("simulationDistance", 5, 32, 12),
+        i("cloudRange", 2, 128, if WEB { 32 } else { 128 }),
+        i(
+            "renderDistance",
+            2,
+            MAX_RENDER_DISTANCE,
+            if WEB { 6 } else { 12 },
+        ),
+        i("simulationDistance", 5, 32, if WEB { 5 } else { 12 }),
         u("screenEffectScale", 1.0),
         def("soundDevice", O(AnyStr), V::Str(String::new())),
         b("vignette", true),

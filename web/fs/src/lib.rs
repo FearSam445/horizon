@@ -10,7 +10,9 @@
 #[cfg(not(target_arch = "wasm32"))]
 pub use std::fs::*;
 
-#[cfg(target_arch = "wasm32")]
+// The browser build's file system; the desktop compiles it for its tests only.
+#[cfg(any(target_arch = "wasm32", test))]
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 mod vfs;
 #[cfg(target_arch = "wasm32")]
 pub use vfs::*;

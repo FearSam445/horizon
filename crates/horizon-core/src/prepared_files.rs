@@ -192,18 +192,21 @@ pub fn open(root: &Path) -> Option<Arc<PreparedFiles>> {
     if let Some((_, files)) = opened.iter().find(|(r, _)| r == root) {
         return files.clone();
     }
-    let files = if std::env::var_os("HORIZON_NO_DATA_FILE").is_some() {
-        None
-    } else {
-        match PreparedFiles::open(root) {
-            Ok(files) => files.map(Arc::new),
-            Err(e) if e.kind() == io::ErrorKind::NotFound => None,
-            Err(e) => {
-                eprintln!("Horizon: {} not used: {e}", root.join(FILE_NAME).display());
-                None
+    // The browser build's root is never the one the file was written for (it records the
+    // player's own folder), and opening it would inflate all of it from the zip it came in.
+    let files =
+        if cfg!(target_arch = "wasm32") || std::env::var_os("HORIZON_NO_DATA_FILE").is_some() {
+            None
+        } else {
+            match PreparedFiles::open(root) {
+                Ok(files) => files.map(Arc::new),
+                Err(e) if e.kind() == io::ErrorKind::NotFound => None,
+                Err(e) => {
+                    eprintln!("Horizon: {} not used: {e}", root.join(FILE_NAME).display());
+                    None
+                }
             }
-        }
-    };
+        };
     opened.push((root.to_owned(), files.clone()));
     files
 }

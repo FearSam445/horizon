@@ -15,7 +15,7 @@
   window.horizonFailed = function (message) {
     status.style.display = '';
     bar.parentNode.style.display = 'none';
-    say('Horizon stopped:\n' + message);
+    say(/^You quit/.test(message) ? message : 'Horizon stopped:\n' + message);
   };
   function fail(error) {
     console.error(error);
@@ -29,9 +29,10 @@
     return bytes;
   }
 
-  // The zip is remembered in IndexedDB when the page may use it (a runner's
-  // sandbox often may not): every access can throw, and then nothing is kept.
-  var DB = 'horizon', STORE = 'files', KEY = 'game-files';
+  // The zip, and the files the game makes (worlds, options), are kept in
+  // IndexedDB when the page may use it (a runner's sandbox often may not):
+  // every access can throw, and then nothing is kept.
+  var DB = 'horizon', STORE = 'files';
   function db() {
     return new Promise(function (ok, no) {
       try {
@@ -42,26 +43,56 @@
       } catch (e) { no(e); }
     });
   }
-  function remembered() {
+  function get(key) {
     return db().then(function (d) {
       return new Promise(function (ok) {
         try {
-          var get = d.transaction(STORE).objectStore(STORE).get(KEY);
-          get.onsuccess = function () { ok(get.result || null); };
-          get.onerror = function () { ok(null); };
+          var request = d.transaction(STORE).objectStore(STORE).get(key);
+          request.onsuccess = function () { ok(request.result || null); };
+          request.onerror = function () { ok(null); };
         } catch (e) { ok(null); }
       });
     }).catch(function () { return null; });
   }
-  function remember(file) {
+  function put(key, value) {
     return db().then(function (d) {
-      try { d.transaction(STORE, 'readwrite').objectStore(STORE).put(file, KEY); } catch (e) {}
+      try { d.transaction(STORE, 'readwrite').objectStore(STORE).put(value, key); } catch (e) {}
     }).catch(function () {});
   }
-  function forget() {
+  function forget(key) {
     return db().then(function (d) {
-      try { d.transaction(STORE, 'readwrite').objectStore(STORE).delete(KEY); } catch (e) {}
+      try { d.transaction(STORE, 'readwrite').objectStore(STORE).delete(key); } catch (e) {}
     }).catch(function () {});
+  }
+  var remembered = function () { return get('game-files'); };
+  var remember = function (file) { return put('game-files', file); };
+
+  // The game's own files: back from the last visit before it starts, then kept
+  // again whenever they changed: every 15 s, and as the page is hidden or left.
+  async function restoreKept() {
+    var block = await get('kept');
+    if (!block) return;
+    try {
+      wasm_bindgen.restore_kept_files(new Uint8Array(block));
+    } catch (e) {
+      console.warn('Horizon: the kept worlds could not be restored', e);
+    }
+  }
+  function keepFiles() {
+    var keptAt = wasm_bindgen.kept_changes();
+    function keep() {
+      try {
+        var now = wasm_bindgen.kept_changes();
+        if (now === keptAt) return;
+        keptAt = now;
+        put('kept', wasm_bindgen.kept_files());
+      } catch (e) {}
+    }
+    setInterval(keep, 15000);
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') keep();
+    });
+    window.addEventListener('pagehide', keep);
   }
 
   // Asks for the zip; resolves to a File, or null to start without one.
@@ -72,7 +103,8 @@
       box.innerHTML =
         '<p class="title">Your game files</p>' +
         '<p>' + (reason || 'Horizon needs the game files prepared from your own copy of Minecraft: ' +
-        'zip the <b>26.3</b> folder the Horizon launcher made (game-files/horizon-client/26.3) and choose it here.') + '</p>' +
+        'zip the <b>26.3</b> folder the Horizon launcher made (game-files/horizon-client/26.3) and choose it here. ' +
+        'Leave out <b>horizon-data.bin</b>: the page doesn\'t use it, and it repeats the other files, so the zip is smaller without it.') + '</p>' +
         '<label class="button">Choose zip…<input type="file" accept=".zip,application/zip" hidden></label>' +
         '<button class="link" type="button">Start without them</button>';
       document.body.appendChild(box);
@@ -113,6 +145,7 @@
     bytes = null;
     await wasm_bindgen({ module_or_path: module });
     module = null;
+    await restoreKept();
 
     var file = await remembered(), reason = null;
     for (;;) {
@@ -132,11 +165,13 @@
         if (!file) throw error;
         // A zip the game can't use: forget it and ask again.
         reason = String(error.message || error);
-        forget();
+        forget('game-files');
         file = null;
       }
     }
     status.style.display = 'none';
+    keepFiles();
+    if (window.horizonFocus) window.horizonFocus();
   }
   start().catch(fail);
 })();

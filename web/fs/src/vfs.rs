@@ -19,8 +19,14 @@ type Bytes = Arc<Mutex<Vec<u8>>>;
 type Archive = zip::ZipArchive<Cursor<Arc<[u8]>>>;
 
 fn now() -> SystemTime {
-    use web_time::web::SystemTimeExt;
-    web_time::SystemTime::now().to_std()
+    #[cfg(target_arch = "wasm32")]
+    {
+        use web_time::web::SystemTimeExt;
+        web_time::SystemTime::now().to_std()
+    }
+    // The desktop compiles this module only for its tests.
+    #[cfg(not(target_arch = "wasm32"))]
+    SystemTime::now()
 }
 
 #[derive(Clone)]
@@ -73,6 +79,19 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
 }
 
 static TREE: LazyLock<Mutex<Node>> = LazyLock::new(|| Mutex::new(Node::dir()));
+
+/// Bumped by every change to what the game wrote: [`changes`].
+static CHANGES: AtomicU64 = AtomicU64::new(0);
+
+fn changed() {
+    CHANGES.fetch_add(1, Ordering::Relaxed);
+}
+
+/// A number that moves whenever a file or folder the game made changes: the page
+/// saves the game's files again only when it moved ([`export`]).
+pub fn changes() -> u64 {
+    CHANGES.load(Ordering::Relaxed)
+}
 
 /// `path`'s parts from the root, with `.` and `..` resolved.
 fn parts(path: &Path) -> Vec<OsString> {
@@ -380,6 +399,7 @@ impl File {
         })
     }
     pub fn set_len(&self, size: u64) -> io::Result<()> {
+        changed();
         lock(&self.data).resize(size as usize, 0);
         Ok(())
     }
@@ -565,6 +585,7 @@ impl OpenOptions {
             }
             Some(Node::File { data, modified }) => {
                 if writes {
+                    changed();
                     *modified = now();
                     if self.truncate {
                         lock(data).clear();
@@ -597,6 +618,7 @@ impl OpenOptions {
                 data
             }
             None if self.create || self.create_new => {
+                changed();
                 if !writes {
                     return Err(error(
                         io::ErrorKind::InvalidInput,
@@ -738,6 +760,7 @@ pub fn read_to_string(path: impl AsRef<Path>) -> io::Result<String> {
 }
 
 pub fn write(path: impl AsRef<Path>, contents: impl AsRef<[u8]>) -> io::Result<()> {
+    changed();
     let path = path.as_ref();
     let parts = parts(path);
     let mut tree = lock(&TREE);
@@ -782,6 +805,7 @@ pub fn read_dir(path: impl AsRef<Path>) -> io::Result<ReadDir> {
 }
 
 pub fn create_dir(path: impl AsRef<Path>) -> io::Result<()> {
+    changed();
     let path = path.as_ref();
     let parts = parts(path);
     if parts.is_empty() {
@@ -798,6 +822,7 @@ pub fn create_dir(path: impl AsRef<Path>) -> io::Result<()> {
 }
 
 pub fn create_dir_all(path: impl AsRef<Path>) -> io::Result<()> {
+    changed();
     let path = path.as_ref();
     let mut tree = lock(&TREE);
     let mut node = &mut *tree;
@@ -822,6 +847,7 @@ pub fn create_dir_all(path: impl AsRef<Path>) -> io::Result<()> {
 }
 
 fn remove(path: &Path, want_dir: bool, recursive: bool) -> io::Result<()> {
+    changed();
     let parts = parts(path);
     let mut tree = lock(&TREE);
     let dir = parent_mut(&mut tree, &parts, path)?;
@@ -858,6 +884,7 @@ pub fn remove_dir_all(path: impl AsRef<Path>) -> io::Result<()> {
 }
 
 pub fn rename(from: impl AsRef<Path>, to: impl AsRef<Path>) -> io::Result<()> {
+    changed();
     let (from, to) = (from.as_ref(), to.as_ref());
     let (src, dst) = (parts(from), parts(to));
     if src == dst {
@@ -903,4 +930,242 @@ pub fn hard_link(from: impl AsRef<Path>, to: impl AsRef<Path>) -> io::Result<()>
 
 pub fn set_permissions(path: impl AsRef<Path>, _perm: Permissions) -> io::Result<()> {
     metadata(path).map(|_| ())
+}
+
+/// What [`export`] writes: a magic, then each entry as its kind (0 a file,
+/// 1 a folder), its path's length and path, and for a file its length and bytes.
+const SNAPSHOT_MAGIC: &[u8; 8] = b"HZFS\0\0\0\x01";
+
+/// The files and folders the game made, outside `skip`'s folders (mounted game
+/// files, temporary files), in one block [`import`] restores: what the page keeps
+/// between visits. Mounted zip entries are never in it.
+pub fn export(skip: &[&str]) -> Vec<u8> {
+    fn walk(node: &Node, path: &mut PathBuf, skip: &[PathBuf], out: &mut Vec<u8>) {
+        if skip.iter().any(|s| s == path) {
+            return;
+        }
+        let mut entry = |kind: u8, data: Option<&[u8]>| {
+            let name = path.to_string_lossy();
+            out.push(kind);
+            out.extend_from_slice(&(name.len() as u32).to_le_bytes());
+            out.extend_from_slice(name.as_bytes());
+            if let Some(data) = data {
+                out.extend_from_slice(&(data.len() as u64).to_le_bytes());
+                out.extend_from_slice(data);
+            }
+        };
+        match node {
+            Node::File { data, .. } => entry(0, Some(&lock(data))),
+            Node::Entry { .. } => {}
+            Node::Dir(dir) => {
+                if path.as_os_str() != "/" {
+                    entry(1, None);
+                }
+                for (name, child) in &dir.entries {
+                    path.push(name);
+                    walk(child, path, skip, out);
+                    path.pop();
+                }
+            }
+        }
+    }
+    let skip: Vec<PathBuf> = skip.iter().map(|s| absolute(Path::new(s))).collect();
+    let mut out = SNAPSHOT_MAGIC.to_vec();
+    let tree = lock(&TREE);
+    walk(&tree, &mut PathBuf::from("/"), &skip, &mut out);
+    out
+}
+
+/// Restores what [`export`] wrote, over what is there; returns the files made.
+pub fn import(bytes: &[u8]) -> io::Result<usize> {
+    let bad = || io::Error::new(io::ErrorKind::InvalidData, "not a saved file system");
+    let rest = bytes
+        .strip_prefix(SNAPSHOT_MAGIC.as_slice())
+        .ok_or_else(bad)?;
+    let mut at = 0;
+    let mut take = |n: usize| -> io::Result<&[u8]> {
+        let part = rest.get(at..at + n).ok_or_else(bad)?;
+        at += n;
+        Ok(part)
+    };
+    let mut files = 0;
+    loop {
+        let Ok(kind) = take(1) else { break };
+        let kind = kind[0];
+        let len = u32::from_le_bytes(take(4)?.try_into().map_err(|_| bad())?) as usize;
+        let path = PathBuf::from(std::str::from_utf8(take(len)?).map_err(|_| bad())?);
+        match kind {
+            0 => {
+                let len = u64::from_le_bytes(take(8)?.try_into().map_err(|_| bad())?) as usize;
+                let data = take(len)?.to_vec();
+                if let Some(parent) = path.parent() {
+                    create_dir_all(parent)?;
+                }
+                write(&path, data)?;
+                files += 1;
+            }
+            1 => create_dir_all(&path)?,
+            _ => return Err(bad()),
+        }
+    }
+    Ok(files)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The tree is one per process: each test works under its own folder.
+    fn root(name: &str) -> PathBuf {
+        let root = PathBuf::from("/test").join(name);
+        let _ = remove_dir_all(&root);
+        create_dir_all(&root).unwrap();
+        root
+    }
+
+    #[test]
+    fn files_are_written_read_listed_renamed_and_removed() {
+        let r = root("files");
+        write(r.join("a.txt"), b"hello").unwrap();
+        assert_eq!(read_to_string(r.join("a.txt")).unwrap(), "hello");
+        assert!(
+            write(r.join("missing/b.txt"), b"x").is_err(),
+            "a parent must exist"
+        );
+        create_dir_all(r.join("sub/deeper")).unwrap();
+        rename(r.join("a.txt"), r.join("sub/deeper/a.txt")).unwrap();
+        assert_eq!(read(r.join("sub/deeper/a.txt")).unwrap(), b"hello");
+        assert_eq!(
+            metadata(r.join("a.txt")).unwrap_err().kind(),
+            io::ErrorKind::NotFound
+        );
+        let names: Vec<_> = read_dir(&r)
+            .unwrap()
+            .map(|e| e.unwrap().file_name())
+            .collect();
+        assert_eq!(names, ["sub"]);
+        assert_eq!(
+            remove_dir(r.join("sub")).unwrap_err().kind(),
+            io::ErrorKind::DirectoryNotEmpty
+        );
+        remove_dir_all(r.join("sub")).unwrap();
+        assert_eq!(read_dir(&r).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn open_options_append_truncate_and_seek_like_std() {
+        let r = root("options");
+        let path = r.join("log");
+        let mut f = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)
+            .unwrap();
+        f.write_all(b"one ").unwrap();
+        f.write_all(b"two").unwrap();
+        assert_eq!(read(&path).unwrap(), b"one two");
+        let mut f = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&path)
+            .unwrap();
+        f.seek(SeekFrom::Start(4)).unwrap();
+        f.write_all(b"TWO").unwrap();
+        assert_eq!(read(&path).unwrap(), b"one TWO");
+        let mut f = File::open(&path).unwrap();
+        let mut s = String::new();
+        f.read_to_string(&mut s).unwrap();
+        assert_eq!(s, "one TWO");
+        assert!(f.write_all(b"x").is_err(), "opened for reading only");
+        File::create(&path).unwrap();
+        assert_eq!(metadata(&path).unwrap().len(), 0, "create truncates");
+        assert_eq!(
+            File::create_new(&path).unwrap_err().kind(),
+            io::ErrorKind::AlreadyExists
+        );
+    }
+
+    fn zip(entries: &[(&str, &[u8])]) -> Vec<u8> {
+        let mut out = std::io::Cursor::new(Vec::new());
+        let mut writer = zip::ZipWriter::new(&mut out);
+        for (name, data) in entries {
+            if name.ends_with('/') {
+                writer
+                    .add_directory(*name, zip::write::SimpleFileOptions::default())
+                    .unwrap();
+            } else {
+                writer
+                    .start_file(*name, zip::write::SimpleFileOptions::default())
+                    .unwrap();
+                writer.write_all(data).unwrap();
+            }
+        }
+        writer.finish().unwrap();
+        out.into_inner()
+    }
+
+    #[test]
+    fn a_mounted_zip_reads_its_entries_and_copies_one_when_written() {
+        let r = root("zip");
+        let bytes = zip(&[
+            ("26.3/", b""),
+            ("26.3/a.json", b"{}"),
+            ("26.3/textures/b.png", b"png"),
+        ]);
+        assert_eq!(mount_zip(r.join("game"), bytes).unwrap(), 2);
+        assert_eq!(read(r.join("game/26.3/a.json")).unwrap(), b"{}");
+        assert_eq!(
+            metadata(r.join("game/26.3/textures/b.png")).unwrap().len(),
+            3
+        );
+        assert!(metadata(r.join("game/26.3/textures")).unwrap().is_dir());
+        rename(r.join("game/26.3"), r.join("resources")).unwrap();
+        let mut f = OpenOptions::new()
+            .append(true)
+            .open(r.join("resources/a.json"))
+            .unwrap();
+        f.write_all(b"!").unwrap();
+        assert_eq!(read(r.join("resources/a.json")).unwrap(), b"{}!");
+    }
+
+    #[test]
+    fn an_export_restores_what_the_game_wrote_and_leaves_out_mounts_and_skipped_folders() {
+        let r = root("export");
+        create_dir_all(r.join("saves/World/region")).unwrap();
+        write(r.join("saves/World/level.dat"), [1, 2, 3]).unwrap();
+        write(r.join("options.txt"), b"fov:70").unwrap();
+        create_dir_all(r.join("tmp")).unwrap();
+        write(r.join("tmp/scratch"), b"drop me").unwrap();
+        mount_zip(r.join("mounted"), zip(&[("x.json", b"1")])).unwrap();
+        let before = changes();
+        let tmp = r.join("tmp");
+        let saved = export(&[tmp.to_str().unwrap()]);
+        assert_eq!(changes(), before, "an export changes nothing");
+        remove_dir_all(&r).unwrap();
+        assert!(import(&saved).unwrap() >= 2);
+        assert_eq!(read(r.join("saves/World/level.dat")).unwrap(), [1, 2, 3]);
+        assert_eq!(read_to_string(r.join("options.txt")).unwrap(), "fov:70");
+        assert!(
+            metadata(r.join("saves/World/region")).unwrap().is_dir(),
+            "empty folders too"
+        );
+        assert!(metadata(r.join("tmp/scratch")).is_err());
+        assert!(
+            metadata(r.join("mounted/x.json")).is_err(),
+            "the player's files are not saved"
+        );
+        assert!(import(b"not a snapshot").is_err());
+    }
+
+    #[test]
+    fn writes_move_the_change_count() {
+        let r = root("changes");
+        let before = changes();
+        write(r.join("f"), b"1").unwrap();
+        assert!(changes() > before);
+        let before = changes();
+        let _ = read(r.join("f")).unwrap();
+        let _ = metadata(r.join("f")).unwrap();
+        assert_eq!(changes(), before, "reads change nothing");
+    }
 }

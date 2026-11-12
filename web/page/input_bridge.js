@@ -1,7 +1,9 @@
 // Eaglercraft runners (and their controller scripts) send synthetic events:
 // keydown/keyup on window and mouse events on the game canvas. winit listens for
 // keyboard events on the canvas and for pointer events, not mouse events, so the
-// synthetic ones are passed on in that form. Real input is left alone.
+// synthetic ones are passed on in that form. Real key presses that miss the
+// canvas (it lost focus) are passed on too, and a click gives it focus back:
+// on an iPad with a keyboard, keys only reach the focused element.
 (function () {
   var MARK = '__horizonBridged';
   function canvas() {
@@ -33,11 +35,24 @@
       target.dispatchEvent(ev);
     }, true);
   });
+  // Focus follows the game: at start (horizonFocus) and on every press.
+  window.horizonFocus = function () {
+    var target = canvas();
+    if (target && document.activeElement !== target) {
+      try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); }
+    }
+  };
+  document.addEventListener('pointerdown', function (e) {
+    if (e.target === canvas()) window.horizonFocus();
+  }, true);
   ['keydown', 'keyup'].forEach(function (type) {
     window.addEventListener(type, function (e) {
-      if (e.isTrusted || e[MARK]) return;
+      if (e[MARK]) return;
       var target = canvas();
       if (!target || e.target === target) return;
+      // A key typed into the page's own controls (the file picker) stays there.
+      if (e.target && e.target.closest && e.target.closest('#horizon-files')) return;
+      if (e.isTrusted) e.preventDefault();
       var ev = new KeyboardEvent(type, {
         key: e.key, code: e.code, location: e.location, repeat: e.repeat,
         ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, metaKey: e.metaKey,

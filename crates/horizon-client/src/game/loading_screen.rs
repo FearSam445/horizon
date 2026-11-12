@@ -476,6 +476,9 @@ impl ApplicationHandler for App {
         if let App::Ready(game) = self {
             game.exiting(event_loop);
         }
+        // A page has nowhere to exit to: it says so once the world is saved.
+        #[cfg(target_arch = "wasm32")]
+        horizon_client::logging::show_on_page("You quit Horizon. Reload the page to play again.");
     }
 }
 

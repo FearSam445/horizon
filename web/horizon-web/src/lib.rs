@@ -37,6 +37,32 @@ pub fn game_files_chunk(chunk: &[u8]) {
         .extend_from_slice(chunk);
 }
 
+/// Folders the page doesn't keep between visits: the player's game files (they
+/// come from the zip each time), the zip's mount and temporary files.
+const NOT_KEPT: &[&str] = &[RESOURCES, "/mnt", "/tmp"];
+
+/// A number that moves when the game changes a file it made (a world's save,
+/// the options): the page keeps the files again only when it moved.
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn kept_changes() -> f64 {
+    horizon_fs::changes() as f64
+}
+
+/// The files the game made (worlds, options), in one block the page keeps in
+/// the browser's storage between visits.
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn kept_files() -> Vec<u8> {
+    horizon_fs::export(NOT_KEPT)
+}
+
+/// Restores [`kept_files`]' block from an earlier visit, before [`boot`].
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn restore_kept_files(block: &[u8]) -> Result<u32, String> {
+    let files = horizon_fs::import(block).map_err(|e| e.to_string())?;
+    log::info!("Kept files: {files} restored");
+    Ok(files as u32)
+}
+
 /// Mounts the zip handed over, if any, then starts the game. An error comes
 /// back to the page when the zip can't be read or holds no prepared files.
 #[wasm_bindgen::prelude::wasm_bindgen]
