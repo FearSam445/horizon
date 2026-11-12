@@ -41,8 +41,13 @@ def main():
     shutil.rmtree(pkg, ignore_errors=True)
     run(["wasm-bindgen", "--target", "no-modules", "--no-typescript", "--out-dir", pkg, wasm])
     bg = os.path.join(pkg, "horizon_web_bg.wasm")
-    if not args.dev and shutil.which("wasm-opt"):
-        run(["wasm-opt", "-Oz", "--all-features", "--strip-debug", "--strip-producers", bg, "-o", bg])
+    # A current binaryen: older ones (Ubuntu's 108) don't know the features Rust emits
+    # and write a module browsers refuse. WASM_OPT names one (npm's binaryen works).
+    wasm_opt = os.environ.get("WASM_OPT") or shutil.which("wasm-opt")
+    if not args.dev and wasm_opt:
+        run([wasm_opt, "-Oz", "--enable-bulk-memory", "--enable-sign-ext", "--enable-mutable-globals",
+             "--enable-nontrapping-float-to-int", "--enable-multivalue", "--enable-reference-types",
+             "--strip-debug", "--strip-producers", bg, "-o", bg])
     glue = open(os.path.join(pkg, "horizon_web.js")).read()
     data = open(bg, "rb").read()
     packed = base64.b64encode(gzip.compress(data, compresslevel=9, mtime=0)).decode()

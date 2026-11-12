@@ -14,7 +14,7 @@ python3 web/build.py         # the shipped file: profile web (opt-level z, fat L
 
 Output: `web/out/horizon.html`. Needs the `wasm32-unknown-unknown` target,
 `wasm-bindgen-cli` at the version in `Cargo.lock` (0.2.129) and, for the shipped
-file, `wasm-opt` (binaryen).
+file, a current `wasm-opt` (binaryen 116 or newer; `WASM_OPT=path` picks one, e.g. from `npm install binaryen`).
 
 Check it boots in headless Chromium (prints the console, saves a screenshot):
 
