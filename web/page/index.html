@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Horizon</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0d12; overflow: hidden; }
+  canvas._eaglercraftX_canvas_element { display: block; width: 100vw; height: 100vh; outline: none; touch-action: none; }
+  #horizon-status { position: fixed; inset: auto 0 40% 0; text-align: center; color: #e8e8ea;
+    font: 16px/1.5 system-ui, sans-serif; pointer-events: none; white-space: pre-line; }
+  #horizon-status .bar { width: 240px; height: 4px; margin: 12px auto 0; background: #2a2f3a; border-radius: 2px; overflow: hidden; }
+  #horizon-status .bar > i { display: block; height: 100%; width: 0; background: #f0795a; transition: width .2s; }
+</style>
+</head>
+<body>
+<canvas class="_eaglercraftX_canvas_element" id="horizon-canvas" tabindex="0"></canvas>
+<div id="horizon-status">Starting Horizon…<div class="bar"><i></i></div></div>
+<script>/*INPUT_BRIDGE*/</script>
+<script>/*GLUE*/</script>
+<script type="application/octet-stream" id="horizon-wasm">WASM_BASE64</script>
+<script>/*LOADER*/</script>
+</body>
+</html>

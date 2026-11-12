@@ -688,7 +688,32 @@ pub fn with_icon(attributes: winit::window::WindowAttributes) -> winit::window::
     #[cfg(target_os = "windows")]
     let attributes =
         winit::platform::windows::WindowAttributesExtWindows::with_taskbar_icon(attributes, icon);
+    #[cfg(target_arch = "wasm32")]
+    let attributes = web_canvas(attributes);
     attributes
+}
+
+/// The browser build draws on the page's game canvas: the one Eaglercraft runners
+/// send their controller's mouse events to (`canvas._eaglercraftX_canvas_element`),
+/// else a new canvas added to the page.
+#[cfg(target_arch = "wasm32")]
+fn web_canvas(attributes: winit::window::WindowAttributes) -> winit::window::WindowAttributes {
+    use wasm_bindgen::JsCast;
+    use winit::platform::web::WindowAttributesExtWebSys;
+    let canvas = web_sys::window()
+        .and_then(|window| window.document())
+        .and_then(|document| {
+            document
+                .query_selector("canvas._eaglercraftX_canvas_element")
+                .ok()
+                .flatten()
+        })
+        .and_then(|element| element.dyn_into::<web_sys::HtmlCanvasElement>().ok());
+    let attributes = match canvas {
+        Some(canvas) => attributes.with_canvas(Some(canvas)),
+        None => attributes.with_append(true),
+    };
+    attributes.with_prevent_default(true).with_focusable(true)
 }
 
 /// The screen a window is on: its size in physical pixels, its refresh rate where the OS gives

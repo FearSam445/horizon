@@ -50,8 +50,25 @@ the chunk worker pool (`streaming.rs`) must become a per-frame job queue.
 - Integrated server and client share one thread; fewer loaded chunks on the server too.
 - Texture atlas without extra mip levels; drop GPU-side copies once uploaded.
 
+## Decisions so far
+- **Target: `wasm32-unknown-unknown`.** winit's web backend and wasm-bindgen only
+  support it (wasm-bindgen refuses WASI), so `std::fs`, `Instant::now`,
+  `SystemTime::now` and threads don't work there and are supplied by the game:
+  - Clock: `web_time::Instant` everywhere (std::time on the desktop);
+    `horizon_clock::system_now()` for `SystemTime::now()` (web/clock).
+  - Files: `horizon_fs` (web/fs): std::fs on the desktop, an in-memory file
+    system with read-only zip mounts in the browser. Rewritten by
+    `web/tools/webfs.py`.
+  - Crates that can't run in a page get stand-ins under their own names
+    (web/shims): mimalloc, ureq, mio, fs4, arboard.
+- **Graphics: WebGL2** through wgpu's `webgl` backend, with
+  `fragile-send-sync-non-atomic-wasm` (one thread, no atomics).
+- **Threads:** no SharedArrayBuffer in a runner's sandboxed iframe, so no real
+  threads. Long-lived threads become steps the main loop calls each frame (the
+  integrated server first); short ones run inline.
+
 ## Milestones
-1. `cargo check -p horizon-client --target wasm32-unknown-unknown` passes (cfg-gates above).
+1. ✅ `cargo check -p horizon-client --target wasm32-unknown-unknown` passes (cfg-gates above).
 2. Renders a blank WebGL2 canvas from a test page.
 3. Loads the player's game files and renders a world.
 4. Playable single-player with input through the runner.

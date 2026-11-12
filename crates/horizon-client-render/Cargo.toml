@@ -77,6 +77,10 @@ wgpu = { version = "30.0.1", default-features = false, features = ["gles"] }
 ureq = { version = "2", default-features = false, features = ["tls"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+# The log, on the page's console (logging.rs); chrono's clock from the page.
+wasm-bindgen = "0.2.129"
+web-sys = { version = "0.3.106", features = ["console"] }
+chrono = { version = "0.4.42", default-features = false, features = ["clock", "std", "wasmbind"] }
 horizon-web-ureq = { path = "../../web/shims/ureq" }
 
 [features]

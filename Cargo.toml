@@ -54,6 +54,8 @@ members = [
     "crates/horizon-release-sign",
     "crates/horizon-mod-deps",
     "xtask",
+    # The browser build (web/README.md).
+    "web/horizon-web",
 ]
 resolver = "2"
 
@@ -114,6 +116,23 @@ lto = "thin"
 codegen-units = 1
 
 # Optimized but quick-to-link builds for iteration: cargo build --profile fast
+# The browser build (web/build.py): `web-dev` while iterating, `web` for the shipped file, small first.
+[profile.web-dev]
+inherits = "release"
+opt-level = 1
+lto = false
+codegen-units = 16
+incremental = true
+panic = "abort"
+
+[profile.web]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+
 [profile.fast]
 inherits = "release"
 lto = false

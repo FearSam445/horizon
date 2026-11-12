@@ -526,8 +526,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
 dependencies = [
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-link",
 ]
 
@@ -1592,6 +1594,8 @@ dependencies = [
  "horizon-theme",
  "horizon-web-arboard",
  "png",
+ "wasm-bindgen",
+ "web-sys",
  "web-time",
  "winit",
 ]
@@ -1715,6 +1719,8 @@ dependencies = [
  "symphonia",
  "unicode-bidi",
  "ureq",
+ "wasm-bindgen",
+ "web-sys",
  "web-time",
  "wgpu",
  "winit",
@@ -2188,6 +2194,16 @@ dependencies = [
  "rustc-demangle",
  "web-time",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "horizon-web"
+version = "0.1.0"
+dependencies = [
+ "horizon-client",
+ "log",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]

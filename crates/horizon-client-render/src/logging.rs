@@ -512,12 +512,26 @@ impl Logger {
                 recent.push_back(line.clone());
             }
         }
+        // The browser build has no log file or terminal: its lines go to the page's console.
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = stderr;
+            let text = wasm_bindgen::JsValue::from_str(&lines.join("\n"));
+            match level {
+                log::Level::Error => web_sys::console::error_1(&text),
+                log::Level::Warn => web_sys::console::warn_1(&text),
+                _ => web_sys::console::log_1(&text),
+            }
+            return;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
         let msg = Out::Write {
             date: now.date_naive(),
             lines,
             stderr,
             record: (level, thread.to_owned(), message.to_owned()),
         };
+        #[cfg(not(target_arch = "wasm32"))]
         if let Err(mpsc::SendError(Out::Write {
             stderr: Some(message),
             ..

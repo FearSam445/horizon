@@ -35,3 +35,5 @@
 
 # Release-only compiled original exporter bundle.
 /exporters/
+# The browser build's output (web/build.py).
+/web/out/
