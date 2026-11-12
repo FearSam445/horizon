@@ -9,7 +9,7 @@ description = "HDR metadata for the swapchain: the Vulkan calls the crates that 
 [dependencies]
 wgpu = { version = "30.0.1", default-features = false, features = ["vulkan"] }
 
-[target.'cfg(not(target_os = "macos"))'.dependencies]
+[target.'cfg(not(any(target_os = "macos", target_arch = "wasm32")))'.dependencies]
 # The version wgpu-hal already uses.
 ash = { version = "0.38", default-features = false }
 
@@ -18,6 +18,10 @@ ash = { version = "0.38", default-features = false }
 wayland-backend = { version = "0.3.10", default-features = false, features = ["client_system"] }
 wayland-client = { version = "0.31.10", default-features = false }
 wayland-protocols = { version = "0.32.8", default-features = false, features = ["client", "staging"] }
+
+# The browser build draws through WebGL2: the widest support and the least memory.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wgpu = { version = "30.0.1", default-features = false, features = ["webgl", "wgsl"] }
 
 [lints]
 workspace = true

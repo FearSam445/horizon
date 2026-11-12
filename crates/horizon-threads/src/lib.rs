@@ -1,6 +1,12 @@
 //! Scheduling hints for the game's threads and its allocator: the few OS calls
 //! that the other crates, which forbid unsafe code, can't make themselves.
 
+// The browser build: Rust's own allocator under mimalloc's names (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_libmimalloc_sys as libmimalloc_sys;
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_mimalloc as mimalloc;
+
 pub mod alloc_count;
 pub mod allocator_stats;
 /// The game window's boot screen, before wgpu's first frame paints over it.

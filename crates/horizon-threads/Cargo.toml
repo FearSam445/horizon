@@ -6,9 +6,14 @@ license.workspace = true
 rust-version.workspace = true
 description = "Scheduling hints for the game's threads and its allocator, and the other OS calls the crates that forbid unsafe code can't make"
 
-[dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 mimalloc = { version = "0.1.52", default-features = false }
 libmimalloc-sys = { version = "0.1.49", default-features = false, features = ["extended"] }
+
+# The browser build: Rust's own allocator under mimalloc's names (web/shims).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+horizon-web-mimalloc = { path = "../../web/shims/mimalloc" }
+horizon-web-libmimalloc-sys = { path = "../../web/shims/libmimalloc-sys" }
 
 [target.'cfg(any(target_vendor = "apple", target_os = "linux", target_os = "android"))'.dependencies]
 libc = "0.2"

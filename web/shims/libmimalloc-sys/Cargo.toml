@@ -1,0 +1,7 @@
+[package]
+name = "horizon-web-libmimalloc-sys"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Stands in for libmimalloc-sys in the browser build: the few calls the game makes, as no-ops"
+publish = false

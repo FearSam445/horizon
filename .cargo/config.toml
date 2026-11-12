@@ -2,3 +2,7 @@
 # web/perf/README.md work as written. `cargo run -p xtask -- …` stays equivalent.
 [alias]
 xtask = "run --package xtask --"
+
+# The browser build (web/): getrandom reads the browser's crypto.getRandomValues.
+[target.wasm32-unknown-unknown]
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
