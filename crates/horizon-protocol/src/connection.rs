@@ -97,6 +97,11 @@ impl Pipe {
             incoming.notify();
         }
     }
+    /// Whether a read would return at once: bytes have arrived, or the pipe closed.
+    pub fn readable(&self) -> bool {
+        let state = self.end.incoming.state.lock().unwrap();
+        !state.0.is_empty() || state.1
+    }
     /// Close both directions: reads at either end then see the end of the stream.
     pub fn shutdown(&self) {
         self.end.incoming.close();
@@ -140,6 +145,22 @@ impl Write for Pipe {
     fn flush(&mut self) -> std::io::Result<()> {
         Ok(())
     }
+}
+
+std::thread_local! {
+    static COOPERATIVE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Whether [`ConnReader::recv_async`] waits by returning pending instead of
+/// blocking: always in the browser build (one thread runs both ends of a pipe),
+/// and on a thread that asked with [`set_cooperative`] (tests of that build's way).
+pub fn cooperative() -> bool {
+    cfg!(target_arch = "wasm32") || COOPERATIVE.with(std::cell::Cell::get)
+}
+
+/// Makes [`ConnReader::recv_async`] on this thread wait as the browser build's does.
+pub fn set_cooperative(on: bool) {
+    COOPERATIVE.with(|c| c.set(on));
 }
 
 /// What a connection runs over.
@@ -459,6 +480,10 @@ impl Connection {
     pub fn recv(&mut self) -> Result<(i32, Vec<u8>)> {
         self.reader.recv()
     }
+    /// [`ConnReader::recv_async`].
+    pub async fn recv_async(&mut self) -> Result<(i32, Vec<u8>)> {
+        self.reader.recv_async().await
+    }
     pub fn split(self) -> (ConnReader, ConnWriter) {
         (self.reader, self.writer)
     }
@@ -492,6 +517,33 @@ impl ConnReader {
         let mut out = vec![0u8; len];
         self.stream.read_exact(&mut out)?;
         Ok(out)
+    }
+    /// Whether [`ConnReader::recv`] would return without waiting for bytes from
+    /// the peer: always for a socket (it may wait); for an in-memory pipe when
+    /// bytes are buffered, have arrived, or the pipe closed. With one thread (the
+    /// browser build) a peer writes whole frames before this end reads.
+    pub fn ready(&self) -> bool {
+        match &self.stream {
+            Stream::Memory(pipe) => self.start < self.end || pipe.readable(),
+            Stream::Tcp(_) | Stream::Detached => true,
+        }
+    }
+    /// [`ConnReader::recv`] as a future. On the desktop it is `recv` itself: it
+    /// may block, on its own thread. In the browser build, whose one thread runs
+    /// both ends of an in-memory pipe, it is pending until a packet has arrived,
+    /// and the page's loop polls it again (`horizon_thread::run_local_tasks`).
+    pub async fn recv_async(&mut self) -> Result<(i32, Vec<u8>)> {
+        if cooperative() {
+            std::future::poll_fn(|_| {
+                if self.ready() {
+                    std::task::Poll::Ready(())
+                } else {
+                    std::task::Poll::Pending
+                }
+            })
+            .await;
+        }
+        self.recv()
     }
     /// Block until a whole packet arrives: (id, payload).
     pub fn recv(&mut self) -> Result<(i32, Vec<u8>)> {

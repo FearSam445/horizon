@@ -288,10 +288,16 @@ fn start(threads: usize) -> std::io::Result<Pool> {
             inbox: Mutex::default(),
             load: AtomicUsize::new(0),
         });
-        let mine = worker.clone();
-        horizon_thread::Builder::new()
-            .name(format!("horizon-net-{n}"))
-            .spawn(move || run(poll, &mine))?;
+        // The browser build has one thread: its window runs the turns (`pump`).
+        #[cfg(target_arch = "wasm32")]
+        let _ = (poll, n);
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let mine = worker.clone();
+            horizon_thread::Builder::new()
+                .name(format!("horizon-net-{n}"))
+                .spawn(move || run(poll, &mine))?;
+        }
         workers.push(worker);
     }
     Ok(Pool { workers })
@@ -331,24 +337,52 @@ pub(super) fn adopt(
     }
 }
 
-fn run(mut poll: Poll, worker: &Arc<Worker>) {
-    let mut events = Events::with_capacity(1024);
-    let mut conns: Vec<Option<Conn>> = Vec::new();
-    let mut free: Vec<usize> = Vec::new();
-    let mut touched: Vec<usize> = Vec::new();
-    let mut sweep_at = Instant::now() + SWEEP;
+// The browser build runs the turns from its window (`pump`).
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+fn run(poll: Poll, worker: &Arc<Worker>) {
+    let mut runner = Runner::new(poll);
     loop {
-        let wait = sweep_at.saturating_duration_since(Instant::now());
-        if let Err(e) = poll.poll(&mut events, Some(wait))
+        let wait = runner.sweep_at.saturating_duration_since(Instant::now());
+        runner.turn(worker, wait);
+    }
+}
+
+/// A network thread's connections, between its turns.
+struct Runner {
+    poll: Poll,
+    events: Events,
+    conns: Vec<Option<Conn>>,
+    free: Vec<usize>,
+    touched: Vec<usize>,
+    sweep_at: Instant,
+}
+
+impl Runner {
+    fn new(poll: Poll) -> Self {
+        Self {
+            poll,
+            events: Events::with_capacity(1024),
+            conns: Vec::new(),
+            free: Vec::new(),
+            touched: Vec::new(),
+            sweep_at: Instant::now() + SWEEP,
+        }
+    }
+
+    /// One turn: wait at most `wait` for the sockets, then serve what is ready,
+    /// what the inbox holds and, when due, every connection's clocks.
+    fn turn(&mut self, worker: &Arc<Worker>, wait: Duration) {
+        if let Err(e) = self.poll.poll(&mut self.events, Some(wait))
             && e.kind() != ErrorKind::Interrupted
+            && e.kind() != ErrorKind::Unsupported
         {
             log::warn!("[lan] network poll: {e}");
             horizon_thread::sleep(SWEEP);
         }
         let now = Instant::now();
-        for event in &events {
+        for event in &self.events {
             let i = event.token().0;
-            let Some(Some(c)) = conns.get_mut(i) else {
+            let Some(Some(c)) = self.conns.get_mut(i) else {
                 continue;
             };
             if event.is_readable() || event.is_read_closed() || event.is_error() {
@@ -357,56 +391,79 @@ fn run(mut poll: Poll, worker: &Arc<Worker>) {
             if event.is_writable() || event.is_write_closed() || event.is_error() {
                 c.serve(now);
             }
-            touched.push(i);
+            self.touched.push(i);
         }
         let inbox =
             std::mem::take(&mut *worker.inbox.lock().unwrap_or_else(PoisonError::into_inner));
         for adopted in inbox.adopt {
-            let i = free.pop().unwrap_or(conns.len());
-            if i == conns.len() {
-                conns.push(None);
+            let i = self.free.pop().unwrap_or(self.conns.len());
+            if i == self.conns.len() {
+                self.conns.push(None);
             }
-            match Conn::register(adopted, poll.registry(), worker, i, now) {
+            match Conn::register(adopted, self.poll.registry(), worker, i, now) {
                 Ok(mut c) => {
                     c.outbox.attach(i);
                     c.read(now);
                     c.serve(now);
-                    conns[i] = Some(c);
-                    touched.push(i);
+                    self.conns[i] = Some(c);
+                    self.touched.push(i);
                 }
-                Err(()) => free.push(i),
+                Err(()) => self.free.push(i),
             }
         }
         for i in inbox.read {
-            if let Some(Some(c)) = conns.get_mut(i) {
+            if let Some(Some(c)) = self.conns.get_mut(i) {
                 c.read(now);
-                touched.push(i);
+                self.touched.push(i);
             }
         }
         for i in inbox.serve {
-            if let Some(Some(c)) = conns.get_mut(i) {
+            if let Some(Some(c)) = self.conns.get_mut(i) {
                 c.serve(now);
-                touched.push(i);
+                self.touched.push(i);
             }
         }
-        if now >= sweep_at {
-            sweep_at = now + SWEEP;
-            touched.clear();
-            for (i, slot) in conns.iter_mut().enumerate() {
+        if now >= self.sweep_at {
+            self.sweep_at = now + SWEEP;
+            self.touched.clear();
+            for (i, slot) in self.conns.iter_mut().enumerate() {
                 if let Some(c) = slot {
                     c.sweep(now);
-                    touched.push(i);
+                    self.touched.push(i);
                 }
             }
         }
-        for i in touched.drain(..) {
-            if conns[i].as_ref().is_some_and(|c| c.done(now)) {
-                let c = conns[i].take().expect("checked");
-                c.close(poll.registry(), worker);
-                free.push(i);
+        for i in self.touched.drain(..) {
+            if self.conns[i].as_ref().is_some_and(|c| c.done(now)) {
+                let c = self.conns[i].take().expect("checked");
+                c.close(self.poll.registry(), worker);
+                self.free.push(i);
             }
         }
     }
+}
+
+/// The browser build's network "thread": the window runs a turn of it each
+/// frame, without waiting. Its only connections are in-memory pipes (the
+/// single-player server's own player), whose arrivals land in the inbox.
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn pump() {
+    thread_local! {
+        static RUNNER: std::cell::RefCell<Option<Runner>> = const { std::cell::RefCell::new(None) };
+    }
+    let Ok(pool) = pool() else {
+        return;
+    };
+    let worker = &pool.workers[0];
+    RUNNER.with(|runner| {
+        let Ok(mut runner) = runner.try_borrow_mut() else {
+            return;
+        };
+        let runner = runner.get_or_insert_with(|| {
+            Runner::new(Poll::new().expect("the browser build's poll always opens"))
+        });
+        runner.turn(worker, Duration::ZERO);
+    });
 }
 
 /// A connection's stream, polled.

@@ -30,6 +30,11 @@ pub mod handoff;
 pub mod hub;
 pub mod import;
 mod io_pool;
+/// The browser build's network turn, which its window runs each frame.
+#[cfg(target_arch = "wasm32")]
+pub fn io_pool_pump() {
+    io_pool::pump();
+}
 pub mod menu;
 pub mod playerdata;
 pub mod prediction;
@@ -805,15 +810,20 @@ impl Lan {
     pub fn connect_local(&self) -> io::Result<horizon_protocol::connection::Pipe> {
         let (client, server) = horizon_protocol::connection::Pipe::pair();
         let shared = self.shared.clone();
+        let serve = async move {
+            if let Err(e) = conn::serve_local(server, shared).await
+                && std::env::var_os("HORIZON_NET_DEBUG").is_some()
+            {
+                log::warn!("[lan] local: {e}");
+            }
+        };
+        // The browser build has one thread: the login is a task its loop polls.
+        #[cfg(target_arch = "wasm32")]
+        horizon_thread::spawn_local(serve);
+        #[cfg(not(target_arch = "wasm32"))]
         horizon_thread::Builder::new()
             .name("horizon-local-conn".into())
-            .spawn(move || {
-                if let Err(e) = conn::serve_local(server, shared)
-                    && std::env::var_os("HORIZON_NET_DEBUG").is_some()
-                {
-                    log::warn!("[lan] local: {e}");
-                }
-            })?;
+            .spawn(move || pollster::block_on(serve))?;
         Ok(client)
     }
     /// Everything the connection threads reported since the last call.

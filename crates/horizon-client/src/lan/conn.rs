@@ -30,7 +30,7 @@ use std::{
     sync::{
         Arc, Mutex, PoisonError,
         atomic::{AtomicI32, AtomicI64, AtomicU32, AtomicUsize, Ordering},
-        mpsc::{RecvTimeoutError, Sender, channel},
+        mpsc::Sender,
     },
 };
 use web_time::{Duration, Instant};
@@ -630,7 +630,7 @@ pub(super) fn serve(
     // its thread and its place among the server's connections with it.
     let _ = stream.set_write_timeout(Some(WRITE_TIMEOUT));
     let c = Connection::from_stream(stream).map_err(e)?;
-    serve_connection(c, address, shared, Some(counted))
+    pollster::block_on(serve_connection(c, address, shared, Some(counted)))
 }
 
 /// How long one write may wait on a peer that reads nothing: as long as a read may wait.
@@ -643,11 +643,11 @@ pub const MEMORY_ADDRESS: std::net::SocketAddr = std::net::SocketAddr::V4(
 
 /// `ServerConnectionListener.startMemoryChannel`: an integrated server's
 /// own player, over one end of an in-memory pipe.
-pub fn serve_local(
+pub async fn serve_local(
     pipe: horizon_protocol::connection::Pipe,
     shared: Arc<Shared>,
 ) -> Result<(), String> {
-    serve_connection(Connection::local(pipe), MEMORY_ADDRESS, shared, None)
+    serve_connection(Connection::local(pipe), MEMORY_ADDRESS, shared, None).await
 }
 
 /// A client's handshake (`ClientIntentionPacket`) reached the server, on the connection's own thread, before
@@ -670,7 +670,7 @@ pub fn native_handshake(
     crate::native_client_hooks::handshake(address, host, intent, cancel, reason);
 }
 
-fn serve_connection(
+async fn serve_connection(
     mut c: Connection,
     address: std::net::SocketAddr,
     shared: Arc<Shared>,
@@ -678,7 +678,7 @@ fn serve_connection(
 ) -> Result<(), String> {
     let e = |e: horizon_protocol::Error| e.to_string();
     c.reader.set_read_timeout(Some(LOGIN_TIMEOUT)).map_err(e)?;
-    let (id, payload) = c.recv().map_err(e)?;
+    let (id, payload) = c.recv_async().await.map_err(e)?;
     // Behind a proxy (forwarding on, see `serve_login`) the host may be as long as Paper takes it there, for the
     // data a proxy puts after it (Floodgate's); otherwise vanilla's 255.
     let forwarding = shared.config.forwarding_secret.is_some()
@@ -717,7 +717,7 @@ fn serve_connection(
         // ServerHandshakePacketListenerImpl: a server that does not reply
         // to status requests closes the connection.
         handshake::STATUS if !shared.enable_status() => Ok(()),
-        handshake::STATUS => serve_status(&mut c, &shared, intention.protocol),
+        handshake::STATUS => serve_status(&mut c, &shared, intention.protocol).await,
         handshake::TRANSFER if !shared.accepts_transfers() => {
             login_disconnect(
                 &mut c,
@@ -744,7 +744,7 @@ fn serve_connection(
                 );
                 return Ok(());
             }
-            serve_login(c, address, &shared, counted)
+            serve_login(c, address, &shared, counted).await
         }
         other => Err(format!("unknown intent {other}")),
     }
@@ -765,11 +765,11 @@ fn older_client(
     .then_some(version)
 }
 
-fn serve_status(c: &mut Connection, shared: &Shared, protocol: i32) -> Result<(), String> {
+async fn serve_status(c: &mut Connection, shared: &Shared, protocol: i32) -> Result<(), String> {
     let e = |e: horizon_protocol::Error| e.to_string();
     let mut requested = false;
     loop {
-        let (id, payload) = c.recv().map_err(e)?;
+        let (id, payload) = c.recv_async().await.map_err(e)?;
         match status::Serverbound::decode(id, &payload).map_err(e)? {
             // ServerStatusPacketListenerImpl: a second request disconnects.
             status::Serverbound::StatusRequest(_) if requested => return Ok(()),
@@ -846,7 +846,7 @@ static AUTHENTICATORS: AtomicU32 = AtomicU32::new(0);
 /// thread: check the client's answer to the encryption request, encrypt the
 /// connection, and ask the session service whether the player joined with
 /// this server's hash. The profile, or the text of the refusal.
-fn authenticate(
+async fn authenticate(
     c: &mut Connection,
     shared: &Shared,
     online: &super::OnlineMode,
@@ -867,7 +867,7 @@ fn authenticate(
         .encode(),
     )
     .map_err(e)?;
-    let (id, payload) = c.recv().map_err(e)?;
+    let (id, payload) = c.recv_async().await.map_err(e)?;
     let key = match login::Serverbound::decode(id, &payload).map_err(e)? {
         login::Serverbound::Key(k) => k,
         _ => return Err("Unexpected packet during login".into()),
@@ -991,14 +991,14 @@ pub fn native_player_profile(
     crate::native_client_hooks::player_profile(player, name, properties);
 }
 
-fn serve_login(
+async fn serve_login(
     mut c: Connection,
     address: std::net::SocketAddr,
     shared: &Arc<Shared>,
     counted: Option<super::Counted>,
 ) -> Result<(), String> {
     let e = |e: horizon_protocol::Error| e.to_string();
-    let (id, payload) = c.recv().map_err(e)?;
+    let (id, payload) = c.recv_async().await.map_err(e)?;
     let hello = match login::Serverbound::decode(id, &payload).map_err(e)? {
         login::Serverbound::Hello(h) => h,
         _ => return Err("expected a login hello".into()),
@@ -1050,7 +1050,7 @@ fn serve_login(
         .map(|(owner_name, uuid)| (owner_name.clone(), *uuid));
     let (uuid, mut properties) = match (online, forwarding) {
         (Some(online), _) => {
-            match authenticate(&mut c, shared, online, &hello.name, address, &user) {
+            match authenticate(&mut c, shared, online, &hello.name, address, &user).await {
                 Ok(Ok(profile)) => profile,
                 Ok(Err(refused)) => {
                     lost(shared, &user, &refused);
@@ -1062,7 +1062,7 @@ fn serve_login(
                 }
             }
         }
-        (None, Some(secret)) => match forward(&mut c, secret) {
+        (None, Some(secret)) => match forward(&mut c, secret).await {
             Ok(Ok(forwarded)) => {
                 (name, address) = (
                     forwarded.name,
@@ -1149,7 +1149,7 @@ fn serve_login(
             );
         }
     };
-    let result = login_and_configure(&mut c, shared, uuid, &name, properties);
+    let result = login_and_configure(&mut c, shared, uuid, &name, properties).await;
     match result {
         Ok(Some(parts)) => {
             play(c, shared, parts, address, counted, expected.is_some());
@@ -1174,7 +1174,7 @@ fn serve_login(
 /// Asks the proxy for the player's forwarded information (login plugin channel `velocity:player_info`) and
 /// checks it against the shared secret. The outer error is the connection failing; the inner one is a refusal
 /// (the client isn't a proxy, or signed with another secret), with the reason for the log.
-fn forward(
+async fn forward(
     c: &mut Connection,
     secret: &[u8],
 ) -> Result<Result<forwarding::Forwarded, String>, String> {
@@ -1189,7 +1189,7 @@ fn forward(
         .encode(),
     )
     .map_err(e)?;
-    let (id, payload) = c.recv().map_err(e)?;
+    let (id, payload) = c.recv_async().await.map_err(e)?;
     match login::Serverbound::decode(id, &payload).map_err(e)? {
         login::Serverbound::CustomQueryAnswer(answer) if answer.transaction == TRANSACTION => {
             Ok(match answer.payload {
@@ -1220,7 +1220,7 @@ fn note_channels(configured: &mut super::Configured, packet: &cfg::Serverbound) 
     }
 }
 
-fn login_and_configure(
+async fn login_and_configure(
     c: &mut Connection,
     shared: &Arc<Shared>,
     uuid: u128,
@@ -1249,7 +1249,7 @@ fn login_and_configure(
     .map_err(e)?;
     // The client may send its settings before acknowledging the login.
     loop {
-        let (id, payload) = c.recv().map_err(e)?;
+        let (id, payload) = c.recv_async().await.map_err(e)?;
         match login::Serverbound::decode(id, &payload).map_err(e)? {
             login::Serverbound::LoginAcknowledged(_) => break,
             login::Serverbound::CustomQueryAnswer(_) | login::Serverbound::CookieResponse(_) => {}
@@ -1305,7 +1305,7 @@ fn login_and_configure(
     let mut brand = String::from("vanilla");
     let mut configured = super::Configured::default();
     let known_pack = loop {
-        let (id, payload) = c.recv().map_err(e)?;
+        let (id, payload) = c.recv_async().await.map_err(e)?;
         let packet = decode_config(id, &payload).map_err(e)?;
         note_channels(&mut configured, &packet);
         match packet {
@@ -1404,7 +1404,7 @@ fn login_and_configure(
         // A client that does not answer has no mods to offer.
         let mut client_mods = Vec::new();
         loop {
-            let (id, payload) = c.recv().map_err(e)?;
+            let (id, payload) = c.recv_async().await.map_err(e)?;
             let packet = decode_config(id, &payload).map_err(e)?;
             note_channels(&mut configured, &packet);
             match packet {
@@ -1442,7 +1442,7 @@ fn login_and_configure(
         send(c, cfg::Clientbound::Ping(cfg::Ping { id: 0 }))?;
         let mut content_match = false;
         loop {
-            let (id, payload) = c.recv().map_err(e)?;
+            let (id, payload) = c.recv_async().await.map_err(e)?;
             let packet = decode_config(id, &payload).map_err(e)?;
             note_channels(&mut configured, &packet);
             match packet {
@@ -1477,10 +1477,10 @@ fn login_and_configure(
     if let Some(text) =
         super::code_of_conduct::pick(&shared.config.code_of_conducts, &info.language)
     {
-        accept_code_of_conduct(c, text, &mut info, &mut configured)?;
+        accept_code_of_conduct(c, text, &mut info, &mut configured).await?;
     }
     if let Some(pack) = &shared.config.resource_pack
-        && let Some(rejected) = offer_pack(c, pack, &mut info, &mut configured)?
+        && let Some(rejected) = offer_pack(c, pack, &mut info, &mut configured).await?
     {
         let (reason, text) = pack_rejected(shared, name, rejected);
         let _ = send(c, cfg::Clientbound::Disconnect(cfg::Disconnect { reason }));
@@ -1489,7 +1489,7 @@ fn login_and_configure(
     }
     send(c, cfg::Clientbound::FinishConfiguration(Empty))?;
     loop {
-        let (id, payload) = c.recv().map_err(e)?;
+        let (id, payload) = c.recv_async().await.map_err(e)?;
         let packet = decode_config(id, &payload).map_err(e)?;
         note_channels(&mut configured, &packet);
         match packet {
@@ -1564,7 +1564,7 @@ fn rate_exceeded(shared: &Shared, average: f32) -> (horizon_world::nbt::Tag, Str
 /// prompt, so the connection is kept alive meanwhile, as
 /// ServerConfigurationPacketListenerImpl.tick does. The id of a required
 /// pack the client declined, which disconnects it.
-fn offer_pack(
+async fn offer_pack(
     c: &mut Connection,
     pack: &crate::server::properties::ResourcePackInfo,
     info: &mut ClientInformation,
@@ -1600,6 +1600,7 @@ fn offer_pack(
         }
         Err(err) => Some(Err(err)),
     })
+    .await
 }
 
 /// ServerCodeOfConductConfigurationTask: send the text, then wait for
@@ -1607,7 +1608,7 @@ fn offer_pack(
 /// keeping the connection alive while the player reads. Finishing the
 /// configuration first is `finishCurrentTask` of the wrong task type, an
 /// error that drops the connection.
-fn accept_code_of_conduct(
+async fn accept_code_of_conduct(
     c: &mut Connection,
     text: &str,
     info: &mut ClientInformation,
@@ -1631,15 +1632,18 @@ fn accept_code_of_conduct(
         }
         Err(err) => Some(Err(err)),
     })
+    .await
 }
 
 /// Read configuration packets until `answer` has a result, sending a
 /// keep-alive every `KEEP_ALIVE_EVERY` meanwhile
 /// (ServerConfigurationPacketListenerImpl.tick).
-fn wait_alive<T>(
+#[cfg(not(target_arch = "wasm32"))]
+async fn wait_alive<T>(
     c: &mut Connection,
     mut answer: impl FnMut(Result<cfg::Serverbound, String>) -> Option<Result<T, String>>,
 ) -> Result<T, String> {
+    use std::sync::mpsc::{RecvTimeoutError, channel};
     horizon_thread::scope(|scope| {
         let (stop, stopped) = channel::<()>();
         let writer = &mut c.writer;
@@ -1665,6 +1669,40 @@ fn wait_alive<T>(
         drop(stop);
         result
     })
+}
+
+/// The browser build's `wait_alive`: one thread, so the keep-alives go out
+/// from the wait itself, each time the page's loop finds no packet yet.
+#[cfg(target_arch = "wasm32")]
+async fn wait_alive<T>(
+    c: &mut Connection,
+    mut answer: impl FnMut(Result<cfg::Serverbound, String>) -> Option<Result<T, String>>,
+) -> Result<T, String> {
+    let start = Instant::now();
+    let mut due = start + KEEP_ALIVE_EVERY;
+    loop {
+        std::future::poll_fn(|_| {
+            if c.reader.ready() {
+                return std::task::Poll::Ready(());
+            }
+            let now = Instant::now();
+            if now >= due {
+                due = now + KEEP_ALIVE_EVERY;
+                let id = i64::try_from(start.elapsed().as_millis()).unwrap_or(0);
+                let keep_alive = cfg::Clientbound::KeepAlive(cfg::KeepAlive { id });
+                let _ = c.writer.send(&keep_alive.encode());
+            }
+            std::task::Poll::Pending
+        })
+        .await;
+        let packet = match c.reader.recv() {
+            Ok((id, payload)) => decode_config(id, &payload).map_err(|e| e.to_string()),
+            Err(err) => return Err(err.to_string()),
+        };
+        if let Some(result) = answer(packet) {
+            return result;
+        }
+    }
 }
 
 fn play(
@@ -2117,6 +2155,7 @@ mod tests {
         assert!(big.handed(size));
     }
     use super::*;
+    use std::sync::mpsc::channel;
 
     /// Having tables for Horizon to join an old server does not make the reverse direction supported.
     #[test]
@@ -2337,6 +2376,88 @@ mod tests {
         );
         assert_eq!(owner.uuid, offline_uuid("Owner"));
         assert!(owner.properties.is_empty());
+    }
+
+    /// The browser build's way: one thread polls the server's login and the client's
+    /// as futures in turn (`horizon_thread::run_local_tasks`), neither ever blocking.
+    /// The owner logs in and the configuration starts as it does on two threads.
+    #[test]
+    fn a_memory_login_runs_on_one_thread_when_both_ends_are_polled() {
+        use std::future::Future;
+        use std::task::{Context, Poll, Waker};
+        horizon_protocol::connection::set_cooperative(true);
+        let config = crate::lan::NetConfig {
+            announce: false,
+            listen: false,
+            singleplayer_profile: Some(("Owner".into(), 7)),
+            ..crate::lan::NetConfig::loopback(0, "Owner - World".into(), 8)
+        };
+        let lan =
+            crate::lan::Lan::start_with(Arc::new(crate::lan::data::SyncData::empty()), config)
+                .unwrap();
+        let (client, server) = horizon_protocol::connection::Pipe::pair();
+        let mut serving = Box::pin(serve_local(server, lan.shared.clone()));
+        let mut c = Connection::local(client);
+        let mut seen = Vec::new();
+        let mut joining = Box::pin(async {
+            c.send(
+                &handshake::Serverbound::Intention(handshake::Intention {
+                    protocol: horizon_protocol::PROTOCOL_VERSION,
+                    host: "127.0.0.1".into(),
+                    port: 0,
+                    intent: handshake::LOGIN,
+                })
+                .encode(),
+            )
+            .unwrap();
+            c.send(
+                &login::Serverbound::Hello(login::ServerHello {
+                    name: "Owner".into(),
+                    uuid: offline_uuid("Owner"),
+                })
+                .encode(),
+            )
+            .unwrap();
+            let (id, payload) = c.recv_async().await.unwrap();
+            let login::Clientbound::LoginFinished(finished) =
+                login::Clientbound::decode(id, &payload).unwrap()
+            else {
+                panic!("expected the login's end");
+            };
+            c.send(&login::Serverbound::LoginAcknowledged(Empty).encode())
+                .unwrap();
+            // The configuration's first packets, up to the known packs it asks about.
+            loop {
+                let (id, payload) = c.recv_async().await.unwrap();
+                let packet = cfg::Clientbound::decode(id, &payload).unwrap();
+                let known = matches!(packet, cfg::Clientbound::SelectKnownPacks(_));
+                seen.push(packet);
+                if known {
+                    break finished.profile;
+                }
+            }
+        });
+        let mut context = Context::from_waker(Waker::noop());
+        let mut profile = None;
+        for _ in 0..100 {
+            if let Poll::Ready(result) = serving.as_mut().poll(&mut context) {
+                panic!("the server's side ended early: {result:?}");
+            }
+            if let Poll::Ready(p) = joining.as_mut().poll(&mut context) {
+                profile = Some(p);
+                break;
+            }
+        }
+        horizon_protocol::connection::set_cooperative(false);
+        let profile = profile.expect("the login did not finish in 100 turns");
+        assert_eq!(profile.uuid, 7);
+        drop(joining);
+        assert!(
+            seen.iter()
+                .any(|p| matches!(p, cfg::Clientbound::UpdateEnabledFeatures(_))),
+            "{} configuration packets",
+            seen.len()
+        );
     }
 
     /// `ServerLoginPacketListenerImpl.handleHello`: the integrated server's own player

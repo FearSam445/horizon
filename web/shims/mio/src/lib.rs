@@ -1,6 +1,8 @@
-//! mio's polling API for the browser build. A page can't accept connections or
-//! poll sockets, so [`Poll::new`] fails with `Unsupported` and the LAN host
-//! reports that the world can't be opened to the network.
+//! mio's polling API for the browser build. A page has no sockets: a poll opens
+//! and never reports anything, registering a socket fails with `Unsupported`,
+//! and a waker does nothing. In-memory pipes (the single-player server's own
+//! player) tell the game when they are ready themselves, and the game's one
+//! thread runs the network's turns (`lan::io_pool::pump`).
 
 use std::io;
 use std::ops::BitOr;
@@ -42,7 +44,7 @@ impl BitOr for Interest {
     }
 }
 
-/// A poll; none can be made here.
+/// A poll with nothing to watch: it returns at once, with no events.
 #[derive(Debug)]
 pub struct Poll {
     registry: Registry,
@@ -50,14 +52,16 @@ pub struct Poll {
 
 impl Poll {
     pub fn new() -> io::Result<Poll> {
-        Err(unsupported())
+        Ok(Poll {
+            registry: Registry(()),
+        })
     }
     pub fn registry(&self) -> &Registry {
         &self.registry
     }
     pub fn poll(&mut self, events: &mut Events, _timeout: Option<Duration>) -> io::Result<()> {
         events.clear();
-        Err(unsupported())
+        Ok(())
     }
 }
 
@@ -83,20 +87,20 @@ impl Registry {
         Err(unsupported())
     }
     pub fn deregister<S: event::Source + ?Sized>(&self, _: &mut S) -> io::Result<()> {
-        Err(unsupported())
+        Ok(())
     }
 }
 
-/// Wakes a poll from another thread.
+/// Wakes a poll from another thread: there is none, and nothing waits.
 #[derive(Debug)]
 pub struct Waker(());
 
 impl Waker {
     pub fn new(_: &Registry, _: Token) -> io::Result<Waker> {
-        Err(unsupported())
+        Ok(Waker(()))
     }
     pub fn wake(&self) -> io::Result<()> {
-        Err(unsupported())
+        Ok(())
     }
 }
 

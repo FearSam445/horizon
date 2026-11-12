@@ -140,6 +140,9 @@ pub mod screen_layout;
 pub mod screen_narrator;
 pub mod social_screen;
 pub mod sound_playback;
+/// The browser build's work between frames (what the desktop runs on threads).
+#[cfg(target_arch = "wasm32")]
+pub mod web_frame;
 pub use horizon_server_files as server;
 pub mod controller_notice;
 pub mod server_packs;

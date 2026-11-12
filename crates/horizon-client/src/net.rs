@@ -298,39 +298,51 @@ impl Session {
         let recorder = Arc::new(Mutex::new(None));
         let thread_recorder = recorder.clone();
         let (address_owned, name_owned) = (address.to_owned(), name.to_owned());
+        let task = async move {
+            let result = run(
+                local,
+                &address_owned,
+                &name_owned,
+                auth.as_deref(),
+                info,
+                &lang,
+                &send,
+                &thread_writer,
+                &thread_configuring,
+                &thread_counters,
+                &thread_cookies,
+                &thread_far,
+                transferred,
+                &resources,
+                lan,
+                &thread_recorder,
+            )
+            .await;
+            thread_far.cancel();
+            let from_server = result.is_ok();
+            let why = result.unwrap_or_else(|e| e);
+            if let Some(w) = thread_writer.lock().unwrap().take() {
+                w.shutdown();
+            }
+            let _ = send.send(Event::Disconnected {
+                reason: why.text,
+                key: why.key,
+                from_server,
+            });
+        };
+        // The browser build has one thread: the connection is a task its loop polls
+        // (`horizon_thread::run_local_tasks`), waiting for packets without blocking.
+        #[cfg(target_arch = "wasm32")]
+        let thread = {
+            horizon_thread::spawn_local(task);
+            None
+        };
+        #[cfg(not(target_arch = "wasm32"))]
         let thread = horizon_thread::Builder::new()
             .name("horizon-net".into())
             .spawn(move || {
                 horizon_threads::favour_current();
-                let result = run(
-                    local,
-                    &address_owned,
-                    &name_owned,
-                    auth.as_deref(),
-                    info,
-                    &lang,
-                    &send,
-                    &thread_writer,
-                    &thread_configuring,
-                    &thread_counters,
-                    &thread_cookies,
-                    &thread_far,
-                    transferred,
-                    &resources,
-                    lan,
-                    &thread_recorder,
-                );
-                thread_far.cancel();
-                let from_server = result.is_ok();
-                let why = result.unwrap_or_else(|e| e);
-                if let Some(w) = thread_writer.lock().unwrap().take() {
-                    w.shutdown();
-                }
-                let _ = send.send(Event::Disconnected {
-                    reason: why.text,
-                    key: why.key,
-                    from_server,
-                });
+                pollster::block_on(task);
             })
             .ok();
         let debug = std::env::var_os("HORIZON_NET_DEBUG").is_some();
@@ -756,7 +768,7 @@ fn connection_lost(e: horizon_protocol::Error, lang: &Language) -> String {
 /// `ClientHandshakePacketListenerImpl.handleHello`: the whole connection.
 /// Ok: why it ended for good (the server's reason, or
 /// a refusal no retry fixes); Err: the connection failed.
-fn run(
+async fn run(
     local: Option<horizon_protocol::connection::Pipe>,
     address: &str,
     name: &str,
@@ -838,7 +850,7 @@ fn run(
     )
     .map_err(e)?;
     let profile = loop {
-        let (id, payload) = c.recv().map_err(e)?;
+        let (id, payload) = c.recv_async().await.map_err(e)?;
         match login::Clientbound::decode(id, &payload).map_err(e)? {
             login::Clientbound::Compression(p) => c.set_compression(p.threshold),
             login::Clientbound::LoginFinished(p) => {
@@ -945,7 +957,8 @@ fn run(
         send,
         cookies,
         resources,
-    )?;
+    )
+    .await?;
     let _ = send.send(Event::Joined {
         registries: Arc::new(registries),
         uuid: profile.uuid,
@@ -962,9 +975,10 @@ fn run(
         resources,
         recorder,
     )
+    .await
 }
 
-fn receive_play(
+async fn receive_play(
     reader: &mut ConnReader,
     shared_writer: &Mutex<Option<ConnWriter>>,
     configuring: &AtomicBool,
@@ -977,7 +991,8 @@ fn receive_play(
 ) -> Result<Reason, Reason> {
     loop {
         let (id, payload) = reader
-            .recv()
+            .recv_async()
+            .await
             .map_err(|e| Reason::plain(connection_lost(e, lang)))?;
         let packet = match play::Clientbound::decode(id, &payload) {
             Ok(p) => p,
@@ -1025,7 +1040,8 @@ fn receive_play(
                     send,
                     cookies,
                     resources,
-                )?;
+                )
+                .await?;
                 let _ = send.send(Event::Reconfigured(Arc::new(registries)));
             }
             // ClientCommonPacketListenerImpl.handleRequestCookie: the stored
@@ -1071,7 +1087,7 @@ fn receive_play(
 
 /// The configuration phase: registries, tags and known packs until the
 /// server finishes it (ClientConfigurationPacketListenerImpl).
-fn configure(
+async fn configure(
     reader: &mut ConnReader,
     writer: &Mutex<Option<ConnWriter>>,
     configuring: &AtomicBool,
@@ -1092,7 +1108,8 @@ fn configure(
     };
     loop {
         let (id, payload) = reader
-            .recv()
+            .recv_async()
+            .await
             .map_err(|e| Reason::plain(connection_lost(e, lang)))?;
         match cfg::Clientbound::decode(id, &payload)
             .map_err(|e| Reason::plain(connection_lost(e, lang)))?
@@ -1762,7 +1779,7 @@ mod tests {
         let (done, result) = channel();
         horizon_thread::spawn(move || {
             let (send, _events) = channel();
-            let _ = done.send(receive_play(
+            let _ = done.send(pollster::block_on(receive_play(
                 &mut reader,
                 &Mutex::new(Some(writer)),
                 &AtomicBool::new(false),
@@ -1772,7 +1789,7 @@ mod tests {
                 &crate::lod_net::Inbox::default(),
                 Path::new("."),
                 &Arc::new(Mutex::new(None)),
-            ));
+            )));
         });
         let ended = result
             .recv_timeout(Duration::from_secs(10))
@@ -1814,7 +1831,7 @@ mod tests {
         let writer = Mutex::new(Some(writer));
         let thread = horizon_thread::spawn(move || {
             let (send, _events) = channel();
-            configure(
+            pollster::block_on(configure(
                 &mut reader,
                 &writer,
                 &AtomicBool::new(true),
@@ -1822,7 +1839,7 @@ mod tests {
                 &send,
                 &Cookies::default(),
                 &root,
-            )
+            ))
         });
         let mut server = Connection::local(server);
         server
@@ -1933,7 +1950,7 @@ mod tests {
         let (send, events) = channel();
         let thread_writer = writer.clone();
         let thread = horizon_thread::spawn(move || {
-            receive_play(
+            pollster::block_on(receive_play(
                 &mut reader,
                 &thread_writer,
                 &AtomicBool::new(false),
@@ -1943,7 +1960,7 @@ mod tests {
                 &crate::lod_net::Inbox::default(),
                 Path::new("."),
                 &Arc::new(Mutex::new(None)),
-            )
+            ))
         });
         let mut server = Connection::local(server);
         let teleport = play::Clientbound::PlayerPosition(play::PlayerPosition {
@@ -2004,7 +2021,7 @@ mod tests {
             session.recorder.clone(),
         );
         let thread = horizon_thread::spawn(move || {
-            receive_play(
+            pollster::block_on(receive_play(
                 &mut reader,
                 &thread_writer,
                 &thread_configuring,
@@ -2014,7 +2031,7 @@ mod tests {
                 &crate::lod_net::Inbox::default(),
                 Path::new("."),
                 &thread_recorder,
-            )
+            ))
         });
         let mut server = Connection::local(server);
         let tick_end = play::Serverbound::ClientTickEnd(Empty);
@@ -2053,7 +2070,7 @@ mod tests {
         let cookies = Cookies::default();
         let (thread_writer, thread_cookies) = (writer.clone(), cookies.clone());
         let thread = horizon_thread::spawn(move || {
-            receive_play(
+            pollster::block_on(receive_play(
                 &mut reader,
                 &thread_writer,
                 &AtomicBool::new(false),
@@ -2063,7 +2080,7 @@ mod tests {
                 &crate::lod_net::Inbox::default(),
                 Path::new("."),
                 &Arc::new(Mutex::new(None)),
-            )
+            ))
         });
         let mut server = Connection::local(server);
         let ask = |server: &mut Connection, key: &str| {
@@ -2292,7 +2309,7 @@ mod tests {
             session.recorder.clone(),
         );
         let thread = horizon_thread::spawn(move || {
-            receive_play(
+            pollster::block_on(receive_play(
                 &mut reader,
                 &thread_writer,
                 &thread_configuring,
@@ -2302,7 +2319,7 @@ mod tests {
                 &crate::lod_net::Inbox::default(),
                 Path::new("."),
                 &thread_recorder,
-            )
+            ))
         });
 
         let mut server = Connection::local(server);

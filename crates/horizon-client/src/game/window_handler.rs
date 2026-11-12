@@ -391,13 +391,12 @@ impl ApplicationHandler for Game<'_> {
         // The browser build has no worker threads: chunk generation, light and meshing
         // run here between frames, for a share of a 60 Hz frame (horizon_threads::jobs).
         #[cfg(target_arch = "wasm32")]
-        {
+        horizon_client::web_frame::run(|| {
             // The single-player server, which runs here instead of on its own thread.
             if let Some(server) = &self.integrated {
                 server.step();
             }
-            horizon_threads::jobs::pump(web_time::Duration::from_millis(8));
-        }
+        });
         self.idle(event_loop);
     }
     /// The application is ending. On macOS, Quit (Cmd+Q) ends it through

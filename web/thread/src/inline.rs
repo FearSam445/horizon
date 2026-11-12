@@ -150,3 +150,38 @@ impl Builder {
         Ok(scope.spawn(f))
     }
 }
+
+/// Work that waits for something another part of the game does on the same
+/// thread (a connection's next packet): a future polled again each turn of the
+/// page's loop until it is done.
+type Task = std::pin::Pin<Box<dyn std::future::Future<Output = ()>>>;
+
+thread_local! {
+    static TASKS: std::cell::RefCell<Vec<Task>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+/// Runs `task` from now on: a first poll at once, then each [`run_local_tasks`].
+pub fn spawn_local(task: impl std::future::Future<Output = ()> + 'static) {
+    let mut task: Task = Box::pin(task);
+    if poll_once(&mut task).is_pending() {
+        TASKS.with(|tasks| tasks.borrow_mut().push(task));
+    }
+}
+
+/// Polls every task once; returns how many are still pending. A task spawned
+/// while they run waits for the next call.
+pub fn run_local_tasks() -> usize {
+    let mut running = TASKS.with(|tasks| std::mem::take(&mut *tasks.borrow_mut()));
+    running.retain_mut(|task| poll_once(task).is_pending());
+    TASKS.with(|tasks| {
+        let mut tasks = tasks.borrow_mut();
+        running.append(&mut tasks);
+        *tasks = running;
+        tasks.len()
+    })
+}
+
+fn poll_once(task: &mut Task) -> std::task::Poll<()> {
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    task.as_mut().poll(&mut context)
+}
