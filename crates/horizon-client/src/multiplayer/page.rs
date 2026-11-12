@@ -12,7 +12,7 @@ use super::{ButtonSpec, Outcome, centered_x, half, quarter};
 use crate::hud::{HudAtlas, HudBatch, rgba};
 use horizon_hooks::pages::{self, Act, Page, Place, Row};
 use std::cell::RefCell;
-use std::time::Instant;
+use web_time::Instant;
 
 /// The first button's id; button `k` of the page is `FIRST + k`.
 const FIRST: u8 = 100;

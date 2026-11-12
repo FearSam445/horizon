@@ -7,10 +7,8 @@ use crate::{
     mesher::SectionMesh,
 };
 use glam::{DVec3, Vec3};
-use std::{
-    collections::VecDeque,
-    time::{Duration, Instant},
-};
+use std::collections::VecDeque;
+use web_time::{Duration, Instant};
 
 /// Finished tile meshes not uploaded yet, the tiles they replace (removed
 /// once every mesh is in) and the columns they leave out.

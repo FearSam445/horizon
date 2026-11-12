@@ -37,7 +37,7 @@ pub(super) struct CommandBlockScreen {
     /// The command box with its `CommandSuggestions`.
     pub(super) command: ChatScreen,
     /// When the command box was focused, for its cursor's blink.
-    opened: std::time::Instant,
+    opened: web_time::Instant,
     previous: EditBox,
     pub(super) track_output: bool,
     mode: Mode,
@@ -622,7 +622,7 @@ impl Game<'_> {
             pos,
             cart,
             command,
-            opened: std::time::Instant::now(),
+            opened: web_time::Instant::now(),
             previous,
             track_output: block.track_output,
             mode,

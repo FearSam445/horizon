@@ -8,7 +8,7 @@
 //! the haptic pulses. How it looks (sizes, colours, motion) is `radial_overlay`'s, in its own
 //! block of constants.
 use crate::gamepad::Pulse;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// The tick as the stick reaches a slot: the light motor alone, briefly, felt rather than heard,
 /// but firm enough to feel through a flick.

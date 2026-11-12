@@ -1461,7 +1461,7 @@ fn content_root_is_reused_until_a_mod_changes() {
     let lang = scratch.join("ruby/assets/ruby/lang/en_us.json");
     fs::write(&lang, r#"{"block.ruby.ruby_block": "Ruby Block"}"#).unwrap();
     let file = fs::File::options().write(true).open(&lang).unwrap();
-    file.set_modified(std::time::SystemTime::now() + std::time::Duration::from_secs(5))
+    file.set_modified(horizon_clock::system_now() + web_time::Duration::from_secs(5))
         .unwrap();
     let rebuilt = resource_root(&base, std::slice::from_ref(&m), &cache).unwrap();
     assert_ne!(rebuilt, root, "a changed mod reused the old root");
@@ -5166,7 +5166,7 @@ fn a_data_mod_loads_unloads_and_loads_again() {
         true,
     );
 
-    let started = std::time::Instant::now();
+    let started = web_time::Instant::now();
     let on = resource_root(&base, std::slice::from_ref(&glint), &cache).unwrap();
     eprintln!("content root built in {} ms", started.elapsed().as_millis());
     assert_ne!(on, base);
@@ -5181,7 +5181,7 @@ fn a_data_mod_loads_unloads_and_loads_again() {
     // On again: the same root, not built again.
     let sentinel = on.join("sentinel");
     fs::write(&sentinel, b"").unwrap();
-    let started = std::time::Instant::now();
+    let started = web_time::Instant::now();
     let again = resource_root(&base, std::slice::from_ref(&glint), &cache).unwrap();
     eprintln!(
         "content root reused in {} ms",
@@ -5216,7 +5216,7 @@ fn roots_unused_for_a_day_are_removed() {
         let stamp = dir.join(STAMP);
         fs::write(&stamp, b"x").unwrap();
         let file = fs::File::options().write(true).open(&stamp).unwrap();
-        file.set_modified(std::time::SystemTime::now() - std::time::Duration::from_secs(age_s))
+        file.set_modified(horizon_clock::system_now() - web_time::Duration::from_secs(age_s))
             .unwrap();
         dir
     };
@@ -5231,7 +5231,7 @@ fn roots_unused_for_a_day_are_removed() {
         .write(true)
         .open(used_path(&stale))
         .unwrap();
-    file.set_modified(std::time::SystemTime::now() - std::time::Duration::from_secs(2 * 86400))
+    file.set_modified(horizon_clock::system_now() - web_time::Duration::from_secs(2 * 86400))
         .unwrap();
     drop(file);
     // Not a root's name: never touched while the folder has no root of the old layout.

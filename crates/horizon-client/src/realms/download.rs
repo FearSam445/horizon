@@ -15,7 +15,7 @@ use std::fs::{self, File};
 use std::io::{self, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::time::Duration;
+use web_time::Duration;
 
 /// `RealmsDownloadLatestWorldScreen.checkDownloadSize`'s `5368709120L`.
 pub const SIZE_LIMIT: u64 = 5 * 1024 * 1024 * 1024;

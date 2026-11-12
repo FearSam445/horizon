@@ -4,7 +4,8 @@ use std::io;
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, mpsc};
 use std::thread::{self, JoinHandle};
-use std::time::{Duration, Instant, SystemTime};
+use std::time::SystemTime;
+use web_time::{Duration, Instant};
 
 use crate::sampler;
 
@@ -151,7 +152,7 @@ pub fn start(config: Config) -> io::Result<Session> {
         stop,
         writer,
         started: Instant::now(),
-        started_at: SystemTime::now(),
+        started_at: horizon_clock::system_now(),
     })
 }
 

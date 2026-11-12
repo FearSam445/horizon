@@ -27,8 +27,8 @@ use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     sync::mpsc::Sender,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 use winit::{
     dpi::PhysicalPosition,
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, WindowEvent},

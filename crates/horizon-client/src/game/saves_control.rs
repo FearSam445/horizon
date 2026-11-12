@@ -4,7 +4,8 @@
 use super::Game;
 use horizon_client::{Result, title};
 use serde_json::{Value, json};
-use std::{path::PathBuf, sync::mpsc::Sender, time::UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
+use std::{path::PathBuf, sync::mpsc::Sender};
 
 pub(super) const HELP: &[&str] = &[
     "worlds                         the saved worlds, newest first: folder, name, mode, last played, version",

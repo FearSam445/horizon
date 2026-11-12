@@ -3,7 +3,7 @@
 //! returns without opening a connection. Failures back off (a minute, doubling, at most a day)
 //! and at most [`MAX_BATCHES_A_DAY`] batches leave a day.
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use web_time::Duration;
 
 use serde::{Deserialize, Serialize};
 

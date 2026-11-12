@@ -311,7 +311,7 @@ pub struct StepState {
 pub struct FixedStep {
     timer: Timer,
     manager: ServerTickRateManager,
-    now: std::time::Duration,
+    now: web_time::Duration,
     pause: bool,
     sprint_checked: bool,
     sprint_report: Option<SprintReport>,
@@ -321,7 +321,7 @@ pub struct FixedStep {
     /// The ticks a second over the last [`TPS_WINDOWS`], decayed once a second ([`Self::tps`]).
     tps: [f64; 3],
     /// When the second being counted started (at a recorded tick's end) and the ticks since.
-    tps_second: Option<(std::time::Instant, u32)>,
+    tps_second: Option<(web_time::Instant, u32)>,
     /// A server's client: its level's tick rate only slows the timer down
     /// (`Minecraft.getTickTargetMillis`), since the server runs the ticks.
     client: bool,
@@ -348,7 +348,7 @@ impl FixedStep {
         let mut clock = Self {
             timer: Timer::new(20.0, 0),
             manager: ServerTickRateManager::default(),
-            now: std::time::Duration::ZERO,
+            now: web_time::Duration::ZERO,
             pause: false,
             sprint_checked: false,
             sprint_report: None,
@@ -385,12 +385,12 @@ impl FixedStep {
         self.now.as_nanos() as i64
     }
     /// The length of one tick at the current rate.
-    pub fn tick_duration(&self) -> std::time::Duration {
-        std::time::Duration::from_nanos(self.manager.base.nanoseconds_per_tick().max(1) as u64)
+    pub fn tick_duration(&self) -> web_time::Duration {
+        web_time::Duration::from_nanos(self.manager.base.nanoseconds_per_tick().max(1) as u64)
     }
     /// Feed one frame's elapsed time; returns the ticks to run (at most ten,
     /// or a sprint frame's worth).
-    pub fn advance(&mut self, elapsed: std::time::Duration) -> u32 {
+    pub fn advance(&mut self, elapsed: web_time::Duration) -> u32 {
         self.now += elapsed;
         let now_ms = self.now_ms();
         if self.manager.is_sprinting() {
@@ -527,7 +527,7 @@ impl FixedStep {
     }
     /// Record how long a tick took (`MinecraftServer.tickServer` bookkeeping
     /// and `endTickWork`).
-    pub fn record(&mut self, took: std::time::Duration) {
+    pub fn record(&mut self, took: web_time::Duration) {
         let took = took.as_nanos() as i64;
         let index = (self.tick_count % SAMPLES as i64) as usize;
         self.aggregated -= self.tick_times[index];
@@ -538,12 +538,12 @@ impl FixedStep {
             let end = self.now_ns() + took;
             self.manager.end_tick_work(end);
         }
-        self.count_tick(std::time::Instant::now());
+        self.count_tick(web_time::Instant::now());
     }
     /// A recorded tick ended at `now`: once a second has passed since the second being
     /// counted started, its ticks a second join each average of [`Self::tps`], weighted as a
     /// load average is (`exp(-elapsed / window)` kept of the old value).
-    fn count_tick(&mut self, now: std::time::Instant) {
+    fn count_tick(&mut self, now: web_time::Instant) {
         let Some((start, ticks)) = &mut self.tps_second else {
             self.tps_second = Some((now, 0));
             return;
@@ -595,8 +595,8 @@ mod tests {
     #[test]
     fn tps_averages_follow_the_ticks_a_second() {
         let mut clock = FixedStep::new(false);
-        let t0 = std::time::Instant::now();
-        let ms = std::time::Duration::from_millis;
+        let t0 = web_time::Instant::now();
+        let ms = web_time::Duration::from_millis;
         for i in 0..=40 {
             clock.count_tick(t0 + ms(50 * i));
         }
@@ -625,7 +625,7 @@ mod tests {
         let mut clock = FixedStep::new(false);
         assert_eq!(clock.tick_times_nanos(), vec![0; SAMPLES]);
         for n in 1..=150u64 {
-            clock.record(std::time::Duration::from_nanos(n));
+            clock.record(web_time::Duration::from_nanos(n));
         }
         let times = clock.tick_times_nanos();
         assert_eq!(times.len(), SAMPLES);
@@ -690,7 +690,7 @@ mod tests {
         let mut clock = FixedStep::default();
         clock.set_frozen(true);
         clock.world_runs();
-        clock.advance(std::time::Duration::from_millis(25));
+        clock.advance(web_time::Duration::from_millis(25));
         clock.end_frame(false);
         assert_eq!(clock.fraction(), 1.0, "frozen entities stay put");
         assert_eq!(clock.camera_fraction(), 0.5, "the player does not");
@@ -700,7 +700,7 @@ mod tests {
         let mut clock = FixedStep::new(true);
         clock.world_runs();
         assert!(!clock.runs_normally(), "frozen before the first tick");
-        clock.advance(std::time::Duration::from_millis(25));
+        clock.advance(web_time::Duration::from_millis(25));
         clock.end_frame(false);
         assert_eq!(clock.fraction(), 1.0);
         assert_eq!(clock.camera_fraction(), 1.0);
@@ -768,7 +768,7 @@ mod tests {
     }
     #[test]
     fn a_servers_tick_rate_only_slows_its_client_down() {
-        let quarter = std::time::Duration::from_millis(250);
+        let quarter = web_time::Duration::from_millis(250);
         let mut client = FixedStep::client();
         client.set_rate(40.0);
         assert_eq!(client.advance(quarter), 5, "still 20 a second");

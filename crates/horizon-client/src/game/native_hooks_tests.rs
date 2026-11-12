@@ -14,7 +14,7 @@ fn held_durability_retains_the_stack_hand_and_explicit_break_slot() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -121,7 +121,7 @@ fn mod_sign_constructor_prioritizes_templates_over_suffixes() {
     let root = std::env::temp_dir().join(format!(
         "horizon-sign-constructor-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()
@@ -164,7 +164,7 @@ fn mod_sign_constructor_prioritizes_templates_over_suffixes() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

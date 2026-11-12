@@ -122,7 +122,7 @@ pub struct Marker {
 /// A file name beside `dest` that no other writer in this or another process
 /// picks: `<dest>.<pid>-<nanos>.<suffix>`.
 fn sibling(dest: &Path, suffix: &str) -> PathBuf {
-    let nanos = std::time::SystemTime::now()
+    let nanos = horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_nanos());
     let mut name = dest.file_name().unwrap_or_default().to_os_string();
@@ -641,7 +641,7 @@ impl TemporaryStream {
     fn create() -> io::Result<Self> {
         let mut last_error = None;
         for attempt in 0..16 {
-            let nanos = std::time::SystemTime::now()
+            let nanos = horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_or(0, |duration| duration.as_nanos());
             let path = std::env::temp_dir().join(format!(

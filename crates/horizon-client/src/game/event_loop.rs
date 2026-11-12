@@ -5,7 +5,7 @@
 //! (#4951) has no display, so it cannot have that loop: it runs its own, and hands the same
 //! methods this trait instead. winit's loop implements it, so a window's game is unchanged.
 
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 use winit::event_loop::{ActiveEventLoop, ControlFlow};
 
 /// A successful frame only permits polling until the next idle iteration. If

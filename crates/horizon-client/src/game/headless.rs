@@ -8,10 +8,8 @@
 
 use super::Game;
 use super::event_loop::EventLoopCtl;
-use std::{
-    cell::Cell,
-    time::{Duration, Instant},
-};
+use std::cell::Cell;
+use web_time::{Duration, Instant};
 use winit::event_loop::ControlFlow;
 
 /// Time between headless frames. The client ticks at 20 Hz whatever the frame rate (a frame

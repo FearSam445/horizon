@@ -6,7 +6,7 @@
 use super::{ScreenshotRequest, hdr_icc, hdr10_to_rgb16, padded_row, square_downscale};
 use std::path::PathBuf;
 use std::sync::mpsc::{Receiver, Sender, channel};
-use std::time::Duration;
+use web_time::Duration;
 
 /// What a frame's readback holds and where its PNG goes.
 pub(super) struct Shot {
@@ -117,8 +117,8 @@ impl Saves {
 impl Drop for Saves {
     /// A screenshot taken right before quitting is still written whole.
     fn drop(&mut self) {
-        let deadline = std::time::Instant::now() + Duration::from_secs(10);
-        while self.in_flight > 0 && std::time::Instant::now() < deadline {
+        let deadline = web_time::Instant::now() + Duration::from_secs(10);
+        while self.in_flight > 0 && web_time::Instant::now() < deadline {
             let _ = self.device.poll(wgpu::PollType::Poll);
             if let Ok(saved) = self.receiver.recv_timeout(Duration::from_millis(20)) {
                 log_saved(&saved);
@@ -299,12 +299,12 @@ mod tests {
             Shot::new(&request, [w, h], wgpu::TextureFormat::Bgra8Unorm, None),
             buffer,
         );
-        let deadline = std::time::Instant::now() + Duration::from_secs(10);
+        let deadline = web_time::Instant::now() + Duration::from_secs(10);
         let saved = loop {
             if let Some(saved) = saves.finished().pop() {
                 break saved;
             }
-            assert!(std::time::Instant::now() < deadline, "never written");
+            assert!(web_time::Instant::now() < deadline, "never written");
             std::thread::sleep(Duration::from_millis(5));
         };
         assert_eq!(saved.path, path);

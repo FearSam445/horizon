@@ -11,8 +11,8 @@ use std::{
     panic::{AssertUnwindSafe, catch_unwind},
     sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError},
     thread,
-    time::Instant,
 };
+use web_time::Instant;
 
 /// Tiles the server lets a player ask for at once, past [`PER_SECOND`]: the
 /// network bunches requests the client spaced out.
@@ -276,7 +276,7 @@ fn same_source(a: &Arc<dyn LodSource>, b: &Arc<dyn LodSource>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Duration;
+    use web_time::Duration;
 
     fn request(id: u32, x: i32) -> Vec<u8> {
         Request {

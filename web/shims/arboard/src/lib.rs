@@ -33,7 +33,10 @@ impl Clipboard {
     pub fn get_text(&mut self) -> Result<String, Error> {
         Err(Error::ClipboardNotSupported)
     }
-    pub fn set_text<'a>(&mut self, _text: impl Into<std::borrow::Cow<'a, str>>) -> Result<(), Error> {
+    pub fn set_text<'a>(
+        &mut self,
+        _text: impl Into<std::borrow::Cow<'a, str>>,
+    ) -> Result<(), Error> {
         Err(Error::ClipboardNotSupported)
     }
 }

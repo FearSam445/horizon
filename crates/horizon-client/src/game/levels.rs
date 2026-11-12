@@ -29,11 +29,8 @@ use horizon_client::{
     world::World,
 };
 use horizon_world::level::{LevelEvent, Ticks};
-use std::{
-    collections::HashMap,
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::{collections::HashMap, sync::Arc};
+use web_time::{Duration, Instant};
 
 /// Server ticks a level other than the Overworld stays loaded with no player
 /// in it, before it is saved and closed (vanilla unloads a level's chunks
@@ -1359,7 +1356,7 @@ mod tests {
         for _ in 0..2000 {
             game.tick_world(true).unwrap();
             game.update_world();
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            std::thread::sleep(web_time::Duration::from_millis(10));
             if game.run_command_quietly("execute if loaded 215 64 8") {
                 loaded = true;
                 break;
@@ -1421,7 +1418,7 @@ mod tests {
             for _ in 0..2000 {
                 game.tick_world(true).unwrap();
                 game.update_world();
-                std::thread::sleep(std::time::Duration::from_millis(10));
+                std::thread::sleep(web_time::Duration::from_millis(10));
                 if game.run_command_quietly("execute if loaded 215 64 8") {
                     loaded = true;
                     break;
@@ -1517,7 +1514,7 @@ mod tests {
         for _ in 0..2000 {
             game.tick_world(true).unwrap();
             game.update_world();
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            std::thread::sleep(web_time::Duration::from_millis(10));
             if game.run_command_quietly("execute if loaded 215 64 8") {
                 loaded = true;
                 break;

@@ -17,8 +17,8 @@ use std::{
     collections::BTreeSet,
     path::{Path, PathBuf},
     sync::Arc,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// Where overlay roots are built (beside options.txt).
 pub fn cache_dir() -> PathBuf {
@@ -752,7 +752,8 @@ impl PackReload {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{sync::mpsc, time::Duration};
+    use std::sync::mpsc;
+    use web_time::Duration;
 
     fn wait(reload: &mut PackReload) -> (ReloadKind, StageResult) {
         for _ in 0..500 {

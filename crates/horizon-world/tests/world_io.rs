@@ -17,7 +17,7 @@ static NEXT: AtomicU32 = AtomicU32::new(0);
 struct Directory(PathBuf);
 impl Directory {
     fn new() -> Self {
-        let stamp = std::time::SystemTime::now()
+        let stamp = horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
@@ -393,7 +393,7 @@ fn benchmark_saving_into_a_full_region() {
     region.sync().unwrap();
     drop(region);
     let rounds = 100;
-    let start = std::time::Instant::now();
+    let start = web_time::Instant::now();
     for round in 0..rounds {
         let changed = chunks[round * 7 % 1024];
         let mut existing = RegionFile::open(dir.region()).unwrap();
@@ -419,7 +419,7 @@ fn benchmark_saving_into_a_full_region() {
     }
     let rewrite = start.elapsed() / rounds as u32;
     let mut region = RegionFile::open_writable(dir.region(), false).unwrap();
-    let start = std::time::Instant::now();
+    let start = web_time::Instant::now();
     for round in 0..rounds {
         region.write(chunks[round * 7 % 1024], &saved).unwrap();
         region.sync().unwrap();

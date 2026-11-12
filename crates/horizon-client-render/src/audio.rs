@@ -46,7 +46,7 @@ struct Channel {
     /// Its world (`Mixer::world_id`; 0 none).
     world: u32,
     /// The sound file it started and when, to tell another player's copy of it.
-    started: Option<(String, std::time::Instant)>,
+    started: Option<(String, web_time::Instant)>,
     /// Its sound event plays clearly through a mod's muffle (`Audio::muffle`).
     unmuffled: bool,
 }
@@ -133,13 +133,13 @@ struct Mixer {
 #[derive(Default)]
 struct StreamErrors {
     /// When the current run of errors began, and how many it holds.
-    since: Option<std::time::Instant>,
+    since: Option<web_time::Instant>,
     count: u32,
 }
 #[cfg(any(feature = "audio", test))]
 impl StreamErrors {
     /// Errors this close together...
-    const WINDOW: std::time::Duration = std::time::Duration::from_secs(2);
+    const WINDOW: web_time::Duration = web_time::Duration::from_secs(2);
     /// ...this many of them: the stream is dead. Under vanilla a device that fails unrecoverably
     /// reads as disconnected (`ALC_CONNECTED`, the `ALC_EXT_disconnect` extension), and
     /// `SoundEngine` opens the output again; cpal reports a dead ALSA stream (`alsa::poll()`
@@ -147,7 +147,7 @@ impl StreamErrors {
     /// stands for it. One alone is a hiccup the stream recovers from.
     const DEAD_AFTER: u32 = 3;
     /// One more backend error at `now`: whether the stream counts as dead.
-    fn dead(&mut self, now: std::time::Instant) -> bool {
+    fn dead(&mut self, now: web_time::Instant) -> bool {
         match self.since {
             Some(since) if now.duration_since(since) <= Self::WINDOW => self.count += 1,
             _ => {
@@ -368,7 +368,7 @@ impl Drop for MixerBackend {
 /// still attach to. The game's own backend counts from 0, as before.
 static SHARED_CHANNELS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 /// Two players' copies of one sound: started within this of each other.
-const SAME_SOUND: std::time::Duration = std::time::Duration::from_millis(150);
+const SAME_SOUND: web_time::Duration = web_time::Duration::from_millis(150);
 /// Decoded interleaved samples, their rate and channel count (`None`: the file did not load).
 type Samples = Option<(Arc<Vec<f32>>, u32, u16)>;
 /// Decoded static sounds (`SoundBufferLibrary`'s buffers), dropped least
@@ -660,7 +660,7 @@ impl MixerBackend {
             if twin {
                 c.state = State::Stopped;
             } else {
-                c.started = Some((key.to_owned(), std::time::Instant::now()));
+                c.started = Some((key.to_owned(), web_time::Instant::now()));
             }
         }
         twin
@@ -1369,7 +1369,7 @@ fn build_stream<T: cpal::SizedSample + cpal::FromSample<f32>>(
                 let dead = match e {
                     cpal::StreamError::DeviceNotAvailable => true,
                     cpal::StreamError::BackendSpecific { .. } => {
-                        m.stream_errors.dead(std::time::Instant::now())
+                        m.stream_errors.dead(web_time::Instant::now())
                     }
                 };
                 if dead && !m.device_lost {
@@ -2233,7 +2233,7 @@ mod tests {
     /// are hiccups.
     #[test]
     fn a_run_of_stream_errors_is_a_dead_stream() {
-        use std::time::{Duration, Instant};
+        use web_time::{Duration, Instant};
         let start = Instant::now();
         let at = |ms: u64| start + Duration::from_millis(ms);
         let mut errors = StreamErrors::default();

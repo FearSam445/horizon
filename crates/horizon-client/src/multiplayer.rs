@@ -12,8 +12,8 @@ use std::{
     collections::HashMap,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 const SERVER_NAME: crate::clipboard::FieldId = ("server.name", 0);
 const SERVER_ADDRESS: crate::clipboard::FieldId = ("server.address", 0);
@@ -1057,7 +1057,7 @@ impl Screen {
                     )
                     .key(crate::widgets::key_of(&"multiplayer/servers"))
                 });
-                let millis = std::time::SystemTime::now()
+                let millis = horizon_clock::system_now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .map_or(0, |d| d.as_millis());
                 let gray = rgba(128, 128, 128, 255);
@@ -1400,7 +1400,7 @@ impl Screen {
                     centered(batch, line, l.message + i as f32 * 9.0, u32::MAX);
                 }
                 if let Some(r) = retry {
-                    let text = r.text(std::time::Instant::now());
+                    let text = r.text(web_time::Instant::now());
                     centered(batch, &text, l.retry, rgba(170, 170, 170, 255));
                 }
             }
@@ -1910,7 +1910,7 @@ impl Screen {
         let Self::Disconnected { retry, .. } = self else {
             return None;
         };
-        if !retry.as_ref()?.due(std::time::Instant::now()) {
+        if !retry.as_ref()?.due(web_time::Instant::now()) {
             return None;
         }
         retry.take()

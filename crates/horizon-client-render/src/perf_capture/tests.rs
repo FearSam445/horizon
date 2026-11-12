@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use std::hint::black_box;
 use std::sync::mpsc;
 use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
+use web_time::Duration;
 
 use horizon_perf_format::v1::{
     Kind as CaptureKind, SampleProfile, Side, Start, Stop, StringEntry, Unit,
@@ -52,7 +53,7 @@ fn profile_of(agg: Aggregate, config: Config) -> Profile {
         config,
         stats: Stats::default(),
         elapsed: Duration::from_secs(10),
-        started: SystemTime::now(),
+        started: horizon_clock::system_now(),
         writer_cpu_ns: 0,
     }
 }

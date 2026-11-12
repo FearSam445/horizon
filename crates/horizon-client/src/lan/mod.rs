@@ -56,8 +56,8 @@ use std::{
         mpsc::{Receiver, Sender, channel},
     },
     thread::JoinHandle,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// IntegratedServer.MAX_PLAYERS.
 pub const MAX_PLAYERS: usize = 8;
@@ -515,9 +515,9 @@ impl Shared {
         }
         if self.is_online(uuid) {
             let _ = self.events.send(NetEvent::Duplicate(uuid));
-            let deadline = std::time::Instant::now() + Duration::from_secs(30);
+            let deadline = web_time::Instant::now() + Duration::from_secs(30);
             while self.is_online(uuid) {
-                if std::time::Instant::now() > deadline {
+                if web_time::Instant::now() > deadline {
                     return Some(translatable("multiplayer.disconnect.slow_login", &[]));
                 }
                 std::thread::sleep(Duration::from_millis(10));
@@ -1113,7 +1113,7 @@ mod tests {
         assert!(
             std::net::TcpStream::connect_timeout(
                 &std::net::SocketAddr::new(other, lan.port),
-                std::time::Duration::from_millis(500),
+                web_time::Duration::from_millis(500),
             )
             .is_err()
         );
@@ -1121,7 +1121,8 @@ mod tests {
     }
     use super::conn::MEMORY_ADDRESS;
     use super::*;
-    use std::{io::Read, time::Instant};
+    use std::io::Read;
+    use web_time::Instant;
 
     /// Sockets that never say a word each hold a connection thread until their read times out: past
     /// the player limit and [`SPARE_CONNECTIONS`], a new one is closed at once instead of taking one

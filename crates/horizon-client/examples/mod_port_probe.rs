@@ -90,7 +90,7 @@ fn main() -> Result<()> {
     }
     mods.sort_by(|a, b| a.id.cmp(&b.id));
     let root = work.join("horizon-root");
-    let began = std::time::Instant::now();
+    let began = web_time::Instant::now();
     let step = |what: &str| {
         let what = what.to_owned();
         move |e: Box<dyn std::error::Error>| format!("{what}: {e}")

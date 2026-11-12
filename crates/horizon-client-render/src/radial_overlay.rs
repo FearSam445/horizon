@@ -26,7 +26,7 @@ use crate::{
     radial::{Page, PageName, Pages, RadialAction, SLOTS, Slot},
 };
 use std::f32::consts::{FRAC_1_SQRT_2, FRAC_PI_4, FRAC_PI_8, TAU};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// A page's name: the default pages' and a new page's are language keys, a player's own is
 /// itself.

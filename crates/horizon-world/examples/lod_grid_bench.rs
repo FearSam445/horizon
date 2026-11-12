@@ -7,7 +7,8 @@
 //!
 //! `--approximate` samples as Reduced far detail does.
 use horizon_world::worldgen::generator::{GeneratorData, OverworldGenerator};
-use std::{path::PathBuf, time::Instant};
+use std::path::PathBuf;
+use web_time::Instant;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 

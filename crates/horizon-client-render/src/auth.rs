@@ -3,11 +3,12 @@
 //! online-mode servers need: authlib's MinecraftServicesSessionService.joinServer
 //! through the services discovery document. The access token stays in this
 //! process's memory: it is never logged, printed or written anywhere.
+use std::time::SystemTime;
 use std::{
     path::Path,
     sync::{Arc, Mutex, OnceLock},
-    time::{Duration, SystemTime},
 };
+use web_time::Duration;
 
 /// MinecraftServicesEnvironment.PROD.
 pub const DEFAULT_DISCOVERY: &str = "https://discovery.minecraftservices.com/minecraft/client";
@@ -96,7 +97,7 @@ impl AuthSession {
         let age = meta
             .modified()
             .ok()
-            .and_then(|m| SystemTime::now().duration_since(m).ok())
+            .and_then(|m| horizon_clock::system_now().duration_since(m).ok())
             .unwrap_or_default();
         if age > MAX_SESSION_FILE_AGE {
             return refuse("it is too old (start the game from the launcher)");
@@ -116,7 +117,7 @@ impl AuthSession {
             .and_then(|p| crate::skins::base64_decode(&p.replace('-', "+").replace('_', "/")))
             .and_then(|json| serde_json::from_slice::<serde_json::Value>(&json).ok())
             .and_then(|v| v.get("exp")?.as_u64());
-        let now = SystemTime::now()
+        let now = horizon_clock::system_now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .map_or(0, |d| d.as_secs());
         exp.is_some_and(|exp| exp <= now + 60)
@@ -356,7 +357,7 @@ impl ChatKeyPair {
 
 /// Epoch milliseconds now.
 pub fn now_millis() -> i64 {
-    SystemTime::now()
+    horizon_clock::system_now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as i64)
 }
@@ -459,7 +460,7 @@ const KEY_RETRY: Duration = Duration::from_secs(60 * 60);
 struct ChatKeys {
     current: Option<Arc<ChatKeyPair>>,
     fetching: bool,
-    next_try: Option<std::time::Instant>,
+    next_try: Option<web_time::Instant>,
 }
 static CHAT_KEYS: std::sync::LazyLock<Mutex<std::collections::HashMap<u128, ChatKeys>>> =
     std::sync::LazyLock::new(|| Mutex::new(std::collections::HashMap::new()));
@@ -479,7 +480,7 @@ pub fn prepare_chat_keys_for(session: Arc<AuthSession>, now: bool) {
     let uuid = session.uuid;
     let mut accounts = CHAT_KEYS.lock().unwrap();
     let keys = accounts.entry(uuid).or_default();
-    let instant = std::time::Instant::now();
+    let instant = web_time::Instant::now();
     if keys.fetching || !now && keys.next_try.is_some_and(|t| instant < t) {
         return;
     }
@@ -690,7 +691,7 @@ mod tests {
             let payload = base64url(json.as_bytes());
             AuthSession::new("Ann", UUID, &format!("e30.{payload}.sig"))
         };
-        let now = SystemTime::now()
+        let now = horizon_clock::system_now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
             .as_secs();

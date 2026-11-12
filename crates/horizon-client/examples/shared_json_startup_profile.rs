@@ -5,7 +5,8 @@
 extern crate horizon_client_lib as horizon_client;
 use horizon_client::{assets::Assets, blocks::BlockFacts};
 use horizon_world::level::Behaviours;
-use std::{path::Path, time::Instant};
+use std::path::Path;
+use web_time::Instant;
 
 fn resident_kib() -> Option<u64> {
     let status = std::fs::read_to_string("/proc/self/status").ok()?;

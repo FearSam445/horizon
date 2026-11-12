@@ -7,7 +7,8 @@ use crate::{
     hud::{HudAtlas, HudBatch, rgba},
     lang,
 };
-use std::{cell::Cell, time::Instant};
+use std::cell::Cell;
+use web_time::Instant;
 
 /// `AccessibilityOnboardingScreen.TEXT_WIDGET_WIDTH`.
 const TEXT_WIDTH: f32 = 374.0;
@@ -309,7 +310,7 @@ impl Title {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::time::Duration;
+    use web_time::Duration;
 
     #[test]
     fn the_widgets_sit_where_the_layouts_put_them() {

@@ -160,7 +160,7 @@ fn random_start() -> u64 {
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::{SystemTime, UNIX_EPOCH};
     static THREADS: AtomicU64 = AtomicU64::new(0);
-    let now = SystemTime::now()
+    let now = horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_nanos() as u64);
     now ^ THREADS.fetch_add(1, Ordering::Relaxed).wrapping_mul(GOLDEN)

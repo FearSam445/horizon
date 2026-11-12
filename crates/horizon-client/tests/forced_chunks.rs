@@ -19,12 +19,8 @@ use horizon_client::{
     world::World,
 };
 use horizon_world::registry::BlockStateId;
-use std::{
-    path::Path,
-    sync::Arc,
-    thread,
-    time::{Duration, Instant},
-};
+use std::{path::Path, sync::Arc, thread};
+use web_time::{Duration, Instant};
 
 fn resources() -> Option<std::path::PathBuf> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))

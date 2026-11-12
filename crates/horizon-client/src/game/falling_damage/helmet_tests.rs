@@ -12,7 +12,7 @@ fn falling_impacts_wear_the_helmet_before_normal_armor_and_reduction() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

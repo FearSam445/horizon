@@ -8,7 +8,7 @@ use crate::hud_kit::hint::{self, HintRow};
 use crate::hud_kit::plate::{self, Plate};
 use crate::pad_glyph::{self, Glyph};
 use crate::toasts::Slide;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// What a notice is about: another with the same id takes its place at once, whatever its
 /// priority (a controller reconnecting replaces its disconnect) and without sliding in again.

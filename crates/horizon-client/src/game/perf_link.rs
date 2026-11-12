@@ -12,7 +12,8 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::mpsc::Sender;
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
+use web_time::Instant;
 
 const MARK_SERVER_STARTED: &str = "server_started";
 
@@ -100,7 +101,7 @@ fn part_text() -> String {
 }
 
 fn unix_secs() -> i64 {
-    SystemTime::now()
+    horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_secs() as i64)
 }

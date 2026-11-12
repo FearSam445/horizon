@@ -18,7 +18,7 @@ fn portal_contact_and_waiting_handoff_match_vanilla_counters() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

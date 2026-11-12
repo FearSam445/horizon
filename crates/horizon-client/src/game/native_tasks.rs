@@ -192,7 +192,7 @@ mod tests {
     use super::*;
     use horizon_client::mod_api::{Host, HostTaskExt};
     use std::sync::atomic::{AtomicBool, AtomicI32};
-    use std::time::{Duration, Instant};
+    use web_time::{Duration, Instant};
 
     struct TestHost {
         tasks: NativeTasks,

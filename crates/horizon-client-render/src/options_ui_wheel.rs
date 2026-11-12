@@ -1,7 +1,7 @@
 //! `Options.mouseWheelSensitivity`'s logarithmic slider (`logMouse`/`unlogMouse`)
 //! and the delayed-apply test the slider buttons share.
 use super::*;
-use std::time::Instant;
+use web_time::Instant;
 
 /// `SliderableValueSet.applyValueImmediately`: these apply 600 ms after
 /// the last change (`OptionInstanceSliderButton.delayedApplyAt`).

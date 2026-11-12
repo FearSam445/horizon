@@ -9,7 +9,7 @@ use crate::{
     text::Style,
     ui::{self, Scroll, java_whitespace},
 };
-use std::time::Instant;
+use web_time::Instant;
 use winit::keyboard::KeyCode;
 
 /// `AbstractTextAreaWidget.INNER_PADDING`.

@@ -86,10 +86,10 @@ impl Fixture {
     }
     fn finish_backup(&mut self) {
         self.title.backup_shown.set(true);
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(5);
         while matches!(self.title.mode, Mode::Backup { .. }) {
-            assert!(std::time::Instant::now() < deadline);
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            assert!(web_time::Instant::now() < deadline);
+            std::thread::sleep(web_time::Duration::from_millis(10));
             self.title.poll_backup();
         }
     }
@@ -642,7 +642,7 @@ fn backup_toast_slides_in_and_out_with_its_sounds() {
     let age = |f: &mut Fixture, ms: u64| {
         let (slide, _) = f.title.toast.as_mut().unwrap();
         let origin = slide.origin.as_mut().unwrap();
-        *origin -= std::time::Duration::from_millis(ms);
+        *origin -= web_time::Duration::from_millis(ms);
     };
     // Half way in: (300 / 600)² of its width shows.
     age(&mut f, 300);
@@ -2187,10 +2187,10 @@ fn chunk_version(file: &Path) -> i32 {
 }
 
 fn wait_while_optimizing(f: &mut Fixture) {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    let deadline = web_time::Instant::now() + web_time::Duration::from_secs(10);
     while matches!(f.title.mode, Mode::Optimize { .. }) {
-        assert!(std::time::Instant::now() < deadline);
-        std::thread::sleep(std::time::Duration::from_millis(10));
+        assert!(web_time::Instant::now() < deadline);
+        std::thread::sleep(web_time::Duration::from_millis(10));
         f.title.poll_backup();
     }
 }

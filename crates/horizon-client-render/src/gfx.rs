@@ -13,7 +13,8 @@ use crate::{
     sprites::SpriteAnimation,
 };
 use glam::{DVec3, Mat4, Vec3, Vec4};
-use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Instant};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use web_time::Instant;
 use wgpu::util::DeviceExt;
 use winit::window::Window;
 
@@ -502,10 +503,10 @@ struct SectionGpu {
     /// When it came in over the far terrain it replaces (drawn whole at once,
     /// `fade`): a section new where far tiles are drawn, which skips vanilla's
     /// fade-in. Meshed again, it stays as it was.
-    fading: Option<std::time::Instant>,
+    fading: Option<web_time::Instant>,
     /// When it began to fade out, its column gone over far terrain that
     /// stays behind it (`Renderer::leave_section`); released once it has.
-    leaving: Option<std::time::Instant>,
+    leaving: Option<web_time::Instant>,
     /// Animated sprite layers present in this section.
     animated_layers: Box<[u16]>,
 }
@@ -620,7 +621,7 @@ impl SectionGpu {
             return None;
         }
         let vanilla = f.uploaded.get(&key).filter(|_| f.fade_ms > 0);
-        vanilla.map(|&t| t + std::time::Duration::from_millis(f.fade_ms))
+        vanilla.map(|&t| t + web_time::Duration::from_millis(f.fade_ms))
     }
 }
 /// Which of a mesh's ranges `move_off_page` moves: what it holds in the section
@@ -798,14 +799,14 @@ const COMPACT_BUDGET: u64 = 32 << 20;
 /// `Renderer::remove_columns` filters each store once rather than looking up every
 /// section key from this many keys, or from as many as there are resident sections.
 const BULK_REMOVAL_KEYS: usize = 256;
-const SHRINK_SETTLE: std::time::Duration = std::time::Duration::from_secs(1);
-const SHRINK_RETRY: std::time::Duration = std::time::Duration::from_secs(5);
+const SHRINK_SETTLE: web_time::Duration = web_time::Duration::from_secs(1);
+const SHRINK_RETRY: web_time::Duration = web_time::Duration::from_secs(5);
 /// Not before then may a large translucent page start to shrink.
 #[derive(Default)]
 struct ShrinkGate(Option<Instant>);
 impl ShrinkGate {
     /// Not before `wait` from `now`, nor before an earlier wait is over.
-    fn wait(&mut self, now: Instant, wait: std::time::Duration) {
+    fn wait(&mut self, now: Instant, wait: web_time::Duration) {
         self.0 = self.0.max(Some(now + wait));
     }
     /// Whether one may start now: the waits are over, and `compact_arena` copied
@@ -1066,9 +1067,9 @@ pub struct Renderer {
     /// Time the last `render` spent blocked on the GPU or the display
     /// (acquiring, presenting, offscreen pacing, the submit thread holding the queue),
     /// excluded from CPU time.
-    pub last_wait: std::time::Duration,
+    pub last_wait: web_time::Duration,
     /// CPU time of the last `render`, waits excluded.
-    pub last_encode: std::time::Duration,
+    pub last_encode: web_time::Duration,
     /// Watched only while HDR is On or Auto, including Auto in SDR;
     /// before `window`, so it's dropped first.
     display: Option<DisplayWatch>,
@@ -1317,7 +1318,7 @@ pub struct Renderer {
     /// Removed sections of `lod_cutout` columns, released once tiles cover them.
     lod_retiring: crate::fast_hash::FxHashSet<SectionKey>,
     /// Removed sections fading out over far terrain (`leave_section`).
-    lod_leaving: Vec<(SectionKey, std::time::Instant)>,
+    lod_leaving: Vec<(SectionKey, web_time::Instant)>,
     /// A mod's hold on the terrain's picture (`hold_world`, gfx/hold.rs) and the new meshes
     /// waiting behind it.
     hold: hold::Hold<HeldMesh>,
@@ -1384,13 +1385,13 @@ pub struct Renderer {
     block_entity_membership_revisions: FxHashMap<SectionKey, u64>,
     /// When each section was first uploaded (`RenderSection.uploadedTime`): kept across meshing
     /// it again, gone with its column. Sections that fade in over far terrain are not in it.
-    section_uploaded: FxHashMap<SectionKey, std::time::Instant>,
+    section_uploaded: FxHashMap<SectionKey, web_time::Instant>,
     /// When `section_uploaded` last gained a section: once the fade time has passed since,
     /// every section is whole and frames skip the per-section lookups.
-    newest_upload: Option<std::time::Instant>,
+    newest_upload: Option<web_time::Instant>,
     /// When a section last began to fade in over far terrain (`SectionGpu::fading`), for the
     /// same shortcut.
-    newest_lod_fade: Option<std::time::Instant>,
+    newest_lod_fade: Option<web_time::Instant>,
     /// Changes whenever `block_entities` does (unique across renderers).
     block_entity_revision: u64,
     /// The light sources of each section and their revision, for `block_light`.
@@ -1417,7 +1418,7 @@ pub struct Renderer {
     /// An output that failed to apply, not tried again until something it needs changes.
     output_rejected: Option<output_apply::Rejected>,
     /// Since when Auto keeps HDR on through the display's loss of its report.
-    auto_off_since: Option<std::time::Instant>,
+    auto_off_since: Option<web_time::Instant>,
     /// The output applied (`update_output`), with the frame every pipeline that draws it
     /// targets: the swapchain's 8-bit format, or `Rgba16Unorm` when the renderer was made with
     /// HDR output on and Smooth Gradients and the device draws and blends into it, or
@@ -1445,7 +1446,7 @@ pub struct Renderer {
     /// Times the parts of passes too (`set_pass_detail`).
     pass_detail: bool,
     /// Least time between timed frames (`set_pass_timing_gap`).
-    pass_timing_gap: std::time::Duration,
+    pass_timing_gap: web_time::Duration,
     /// Whether the timers keep every timed frame for `take_timed_frames`.
     keep_timed_frames: bool,
     /// Times Horizon's own passes on the GPU, as `pass_timing` does (`own_pass_times`).
@@ -4839,8 +4840,8 @@ impl Renderer {
             gpu_timer,
             gpu_times: Vec::new(),
             lightmap_pixels: [0; 16 * 16 * 4],
-            last_wait: std::time::Duration::ZERO,
-            last_encode: std::time::Duration::ZERO,
+            last_wait: web_time::Duration::ZERO,
+            last_encode: web_time::Duration::ZERO,
             window,
             ray_scene: surface_setup::ray_query::ray_scene::RayScene::new(&device),
             device,
@@ -5058,7 +5059,7 @@ impl Renderer {
             native: None,
             pass_timing: false,
             pass_detail: false,
-            pass_timing_gap: std::time::Duration::ZERO,
+            pass_timing_gap: web_time::Duration::ZERO,
             keep_timed_frames: false,
             own_timing: None,
             pack_entity_rest: Vec::new(),
@@ -5723,14 +5724,14 @@ impl Renderer {
         let fading = match self.sections.find(key) {
             Some(old) => old.fading,
             None if !self.lods.is_empty() => {
-                let now = std::time::Instant::now();
+                let now = web_time::Instant::now();
                 self.newest_lod_fade = Some(now);
                 Some(now)
             }
             None => None,
         };
         if fading.is_none() && !self.section_uploaded.contains_key(&key) {
-            let now = std::time::Instant::now();
+            let now = web_time::Instant::now();
             self.section_uploaded.insert(key, now);
             self.newest_upload = Some(now);
         }
@@ -6293,7 +6294,7 @@ impl Renderer {
         fade_seconds: f32,
     ) -> impl Iterator<Item = &([i32; 3], u32)> {
         let fade = fade_millis(fade_seconds);
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         let all = !self.sections_fading_in(fade, now);
         self.block_entities
             .iter()
@@ -6305,7 +6306,7 @@ impl Renderer {
     }
     /// Whether a section may still be fading in over `fade_ms` (vanilla's chunk fade): one was
     /// uploaded more recently than that. Otherwise every section is whole.
-    fn sections_fading_in(&self, fade_ms: u64, now: std::time::Instant) -> bool {
+    fn sections_fading_in(&self, fade_ms: u64, now: web_time::Instant) -> bool {
         fade_ms > 0
             && self
                 .newest_upload
@@ -6313,7 +6314,7 @@ impl Renderer {
     }
     /// Whether a section may be fading in or out over far terrain (`SectionGpu::fade`):
     /// otherwise every section's code is 0.
-    fn sections_fading_over_lods(&self, now: std::time::Instant) -> bool {
+    fn sections_fading_over_lods(&self, now: web_time::Instant) -> bool {
         !self.lod_retiring.is_empty()
             || !self.lod_leaving.is_empty()
             || self
@@ -6397,7 +6398,7 @@ impl Renderer {
         self.shadow_visible.iter().any(|v| v.key == key)
     }
     /// Milliseconds since `key` was uploaded; a section not in `section_uploaded` is old.
-    fn section_elapsed_ms(&self, key: SectionKey, now: std::time::Instant) -> u64 {
+    fn section_elapsed_ms(&self, key: SectionKey, now: web_time::Instant) -> u64 {
         self.section_uploaded.get(&key).map_or(u64::MAX, |t| {
             now.saturating_duration_since(*t).as_millis() as u64
         })
@@ -6606,7 +6607,7 @@ impl Renderer {
     /// away at once, the column's detail dropped to the far terrain's in one
     /// frame.
     fn leave_section(&mut self, key: SectionKey) {
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         if let Some(section) = self.sections.find_mut(key)
             && section.leaving.is_none()
         {
@@ -6618,7 +6619,7 @@ impl Renderer {
         }
     }
     /// Releases the sections that have faded out (`leave_section`).
-    fn release_left(&mut self, now: std::time::Instant) {
+    fn release_left(&mut self, now: web_time::Instant) {
         let mut done = Vec::new();
         self.lod_leaving.retain(|&(key, since)| {
             let left = now.saturating_duration_since(since) >= lod::FADE;
@@ -7089,7 +7090,7 @@ impl Renderer {
         self.device
             .poll(wgpu::PollType::Wait {
                 submission_index: None,
-                timeout: Some(std::time::Duration::from_secs(30)),
+                timeout: Some(web_time::Duration::from_secs(30)),
             })
             .map_err(|e| format!("the frame didn't finish on the GPU: {e}"))?;
         if self.device_lost() {
@@ -7109,7 +7110,7 @@ impl Renderer {
         pack: horizon_shaders::Post,
         block_ids: Vec<i32>,
         label: String,
-        started: std::time::Instant,
+        started: web_time::Instant,
     ) {
         let device = self.device.clone();
         let queue = self.queue.clone();
@@ -7213,7 +7214,7 @@ impl Renderer {
     ) -> Option<(
         i32,
         String,
-        std::time::Instant,
+        web_time::Instant,
         std::result::Result<Option<(Vec<String>, Vec<String>)>, pack_post::Refused>,
     )> {
         if !self.pack_loading.as_ref()?.thread.is_finished() {
@@ -8497,7 +8498,7 @@ impl Renderer {
             !gpu_frame || self.occlusion.generation() == graph_given,
             "the walk reads the graph GPU culling was given"
         );
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         let mut visible_lods = std::mem::take(&mut self.visible_lods);
         visible_lods.clear();
         if frame.title {
@@ -12426,7 +12427,7 @@ impl Renderer {
             let index = self.in_flight.pop_front();
             let _ = self.device.poll(wgpu::PollType::Wait {
                 submission_index: index,
-                timeout: Some(std::time::Duration::from_secs(5)),
+                timeout: Some(web_time::Duration::from_secs(5)),
             });
         }
     }
@@ -13007,7 +13008,7 @@ mod tests {
     #[test]
     fn shrinking_starts_once_terrain_has_settled() {
         use super::{COMPACT_BUDGET, SHRINK_RETRY, SHRINK_SETTLE, ShrinkGate};
-        use std::time::{Duration, Instant};
+        use web_time::{Duration, Instant};
         let (now, ms) = (Instant::now(), Duration::from_millis(1));
         let mut gate = ShrinkGate::default();
         assert!(gate.may_start(now, COMPACT_BUDGET));
@@ -13891,7 +13892,7 @@ mod tests {
     fn section(
         solid: u32,
         translucent: u32,
-        fading: Option<std::time::Instant>,
+        fading: Option<web_time::Instant>,
     ) -> super::SectionGpu {
         super::SectionGpu {
             page: 0,
@@ -13922,7 +13923,7 @@ mod tests {
     fn a_fade_ends_by_its_deadline_and_never_comes_back() {
         use super::FadeInputs;
         use crate::fast_hash::{FxHashMap, FxHashSet};
-        use std::time::{Duration, Instant};
+        use web_time::{Duration, Instant};
         let ms = Duration::from_millis;
         // The steps start at `zero`; what began `t` ms before it began off the steps.
         let zero = Instant::now() + Duration::from_secs(3);
@@ -13988,7 +13989,7 @@ mod tests {
             hold_fading, mark_fades,
         };
         use crate::fast_hash::{FxHashMap, FxHashSet};
-        use std::time::{Duration, Instant};
+        use web_time::{Duration, Instant};
         /// The level's sections: those at y -1 and 14 have no record.
         const ROWS: usize = 14;
         const FRAME: Duration = Duration::from_millis(16);
@@ -14699,7 +14700,7 @@ struct DisplayWatch {
     wayland: Option<horizon_hdr::wayland::Watch>,
     /// Without Wayland's event, when to read wgpu's values again: the OS sends no event for
     /// a moved window or a changed SDR brightness slider.
-    polled: Option<std::time::Instant>,
+    polled: Option<web_time::Instant>,
 }
 
 impl DisplayReading {
@@ -14728,7 +14729,7 @@ fn macos_hdr(info: &wgpu::DisplayHdrInfo) -> Option<bool> {
         .map(|n| n > 1.0)
 }
 /// How often [`DisplayWatch`] reads the OS's values again where no event says they changed.
-const DISPLAY_POLL: std::time::Duration = std::time::Duration::from_secs(2);
+const DISPLAY_POLL: web_time::Duration = web_time::Duration::from_secs(2);
 impl DisplayWatch {
     /// Starts watching, with what the system reports now.
     fn new(
@@ -14752,7 +14753,7 @@ impl DisplayWatch {
         let watch = Self {
             #[cfg(target_os = "linux")]
             wayland: None,
-            polled: Some(std::time::Instant::now() + DISPLAY_POLL),
+            polled: Some(web_time::Instant::now() + DISPLAY_POLL),
         };
         (watch, now)
     }
@@ -14761,7 +14762,7 @@ impl DisplayWatch {
     fn poll(
         &mut self,
         last: DisplayReading,
-        time: std::time::Instant,
+        time: web_time::Instant,
         read: impl FnOnce() -> DisplayReading,
     ) -> Option<DisplayReading> {
         #[cfg(target_os = "linux")]
@@ -14788,17 +14789,17 @@ impl DisplayWatch {
 /// held that long, and only the one they settled on is logged.
 struct DisplayLog {
     last: String,
-    at: Option<std::time::Instant>,
-    pending: Option<(String, std::time::Instant)>,
+    at: Option<web_time::Instant>,
+    pending: Option<(String, web_time::Instant)>,
 }
 static DISPLAY_LOG: std::sync::Mutex<DisplayLog> = std::sync::Mutex::new(DisplayLog {
     last: String::new(),
     at: None,
     pending: None,
 });
-const DISPLAY_LOG_QUIET: std::time::Duration = std::time::Duration::from_secs(1);
+const DISPLAY_LOG_QUIET: web_time::Duration = web_time::Duration::from_secs(1);
 fn log_display(line: String) {
-    let now = std::time::Instant::now();
+    let now = web_time::Instant::now();
     let mut log = DISPLAY_LOG
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -14814,7 +14815,7 @@ fn log_display(line: String) {
 /// Logs a change [`log_display`] held back, once the values have held for
 /// [`DISPLAY_LOG_QUIET`].
 fn flush_display_log() {
-    let now = std::time::Instant::now();
+    let now = web_time::Instant::now();
     let mut log = DISPLAY_LOG
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -15219,7 +15220,7 @@ struct PackLoading {
         std::result::Result<std::result::Result<pack_post::PackPost, pack_post::Refused>, String>,
     >,
     label: String,
-    started: std::time::Instant,
+    started: web_time::Instant,
 }
 
 /// Sets its flag when dropped: `PackLoading`'s cancel, which `PackPost::new` checks per program.

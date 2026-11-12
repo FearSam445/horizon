@@ -23,7 +23,7 @@ use std::{
 
 /// How long a worker waits with nothing to do before it gives back its
 /// generator's scratch buffers ([`ChunkGenerator::idle`]).
-pub const IDLE_RELEASE: std::time::Duration = std::time::Duration::from_secs(5);
+pub const IDLE_RELEASE: web_time::Duration = web_time::Duration::from_secs(5);
 
 /// Worker CPU time and job counts by kind, for benchmarks
 /// (`examples/gen_light_bench.rs`). Off unless enabled: a relaxed load per
@@ -410,7 +410,7 @@ impl Mailbox {
     fn try_recv(&self) -> Option<Done> {
         self.try_lock()?.pop_front()
     }
-    fn recv_timeout(&self, timeout: std::time::Duration) -> Option<Done> {
+    fn recv_timeout(&self, timeout: web_time::Duration) -> Option<Done> {
         let done = self.done.lock().unwrap();
         let (mut done, _) = self
             .arrived
@@ -867,7 +867,7 @@ impl<G: ChunkGenerator> Source for Jobs<G> {
             // The other jobs (saves, light views, freed meshes) are many and short: counted, not
             // timed, so the clock reads don't cost more than they do.
             let cpu = if kind == 6 {
-                std::time::Duration::ZERO
+                web_time::Duration::ZERO
             } else {
                 crate::spans::thread_cpu().unwrap_or_default()
             };
@@ -2319,7 +2319,7 @@ impl Streaming {
             self.save_checked_out(written);
             return;
         }
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(30);
         let aborted = self
             .shared
             .aborted
@@ -2328,7 +2328,7 @@ impl Streaming {
             || (!aborted
                 && (self.decorating > 0 || !self.finishing.is_empty() || !self.viewing.is_empty()))
         {
-            let left = deadline.saturating_duration_since(std::time::Instant::now());
+            let left = deadline.saturating_duration_since(web_time::Instant::now());
             match self.shared.done.recv_timeout(left) {
                 Some(Done::Decorated(x, z, region, finals, writes)) => {
                     self.receive_decorated(x, z, *region, finals, writes, world)
@@ -2360,7 +2360,7 @@ impl Streaming {
     /// Proto snapshots are checked out to workers before chunk writes, just as
     /// in `save(true)`, so older generation cannot overwrite the final chunks.
     pub fn poll_save(&mut self, world: &mut World) -> bool {
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         while let Some(done) = self.shared.done.try_recv() {
             match done {
                 Done::Decorated(x, z, region, finals, writes) => {
@@ -2371,7 +2371,7 @@ impl Streaming {
                 Done::LightView(x, z, proto, view) => self.receive_light_view(x, z, proto, view),
                 other => self.deferred.push(other),
             }
-            if started.elapsed() >= std::time::Duration::from_millis(2) {
+            if started.elapsed() >= web_time::Duration::from_millis(2) {
                 return false;
             }
         }
@@ -2469,7 +2469,7 @@ impl Streaming {
     }
     /// Wait up to `timeout` for a worker to finish a job; the next `update`
     /// takes it. A server pumps generation with this between its ticks.
-    pub fn wait(&mut self, timeout: std::time::Duration) {
+    pub fn wait(&mut self, timeout: web_time::Duration) {
         if let Some(done) = self.shared.done.recv_timeout(timeout) {
             self.deferred.push(done);
         }
@@ -2486,7 +2486,7 @@ pub fn in_view_distance(center: (i32, i32), radius: i32, x: i32, z: i32) -> bool
 }
 /// How long a view's columns are waited for (`ViewArrival`): a server may never
 /// fill it.
-const VIEW_WAIT: std::time::Duration = std::time::Duration::from_secs(30);
+const VIEW_WAIT: web_time::Duration = web_time::Duration::from_secs(30);
 /// Whether the columns of a view (centre, radius) have all arrived, as a client
 /// sees them come: a server forgets the old view's columns, then sends the new
 /// ones nearest first, so the view's outermost ones come last. Single player
@@ -2495,7 +2495,7 @@ const VIEW_WAIT: std::time::Duration = std::time::Duration::from_secs(30);
 #[derive(Default)]
 pub struct ViewArrival {
     view: ((i32, i32), i32),
-    since: Option<std::time::Instant>,
+    since: Option<web_time::Instant>,
     arrived: bool,
 }
 impl ViewArrival {
@@ -2506,7 +2506,7 @@ impl ViewArrival {
     pub fn arriving(
         &mut self,
         view: ((i32, i32), i32),
-        now: std::time::Instant,
+        now: web_time::Instant,
         has: impl Fn((i32, i32)) -> bool,
     ) -> bool {
         if self.since.is_none() || view != self.view {
@@ -2532,7 +2532,7 @@ impl ViewArrival {
     }
     /// Whether the view `arriving` was last given changed less than `VIEW_WAIT`
     /// ago: until then sections meshed are its terrain coming in, later an edit's.
-    pub fn recent(&self, now: std::time::Instant) -> bool {
+    pub fn recent(&self, now: web_time::Instant) -> bool {
         self.since
             .is_some_and(|since| now.saturating_duration_since(since) < VIEW_WAIT)
     }
@@ -2932,9 +2932,9 @@ impl Drop for Streaming {
     fn drop(&mut self) {
         self.abort_generation();
         // Saves in flight hold proto chunks nothing else would save.
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(30);
         while self.saving > 0 {
-            let left = deadline.saturating_duration_since(std::time::Instant::now());
+            let left = deadline.saturating_duration_since(web_time::Instant::now());
             match self.shared.done.recv_timeout(left) {
                 Some(Done::Saved(_)) => self.saving -= 1,
                 Some(_) => {}
@@ -3379,13 +3379,13 @@ mod tests {
             .collect();
         assert_eq!(seqs, [1, 2]);
         assert!(mailbox.take().is_empty());
-        let waiting = std::time::Instant::now();
+        let waiting = web_time::Instant::now();
         assert!(
             mailbox
-                .recv_timeout(std::time::Duration::from_millis(10))
+                .recv_timeout(web_time::Duration::from_millis(10))
                 .is_none()
         );
-        assert!(waiting.elapsed() >= std::time::Duration::from_millis(10));
+        assert!(waiting.elapsed() >= web_time::Duration::from_millis(10));
     }
 
     /// Whether the forgotten columns are few (looked up by key) or many
@@ -3631,7 +3631,7 @@ mod tests {
     /// `VIEW_WAIT` at most, and one of no radius not at all.
     #[test]
     fn a_view_has_arrived_once_its_outermost_columns_are_in() {
-        let start = std::time::Instant::now();
+        let start = web_time::Instant::now();
         let center = (3, -4);
         for r in 0..=16 {
             let view: FxHashSet<(i32, i32)> = (-r - 1..=r + 1)
@@ -3656,7 +3656,7 @@ mod tests {
         assert!(!arrival.arriving(((0, 0), 2), start, all));
         assert!(!arrival.arriving(((0, 0), 2), start, none));
         // Moved: waited for again, until `VIEW_WAIT` after the move.
-        let (late, ms) = (start + VIEW_WAIT, std::time::Duration::from_millis(1));
+        let (late, ms) = (start + VIEW_WAIT, web_time::Duration::from_millis(1));
         assert!(arrival.arriving(((1, 0), 2), start, none));
         assert!(arrival.arriving(((1, 0), 2), late - ms, none));
         assert!(arrival.recent(late - ms) && !arrival.recent(late));
@@ -3992,7 +3992,8 @@ mod tests {
     #[test]
     #[ignore = "reproducible actual generation scheduler benchmark; run with --ignored --nocapture"]
     fn generation_scan_benchmark() {
-        use std::{hint::black_box, time::Instant};
+        use std::hint::black_box;
+        use web_time::Instant;
         let mut f = GenerationFixture::new(32, true);
         f.fill_steady();
         let mut gate = GenerationScan::default();
@@ -4536,7 +4537,7 @@ mod cover_tests {
                 .collect();
             let rounds = 100;
             let time = |r: &Ranges| {
-                let t = std::time::Instant::now();
+                let t = web_time::Instant::now();
                 let mut n = 0usize;
                 for _ in 0..rounds {
                     for &(x, z) in &columns {
@@ -4548,7 +4549,7 @@ mod cover_tests {
                 std::hint::black_box(n);
                 t.elapsed().as_secs_f64() * 1e3 / f64::from(rounds)
             };
-            let t = std::time::Instant::now();
+            let t = web_time::Instant::now();
             for _ in 0..rounds {
                 std::hint::black_box(ExtraCover::new(std::hint::black_box(&extra)));
             }

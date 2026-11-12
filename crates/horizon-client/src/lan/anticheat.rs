@@ -9,7 +9,8 @@ use crate::collisions::SceneCollisions;
 use horizon_anticheat::{Check, Config, Strikes};
 use horizon_core::geometry::{Aabb, Vec3};
 use horizon_world::nbt::{JavaString, Tag};
-use std::{io::Write, time::Instant};
+use std::io::Write;
+use web_time::Instant;
 
 pub struct Anticheat {
     pub config: Config,
@@ -639,7 +640,7 @@ mod tests {
         let out = std::sync::Arc::clone(&written);
         let thread = std::thread::spawn(move || {
             for line in lines {
-                std::thread::sleep(std::time::Duration::from_millis(20));
+                std::thread::sleep(web_time::Duration::from_millis(20));
                 out.lock().unwrap().push(line);
             }
         });

@@ -138,7 +138,7 @@ impl Game<'_> {
             &mut self.last_inv_click,
             slot,
             right,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
         );
         let shift = self.has_shift_down();
         let target = Target::of(slot, outside);

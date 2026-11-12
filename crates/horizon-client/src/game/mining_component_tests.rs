@@ -13,7 +13,7 @@ fn mining_uses_admitted_stack_tools_and_actual_eye_immersion() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -36,7 +36,7 @@ fn mining_uses_admitted_stack_tools_and_actual_eye_immersion() {
     let scratch = std::env::temp_dir().join(format!(
         "horizon-stack-mining-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()
@@ -149,7 +149,7 @@ fn with_survival_game(f: impl FnOnce(&mut Game<'_>)) {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

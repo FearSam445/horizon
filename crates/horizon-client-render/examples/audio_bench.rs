@@ -4,7 +4,8 @@ use horizon_client_render::{
     audio::Audio,
     sound_engine::{MobSound, SoundInstance, Sounds, TickContext},
 };
-use std::{path::Path, time::Instant};
+use std::path::Path;
+use web_time::Instant;
 
 fn main() {
     println!("=== Horizon Audio Attenuation & Mixing Benchmark ===");

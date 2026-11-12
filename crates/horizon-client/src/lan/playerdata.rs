@@ -1054,7 +1054,7 @@ mod tests {
         };
         store(&holding(old, "minecraft:diamond", 5), &mut level, None);
         level.write(&dir).unwrap();
-        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::thread::sleep(web_time::Duration::from_millis(20));
         save(&holding(new, "minecraft:emerald", 9), &dir);
 
         let mut read = Level::read(&dir).unwrap();

@@ -8,7 +8,7 @@
 //! Bricolage Grotesque are in [`night`]. Colours are `0xRRGGBB`; sizes
 //! are in logical pixels.
 use std::fmt::Write as _;
-use std::time::Duration;
+use web_time::Duration;
 
 pub const FONT: &str = "Geist";
 pub const MONO: &str = "Geist Mono";

@@ -11,7 +11,7 @@ use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// Timestamp pairs per frame at most: a pass, a part or an encoder span takes one.
 const CAPACITY: u32 = 128;

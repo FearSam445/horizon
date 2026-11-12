@@ -14,7 +14,7 @@
 use crate::Pose;
 use crate::preview::Camera;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// The game's ticks, which item animations count in.
 pub const TICKS_PER_SECOND: f32 = 20.0;

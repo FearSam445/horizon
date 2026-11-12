@@ -7,7 +7,7 @@
 //! handler (stuck in the kernel, or deadlocked inside the handler) leaves the asker without an
 //! answer once its wait is over.
 
-use std::time::Duration;
+use web_time::Duration;
 
 /// A thread whose stack another thread can read ([`Watched::stack`]).
 #[derive(Clone, Copy, Debug)]
@@ -98,8 +98,8 @@ mod imp {
             Mutex, OnceLock,
             atomic::{AtomicPtr, Ordering},
         },
-        time::{Duration, Instant},
     };
+    use web_time::{Duration, Instant};
 
     /// Ignored when no handler is installed, and used by nothing else here (Go's runtime takes it
     /// for the same reason): a stray one does nothing.

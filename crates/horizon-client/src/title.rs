@@ -414,7 +414,7 @@ pub struct Title {
     pub saves: PathBuf,
     /// The prepared resource root: the flat preset list and block registry.
     resources: PathBuf,
-    pub started: std::time::Instant,
+    pub started: web_time::Instant,
     search: String,
     search_focused: bool,
     /// The focused text field's cursor, selection and scroll.
@@ -461,7 +461,7 @@ pub struct Title {
     /// `SplashManager.getSplash` rolled the player's own name instead of a list entry.
     splash_you: bool,
     /// The saves listed for Home, re-read every couple of seconds.
-    recent: std::cell::RefCell<Option<(std::time::Instant, Vec<WorldEntry>)>>,
+    recent: std::cell::RefCell<Option<(web_time::Instant, Vec<WorldEntry>)>>,
     /// WorldCreationGameRulesScreen, over Create New World while it is open.
     rules: RefCell<Option<RulesScreen>>,
     /// The onboarding screen has run out: the owner saves `onboardAccessibility` as false.
@@ -577,7 +577,7 @@ pub fn list_worlds(saves: &Path) -> Vec<WorldEntry> {
             };
             let data = root.get("Data")?;
             let modified = match data.get("LastPlayed") {
-                Some(horizon_world::nbt::Tag::Long(millis)) if *millis >= 0 => std::time::UNIX_EPOCH + std::time::Duration::from_millis(*millis as u64),
+                Some(horizon_world::nbt::Tag::Long(millis)) if *millis >= 0 => std::time::UNIX_EPOCH + web_time::Duration::from_millis(*millis as u64),
                 _ => modified,
             };
             Some(WorldEntry {
@@ -813,7 +813,7 @@ impl Title {
             .filter(|&size| size > 0)
             .map_or(0, |size| random.next_int_bound(size).unwrap_or(0) as usize);
         let mode = Mode::Main;
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         Self {
             mode,
             last_server: String::new(),
@@ -1301,7 +1301,7 @@ impl Title {
     /// Polling is done once per rendered frame so filesystem work never blocks drawing.
     pub fn poll_backup(&mut self) {
         self.poll_realms();
-        self.poll_onboarding(std::time::Instant::now());
+        self.poll_onboarding(web_time::Instant::now());
         self.poll_account();
         self.poll_optimize();
         if !self.backup_shown.get() {
@@ -1409,7 +1409,7 @@ impl Title {
             .into_iter()
             .find(|w| w.folder == folder)
             .unwrap_or_else(|| {
-                WorldEntry::corrupted(folder.to_owned(), std::time::SystemTime::now())
+                WorldEntry::corrupted(folder.to_owned(), horizon_clock::system_now())
             });
         let issues = [Some(issue), crate::save::level_dat_issue(&dir, true)];
         self.mode = Mode::Recover { world, issues };
@@ -1760,7 +1760,7 @@ impl Title {
             Some((at, worlds)) if at.elapsed().as_secs() < 2 => worlds.clone(),
             _ => {
                 let worlds = list_worlds(&self.saves);
-                *recent = Some((std::time::Instant::now(), worlds.clone()));
+                *recent = Some((web_time::Instant::now(), worlds.clone()));
                 worlds
             }
         }
@@ -1812,7 +1812,7 @@ impl Title {
             .collect();
         // `WorldOptions.randomSeed` when no seed was entered.
         let seed = parse_seed(&seed).unwrap_or_else(|| {
-            let t = std::time::SystemTime::now()
+            let t = horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_or(0, |d| d.as_nanos() as u64);
             (t ^ (t >> 29)).wrapping_mul(0x9E37_79B9_7F4A_7C15) as i64

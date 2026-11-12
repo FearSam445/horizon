@@ -1,6 +1,6 @@
 //! How far through vanilla's chunk fade-in a section is, and the instance that carries it to `terrain.wgsl`.
 use crate::fast_hash::FxHashMap;
-use std::time::Instant;
+use web_time::Instant;
 
 /// A section's instance: its camera-relative origin and its UV step, negated
 /// past its fade code while it fades in over far terrain (`lod::instance`).

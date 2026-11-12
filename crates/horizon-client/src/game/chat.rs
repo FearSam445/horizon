@@ -244,7 +244,7 @@ pub struct UiState {
     /// `ChatScreen.isDraft`: the box opened with the draft and is unchanged since.
     pub chat_draft_shown: bool,
     /// When the chat screen opened (its input took the focus: the cursor blink).
-    pub chat_opened: Option<std::time::Instant>,
+    pub chat_opened: Option<web_time::Instant>,
     /// The chat screen is `InBedChatScreen`: the sleeper's, with a Leave Bed button.
     pub in_bed_chat: bool,
     pub registries: Registries,
@@ -275,10 +275,10 @@ pub struct UiState {
     pub vanilla_root: std::path::PathBuf,
     /// Death screen cause and when the player died (buttons wait 20 ticks).
     pub death_text: Option<Text>,
-    pub died_at: Option<std::time::Instant>,
+    pub died_at: Option<web_time::Instant>,
     /// `DeathScreen.TitleConfirmScreen` and when it opened (its buttons wait
     /// 20 ticks, `setDelay`).
-    pub death_confirm: Option<std::time::Instant>,
+    pub death_confirm: Option<web_time::Instant>,
     /// `LivingEntity.deathTime` of the window's player: ticks since it died.
     pub death_time: u32,
 }
@@ -1049,7 +1049,7 @@ impl Game<'_> {
         );
         screen.auto_suggestions = self.settings.auto_suggestions;
         self.ui.chat_screen = Some(screen);
-        self.ui.chat_opened = Some(std::time::Instant::now());
+        self.ui.chat_opened = Some(web_time::Instant::now());
         self.screen = Screen::Chat;
         self.keys.clear();
         self.left = false;
@@ -2584,7 +2584,7 @@ mod enchantment_snapshot_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -2717,7 +2717,7 @@ mod damage_type_registry_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),

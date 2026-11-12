@@ -145,7 +145,7 @@ impl Loading {
                             fonts.mono,
                             &horizon_client::logging::recent_lines(),
                         );
-                        std::thread::sleep(std::time::Duration::from_millis(300));
+                        std::thread::sleep(web_time::Duration::from_millis(300));
                     }
                 });
                 stop

@@ -9,8 +9,8 @@ use horizon_client::{fast_hash::FxHashMap, mobs::MobType};
 use std::{
     cell::{Cell, RefCell},
     sync::atomic::{AtomicU8, Ordering},
-    time::Instant,
 };
+use web_time::Instant;
 
 /// One server tick in this many is sampled while a report records.
 pub(super) const SAMPLE_EVERY: usize = 4;
@@ -186,7 +186,7 @@ mod tests {
         set_sampling(true);
         for _ in 0..3 {
             let t = start().expect("sampled");
-            std::thread::sleep(std::time::Duration::from_millis(1));
+            std::thread::sleep(web_time::Duration::from_millis(1));
             add("minecraft:overworld", zombie, t);
         }
         add("minecraft:overworld", cow, Instant::now());

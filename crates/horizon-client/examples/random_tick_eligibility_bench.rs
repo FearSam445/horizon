@@ -8,7 +8,8 @@ use horizon_client::{
     random_tick_sections::RandomTickSections,
 };
 use horizon_world::registry::BlockStateId;
-use std::{hint::black_box, path::Path, sync::Arc, time::Instant};
+use std::{hint::black_box, path::Path, sync::Arc};
+use web_time::Instant;
 
 fn select_baseline(chunks: &FxHashMap<(i32, i32), Arc<Chunk>>, facts: &BlockFacts) -> usize {
     let mut ticking = Vec::new();

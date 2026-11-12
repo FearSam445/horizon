@@ -19,9 +19,10 @@ wayland-backend = { version = "0.3.10", default-features = false, features = ["c
 wayland-client = { version = "0.31.10", default-features = false }
 wayland-protocols = { version = "0.32.8", default-features = false, features = ["client", "staging"] }
 
-# The browser build draws through WebGL2: the widest support and the least memory.
+# The browser build draws through WebGL2: the widest support and the least memory. It has one
+# thread, so wgpu's objects can be shared as on the desktop (fragile-send-sync-non-atomic-wasm).
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wgpu = { version = "30.0.1", default-features = false, features = ["webgl", "wgsl"] }
+wgpu = { version = "30.0.1", default-features = false, features = ["webgl", "wgsl", "fragile-send-sync-non-atomic-wasm"] }
 
 [lints]
 workspace = true

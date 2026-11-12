@@ -7,6 +7,10 @@ rust-version.workspace = true
 description = "OptiFine-format resource pack files: .properties, the name, range, biome and block matchers, paths and the optifine/ folders; CEM entity models and connected-texture rules, and the Fusion mod's connected-texture format"
 
 [dependencies]
+# SystemTime::now, also in the browser build (web/).
+horizon-clock = { path = "../../web/clock" }
+# std::time, with a clock in the browser build (web/).
+web-time = "1.1"
 horizon-core = { path = "../horizon-core" }
 log = "0.4"
 regex = { version = "1", default-features = false, features = ["std", "unicode-perl", "unicode-case"] }

@@ -33,7 +33,7 @@ fn game(players: usize, fake: bool) -> (Game<'static>, mpsc::Receiver<horizon_cl
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -146,7 +146,7 @@ fn fake_player_tick() {
         rx.try_iter().for_each(drop);
     }
     let mut sent = 0usize;
-    let start = std::time::Instant::now();
+    let start = web_time::Instant::now();
     for _ in 0..ticks {
         game.tick_lan(false);
         sent += rx.try_iter().count();

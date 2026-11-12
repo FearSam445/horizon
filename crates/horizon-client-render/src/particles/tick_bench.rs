@@ -10,7 +10,7 @@
 use super::*;
 use crate::{blocks::BlockFacts, chunk::Chunk, collisions, world::World};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 const FLOOR_Y: i32 = 289;
 

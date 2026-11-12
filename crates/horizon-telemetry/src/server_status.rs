@@ -8,7 +8,7 @@
 //! takes the current one from `launcher/links.json`.
 use std::io::{Read, Write};
 use std::net::{TcpStream, ToSocketAddrs};
-use std::time::Duration;
+use web_time::Duration;
 
 /// Horizon's official survival server (SMP), from `horizon_addresses`. The launcher's server list
 /// offers the same entry (`launcher/src/server_list.rs`) until links.json names another; the

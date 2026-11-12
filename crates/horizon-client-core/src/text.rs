@@ -830,13 +830,13 @@ mod tests {
         );
         // 20 000 siblings, as a server's chat may carry: 76 s before, as each append cloned the
         // whole tree.
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let mut long = Text::default();
         for _ in 0..20_000 {
             long.push(Text::literal("a"));
         }
         assert_eq!(long.spans.len(), 20_000);
-        assert!(started.elapsed() < std::time::Duration::from_secs(5));
+        assert!(started.elapsed() < web_time::Duration::from_secs(5));
     }
     #[test]
     fn click_events_serialize_and_inherit_as_one_style_field() {

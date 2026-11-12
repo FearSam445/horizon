@@ -22,8 +22,8 @@ use horizon_world::level::BlockId;
 use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// The longest window a report records.
 pub(super) const MAX_SECONDS: u32 = 600;

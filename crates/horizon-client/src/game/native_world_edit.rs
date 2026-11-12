@@ -87,7 +87,7 @@ impl Game<'_> {
         if !self.native_level_open(dimension) {
             return Err(format!("{dimension} is not the level being ticked"));
         }
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let changed = self.edit_blocks(edit)?;
         let ms = started.elapsed().as_secs_f32() * 1000.0;
         if self.options.spikes.is_some_and(|threshold| ms > threshold) {

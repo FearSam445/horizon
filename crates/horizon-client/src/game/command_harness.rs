@@ -14,10 +14,8 @@
 use super::Game;
 use horizon_client::{Result, text::Text};
 use serde_json::{Value, json};
-use std::{
-    path::Path,
-    time::{Duration, Instant},
-};
+use std::path::Path;
+use web_time::{Duration, Instant};
 
 /// A message as `[text, style]` runs with adjacent equal styles merged; the
 /// style lists colour, bold, italic, underlined, strikethrough, obfuscated

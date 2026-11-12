@@ -7,6 +7,10 @@ rust-version.workspace = true
 description = "The client's input layer: key bindings and their names, mouse, controllers, clipboard and window options"
 
 [dependencies]
+# SystemTime::now, also in the browser build (web/).
+horizon-clock = { path = "../../web/clock" }
+# std::time, with a clock in the browser build (web/).
+web-time = "1.1"
 horizon-client-core = { path = "../horizon-client-core" }
 winit = "0.30.13"
 png = "0.18"

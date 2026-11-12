@@ -265,7 +265,7 @@ impl WorldWarps {
     }
 
     fn build(&mut self, device: &wgpu::Device, source: &str) -> Result<Pipelines, String> {
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let terrain = terrain_shader(source)?;
         let entity = entity_shader(source)?;
         validate(&terrain)?;

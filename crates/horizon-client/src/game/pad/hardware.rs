@@ -8,7 +8,7 @@ use super::{
 use horizon_client::controller_ui::Device;
 use horizon_client::gamepad::{self, Button, GlyphStyle, PadState, Rumble, TriggerFeel};
 use serde_json::{Value, json};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 mod face_buttons;
 mod hid_layout;

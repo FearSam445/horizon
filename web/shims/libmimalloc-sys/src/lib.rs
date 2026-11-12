@@ -1,6 +1,10 @@
 //! The calls `horizon-threads` makes into mimalloc, as no-ops for the browser
 //! build: there is no OS to give pages back to and no allocator statistics.
-#![allow(non_camel_case_types, clippy::missing_safety_doc, clippy::too_many_arguments)]
+#![allow(
+    non_camel_case_types,
+    clippy::missing_safety_doc,
+    clippy::too_many_arguments
+)]
 
 use std::ffi::{c_char, c_long, c_void};
 

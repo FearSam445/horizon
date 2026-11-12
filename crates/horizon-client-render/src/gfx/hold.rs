@@ -13,7 +13,7 @@
 //! that ended by itself (spent) stays ended until no mod has asked for a frame.
 use super::SectionKey;
 use crate::fast_hash::{FxHashMap, FxHashSet};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// The longest a hold lasts.
 pub(super) const MAX_HOLD: Duration = Duration::from_secs(30);

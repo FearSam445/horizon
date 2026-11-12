@@ -10,8 +10,8 @@ use super::{
 use std::{
     io,
     path::{Path, PathBuf},
-    time::Duration,
 };
+use web_time::Duration;
 
 /// Playback controller driving recorded packets according to a virtual timeline.
 pub struct ReplayDriver {

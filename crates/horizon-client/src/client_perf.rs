@@ -15,7 +15,7 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 pub mod request;
 

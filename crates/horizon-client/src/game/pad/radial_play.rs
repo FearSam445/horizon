@@ -9,7 +9,7 @@ use horizon_client::text::Text;
 use horizon_client_input::radial::{self, RadialAction, Slot};
 use horizon_client_render::radial_overlay::{self, Dial, Seen, Toggles, View};
 use serde_json::{Value, json};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// The D-pad's buttons, which settle after the menu closes on a D-pad opener.
 const DPAD: [Button; 4] = [

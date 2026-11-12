@@ -16,7 +16,7 @@ use horizon_client::{
     minimap::{self, Layer, Minimap, View},
     reconnect::Tracker,
 };
-use std::time::Duration;
+use web_time::Duration;
 use winit::event::MouseButton;
 
 #[derive(Default)]

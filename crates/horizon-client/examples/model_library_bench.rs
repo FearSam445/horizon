@@ -9,8 +9,8 @@ use std::{
     hash::{Hash, Hasher},
     path::Path,
     sync::atomic::{AtomicUsize, Ordering::Relaxed},
-    time::Instant,
 };
+use web_time::Instant;
 
 struct CountingAllocator;
 const TRACK: bool = option_env!("HORIZON_BENCH_COUNT_ALLOCATIONS").is_some();

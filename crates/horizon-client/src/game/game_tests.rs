@@ -29,7 +29,7 @@ use horizon_world::{
     level::flags,
     worldgen::structure::{BoundingBox, Mirror, Rotation, StructureTemplate},
 };
-use std::time::Instant;
+use web_time::Instant;
 
 type Pos = (i32, i32, i32);
 
@@ -947,10 +947,10 @@ impl Game<'_> {
             return;
         }
         self.force_load_test_chunks(area);
-        let deadline = Instant::now() + std::time::Duration::from_secs(120);
+        let deadline = Instant::now() + web_time::Duration::from_secs(120);
         while missing(self) && Instant::now() < deadline {
             let _ = self.streaming.update(&mut self.world);
-            self.streaming.wait(std::time::Duration::from_millis(5));
+            self.streaming.wait(web_time::Duration::from_millis(5));
         }
     }
 

@@ -9,10 +9,8 @@
 use super::{ServerState, capture_log};
 use crate::game::Game;
 use serde_json::{Value, json};
-use std::{
-    sync::atomic::Ordering,
-    time::{Duration, Instant},
-};
+use std::sync::atomic::Ordering;
+use web_time::{Duration, Instant};
 
 /// The window the tick rate is measured over.
 const TPS_WINDOW: Duration = Duration::from_secs(5);

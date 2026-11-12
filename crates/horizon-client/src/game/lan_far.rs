@@ -43,7 +43,7 @@ impl Game<'_> {
         }
         let dim = Dim::from_id(&guest.dimension);
         let source = self.lod_source_in(dim);
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         match far.request(conn, data, guest.position, source.is_some(), now) {
             Verdict::Serve(request) => far.push(Job {
                 conn,

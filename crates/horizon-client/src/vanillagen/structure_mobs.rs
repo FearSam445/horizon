@@ -579,7 +579,7 @@ mod tests {
     #[test]
     fn fill_behind_is_awaited_not_repeated() {
         use std::sync::{atomic::AtomicUsize, mpsc};
-        use std::time::Duration;
+        use web_time::Duration;
         let cell = Arc::new(OnceLock::new());
         let loads = Arc::new(AtomicUsize::new(0));
         let (started_tx, started) = mpsc::channel();
@@ -639,7 +639,7 @@ mod tests {
             if finalizer.data.get().is_some() {
                 break;
             }
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            std::thread::sleep(web_time::Duration::from_millis(10));
         }
         assert!(finalizer.data.get().is_some(), "the thread filled nothing");
         assert!(finalizer.data().is_none());

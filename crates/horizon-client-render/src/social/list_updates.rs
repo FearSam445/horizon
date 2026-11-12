@@ -4,8 +4,8 @@ use super::{
 use std::{
     sync::atomic::{AtomicBool, Ordering},
     thread,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// `RemoteFriendListUpdateHandler.State`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

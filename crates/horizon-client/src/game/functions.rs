@@ -1696,7 +1696,7 @@ mod tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn function_pack_rejects_invalid_ordinary_lines_before_execution() {
         use crate::game::{Audio, Options, Settings, load_resources};
-        use std::time::Instant;
+        use web_time::Instant;
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let settings = Settings::default();
         let loaded = load_resources(
@@ -1860,7 +1860,7 @@ mod tests {
     fn unless_function_keeps_a_fallthrough_after_running_it_once() {
         use crate::game::{Audio, Options, Settings, load_resources};
         use horizon_client::datapack::FunctionLine;
-        use std::time::Instant;
+        use web_time::Instant;
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let settings = Settings::default();
         let loaded = load_resources(
@@ -2082,7 +2082,7 @@ mod entity_score_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -2174,7 +2174,7 @@ mod entity_score_tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn folder_metadata_rejection_reaches_actual_function_commands() {
         use crate::game::{Audio, Options, Settings, load_resources};
-        use std::time::Instant;
+        use web_time::Instant;
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let settings = Settings::default();
         let loaded = load_resources(
@@ -2303,7 +2303,8 @@ mod required_tag_tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn real_pack_required_tag_failures_execute_no_partial_functions() {
         use crate::game::{Audio, Options, Settings, load_resources};
-        use std::time::{Instant, SystemTime, UNIX_EPOCH};
+        use std::time::{SystemTime, UNIX_EPOCH};
+        use web_time::Instant;
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let settings = Settings::default();
         let loaded = load_resources(
@@ -2334,7 +2335,7 @@ mod required_tag_tests {
         let dir = std::env::temp_dir().join(format!(
             "horizon-required-tags-{}-{}",
             std::process::id(),
-            SystemTime::now()
+            horizon_clock::system_now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos(),
@@ -2515,7 +2516,7 @@ mod required_tag_tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn named_predicates_resolve_loaded_references_for_actual_sources() {
         use crate::game::{Audio, Options, Settings, load_resources};
-        use std::time::Instant;
+        use web_time::Instant;
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let settings = Settings::default();
         let loaded = load_resources(

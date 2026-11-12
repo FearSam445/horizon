@@ -33,8 +33,8 @@ use std::{
         mpsc::{Receiver, RecvTimeoutError, Sender, channel, sync_channel},
     },
     thread::JoinHandle,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 pub(super) mod capture;
 
@@ -1423,7 +1423,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "horizon-integrated-crash-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now()
+            horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
                 .as_nanos()

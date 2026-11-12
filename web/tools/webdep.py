@@ -56,10 +56,14 @@ def main():
             if alias in src:
                 continue
             lines = src.split("\n")
-            i = 0
-            while i < len(lines) and (lines[i].startswith("//!") or lines[i].startswith("#![") or lines[i] == ""):
+            # After the crate's leading inner attributes (an item can't come before them).
+            i, last_attr = 0, -1
+            while i < len(lines) and (lines[i].startswith("//") or lines[i].startswith("#![") or lines[i].strip() == ""):
+                if lines[i].startswith("#!["):
+                    last_attr = i
                 i += 1
-            lines.insert(i, f"// The browser build's stand-in (web/shims).\n#[cfg(target_arch = \"wasm32\")]\n{alias}\n")
+            at = last_attr + 1 if last_attr >= 0 else i
+            lines.insert(at, f"// The browser build's stand-in (web/shims).\n#[cfg(target_arch = \"wasm32\")]\n{alias}\n")
             open(root, "w").write("\n".join(lines))
             print("aliased in", root)
 

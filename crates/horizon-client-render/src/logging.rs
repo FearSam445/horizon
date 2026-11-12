@@ -13,7 +13,7 @@ use std::fs::{self, File, OpenOptions};
 use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 use chrono::{DateTime, Local, NaiveDate};
 
@@ -479,7 +479,7 @@ impl log::Log for Logger {
     fn flush(&self) {
         let (done, wait) = mpsc::sync_channel(1);
         if self.out.send(Out::Flush(done)).is_ok() {
-            let _ = wait.recv_timeout(std::time::Duration::from_secs(1));
+            let _ = wait.recv_timeout(web_time::Duration::from_secs(1));
         }
     }
 }

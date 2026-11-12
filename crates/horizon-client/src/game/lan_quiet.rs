@@ -38,11 +38,11 @@ impl Game<'_> {
             Err(e) => {
                 // At most one a second: a client sending refused payloads by the hundred a tick
                 // must not fill the log.
-                static LAST: std::sync::Mutex<Option<std::time::Instant>> =
+                static LAST: std::sync::Mutex<Option<web_time::Instant>> =
                     std::sync::Mutex::new(None);
                 let mut last = LAST.lock().unwrap_or_else(|e| e.into_inner());
-                if last.is_none_or(|t| t.elapsed() >= std::time::Duration::from_secs(1)) {
-                    *last = Some(std::time::Instant::now());
+                if last.is_none_or(|t| t.elapsed() >= web_time::Duration::from_secs(1)) {
+                    *last = Some(web_time::Instant::now());
                     super::dedicated::log(
                         "WARN",
                         &format!("{name} sent quiet commands that were refused: {e}"),

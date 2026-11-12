@@ -27,7 +27,7 @@
 //! let still = Clock::new(opened, true);
 //! assert_eq!(motion::fade(open, still, opened), 1.0);
 //! ```
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// The time a frame shows, built once a frame by the game.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

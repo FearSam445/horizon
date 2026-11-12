@@ -9,7 +9,7 @@ use crate::{
     text::Text,
 };
 use horizon_client_render::gfx::pack_timing::{Counters, DetailSupport, PartsMode, PassCounters};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// `extractLines`'s background: ARGB 0x90505050.
 const BACKGROUND: u32 = 0x9050_5050;
@@ -571,13 +571,13 @@ impl ProcessMemory {
 /// second; a drop in use (a GC in vanilla) keeps the last rate.
 #[derive(Debug, Default)]
 pub struct MemoryMeter {
-    last: Option<(std::time::Instant, ProcessMemory)>,
+    last: Option<(web_time::Instant, ProcessMemory)>,
     rate: i64,
 }
 
 impl MemoryMeter {
     pub fn lines(&mut self) -> Option<[String; 3]> {
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         let memory = match self.last {
             Some((at, memory)) if now.duration_since(at).as_millis() < 500 => memory,
             last => {

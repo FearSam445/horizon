@@ -31,8 +31,8 @@ use level_event_targets::level_event_except;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
-    time::Instant,
 };
+use web_time::Instant;
 
 /// What `sync_data` loaded: whether it was with data packs over the game's
 /// data, and the registries and tags.
@@ -1509,7 +1509,7 @@ impl Game<'_> {
         self.save_leaving_guests(&mut host);
         host.hub.disconnect_all();
         // Give the network threads a moment to flush the disconnect packets.
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(web_time::Duration::from_millis(100));
         self.world.block_log = None;
         self.world.light_log = None;
         self.audio.capture = None;
@@ -3664,7 +3664,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -4952,7 +4952,7 @@ mod merchant_packet_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),

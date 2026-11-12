@@ -1,6 +1,6 @@
 use super::*;
 fn temp_root(label: &str) -> PathBuf {
-    let nonce = std::time::SystemTime::now()
+    let nonce = horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_nanos();

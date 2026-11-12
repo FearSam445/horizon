@@ -7,8 +7,8 @@ use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, VecDeque},
     sync::mpsc::Sender,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 pub(super) const HELP: &[&str] = &[
     "events [--since SEQ]           what happened (screen, chat, death, respawn, item, hurt, heal, food, dimension, world), oldest first",

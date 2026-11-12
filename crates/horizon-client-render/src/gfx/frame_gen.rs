@@ -19,8 +19,8 @@ use std::{
         mpsc,
     },
     thread,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// Frames to draw into: a pair being drawn, a pair waiting and a pair being shown.
 const FRAMES: usize = 6;

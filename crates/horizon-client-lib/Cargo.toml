@@ -13,6 +13,10 @@ description = "Reusable client systems, control tool and parity probes"
 path = "../horizon-client/src/client_lib.rs"
 
 [dependencies]
+# SystemTime::now, also in the browser build (web/).
+horizon-clock = { path = "../../web/clock" }
+# std::time, with a clock in the browser build (web/).
+web-time = "1.1"
 horizon-assets = { path = "../horizon-assets" }
 horizon-client-core = { path = "../horizon-client-core" }
 horizon-client-input = { path = "../horizon-client-input" }

@@ -66,7 +66,7 @@ fn crack_packets_follow_start_clock_and_strict_observer_radius() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

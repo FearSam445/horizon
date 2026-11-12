@@ -177,7 +177,7 @@ fn allocate_seed() -> i64 {
     if still() {
         return next;
     }
-    let nanos = std::time::SystemTime::now()
+    let nanos = horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_nanos() as i64);
     next ^ nanos
@@ -321,7 +321,7 @@ mod tests {
             let _ = sent.send(());
         });
         finished
-            .recv_timeout(std::time::Duration::from_secs(20))
+            .recv_timeout(web_time::Duration::from_secs(20))
             .expect("seed wait released");
     }
 }

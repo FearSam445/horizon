@@ -25,7 +25,7 @@ pub(in crate::game) struct Emotes {
         std::collections::HashMap<String, std::collections::BTreeMap<String, String>>,
     /// The account's emotes on their way from the service, and when they last came.
     pub(in crate::game) loading: Option<std::sync::mpsc::Receiver<Result<Vec<OwnedEmote>, String>>>,
-    pub(in crate::game) loaded: Option<std::time::Instant>,
+    pub(in crate::game) loaded: Option<web_time::Instant>,
     /// `owned` was read from `HORIZON_COSMETICS_LOCAL`'s folder.
     local_read: bool,
     playing: Option<Playing>,
@@ -266,7 +266,7 @@ impl Game<'_> {
         {
             self.cosmetics.emotes.loading = None;
             if let Ok(owned) = done {
-                self.cosmetics.emotes.loaded = Some(std::time::Instant::now());
+                self.cosmetics.emotes.loaded = Some(web_time::Instant::now());
                 self.cosmetics.emotes.names.clear();
                 self.cosmetics.emotes.owned.clear();
                 for (item, names) in owned {

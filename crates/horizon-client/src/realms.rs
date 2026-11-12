@@ -26,7 +26,8 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
+use web_time::{Duration, Instant};
 
 const HEADER_HEIGHT: f32 = 44.0;
 const CONTENT_WIDTH: f32 = 308.0;
@@ -639,7 +640,7 @@ fn icon_sprite(batch: &mut HudBatch, atlas: &HudAtlas, slot: usize, rgba: &[u8])
 
 /// `InviteCodeExpiration.closestTo`: the choice nearest the time left on the code.
 fn closest_expiration(expiration_millis: i64) -> usize {
-    let now = SystemTime::now()
+    let now = horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0);
@@ -688,7 +689,7 @@ fn days_left_text(days_left: i32, expired: bool) -> String {
 /// ago, from an epoch-millisecond stamp. The clock is the wall clock, not the animation
 /// clock `hud_overlays::now_ms` (that one counts from the process start).
 fn age_presentation(epoch_millis: i64) -> String {
-    let now = SystemTime::now()
+    let now = horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0);
@@ -5590,7 +5591,7 @@ impl Screen {
                                 .1
                                 .map(|seconds| {
                                     use std::time::{SystemTime, UNIX_EPOCH};
-                                    let now = SystemTime::now()
+                                    let now = horizon_clock::system_now()
                                         .duration_since(UNIX_EPOCH)
                                         .map(|d| d.as_millis() as i64)
                                         .unwrap_or(0);
@@ -6050,7 +6051,7 @@ impl Screen {
                     if y >= top
                         && let Some(pick) = rows.get(row)
                     {
-                        let now = SystemTime::now();
+                        let now = horizon_clock::system_now();
                         double = matches!(self.last_click, Some((last, at)) if last == row
                             && now.duration_since(at).is_ok_and(|d| d.as_millis() < 250));
                         self.last_click = Some((row, now));
@@ -6645,7 +6646,7 @@ impl Screen {
             _ => None,
         };
         if let Some((row, template)) = picked {
-            let now = SystemTime::now();
+            let now = horizon_clock::system_now();
             // `MouseHandler.DOUBLE_CLICK_THRESHOLD_MS`.
             let double = matches!(self.last_click, Some((last, at)) if last == row
                 && now.duration_since(at).is_ok_and(|d| d.as_millis() < 250));
@@ -6736,7 +6737,7 @@ impl Screen {
             return Outcome::None;
         }
         let can_play = can_play(&selected, session().map(|s| s.uuid));
-        let now = SystemTime::now();
+        let now = horizon_clock::system_now();
         let double = matches!(self.last_click, Some((last, at)) if last == row
             && now.duration_since(at).is_ok_and(|d| d.as_millis() < 250));
         self.selected = Some(row);
@@ -11750,7 +11751,7 @@ impl Screen {
 }
 
 fn loading_dots() -> &'static str {
-    let millis = SystemTime::now()
+    let millis = horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_millis());
     ["O o o", "o O o", "o o O", "o O o"][(millis / 300 % 4) as usize]
@@ -12144,7 +12145,7 @@ mod tests {
     /// nearest to the time left.
     #[test]
     fn an_expiration_reads_back_as_the_closest_choice() {
-        let now = SystemTime::now()
+        let now = horizon_clock::system_now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_millis() as i64;
@@ -12473,7 +12474,7 @@ mod tests {
 
     /// `InviteCodeExpiration.closestTo`: the choice nearest the time left on the code.
     fn closest_expiration(expiration_millis: i64) -> usize {
-        let now = SystemTime::now()
+        let now = horizon_clock::system_now()
             .duration_since(UNIX_EPOCH)
             .map(|d| d.as_millis() as i64)
             .unwrap_or(0);
@@ -12864,7 +12865,7 @@ mod tests {
     /// clock's distance, not the animation clock's (`just now` for every row was wrong).
     #[test]
     fn a_backups_age_is_wall_clock_time() {
-        let now = SystemTime::now()
+        let now = horizon_clock::system_now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_millis() as i64;

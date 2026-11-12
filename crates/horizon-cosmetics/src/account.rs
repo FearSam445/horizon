@@ -43,7 +43,7 @@ impl Call for crate::Http {
 
 /// How often a running game tells the service its player plays Horizon (the service's
 /// `PRESENCE_EVERY`; it forgets them some hours after the last time).
-pub const PRESENCE_EVERY: std::time::Duration = std::time::Duration::from_secs(3600);
+pub const PRESENCE_EVERY: web_time::Duration = web_time::Duration::from_secs(3600);
 
 /// "Show me as a Horizon player": listed, other Horizon players see the mark by `name`'s name for
 /// a while (sent again every `PRESENCE_EVERY`); not listed, the service forgets it at once.
@@ -100,7 +100,7 @@ fn sign_in_for(
 /// minute: emotes come often, Mojang's `join` shouldn't each time.
 #[derive(Default)]
 pub struct Kept {
-    session: Option<(String, std::time::Instant)>,
+    session: Option<(String, web_time::Instant)>,
 }
 
 impl Kept {
@@ -120,13 +120,13 @@ impl Kept {
             let fresh = self
                 .session
                 .as_ref()
-                .filter(|(_, until)| std::time::Instant::now() < *until);
+                .filter(|(_, until)| web_time::Instant::now() < *until);
             let session = match fresh {
                 Some((s, _)) => s.clone(),
                 None => {
                     let (session, seconds) = sign_in_for(service, name, &mut join)?;
-                    let keep = std::time::Duration::from_secs(seconds.saturating_sub(60));
-                    self.session = Some((session.clone(), std::time::Instant::now() + keep));
+                    let keep = web_time::Duration::from_secs(seconds.saturating_sub(60));
+                    self.session = Some((session.clone(), web_time::Instant::now() + keep));
                     session
                 }
             };
@@ -365,7 +365,7 @@ mod tests {
         // The service forgot the session (a restart): one more sign-in, then the call.
         kept.session = Some((
             "stale".into(),
-            std::time::Instant::now() + std::time::Duration::from_secs(60),
+            web_time::Instant::now() + web_time::Duration::from_secs(60),
         ));
         play_emote(&mut kept, &service, "Alex", join, Some("wave_hello")).unwrap();
         assert_eq!(joins.get(), 2);

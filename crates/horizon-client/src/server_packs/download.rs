@@ -5,12 +5,12 @@
 //! `downloads/log.json`, and the cache cut to its 20 newest files on start.
 use super::{Batch, Request};
 use sha1::{Digest, Sha1};
+use std::time::SystemTime;
 use std::{
     fs,
     io::{self, Read, Write},
     path::{Path, PathBuf},
     sync::mpsc::{Receiver, Sender, channel},
-    time::SystemTime,
 };
 
 /// `DownloadedPackSource`'s MAX_PACK_SIZE_BYTES (250 MiB).
@@ -20,7 +20,7 @@ const MAX_KEPT: usize = 20;
 /// Longest wait for a connection, and for any one read from the server. The
 /// queue runs batches on one thread, so a server that accepts the connection
 /// and then goes silent would otherwise hold the pack screen forever.
-const NET_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+const NET_TIMEOUT: web_time::Duration = web_time::Duration::from_secs(30);
 
 /// `createDownloadHeaders`: who is downloading, with which game.
 pub fn headers(name: &str, uuid: u128) -> Vec<(&'static str, String)> {
@@ -187,7 +187,7 @@ fn touch(path: &Path) {
     let _ = fs::File::options()
         .append(true)
         .open(path)
-        .and_then(|f| f.set_modified(SystemTime::now()));
+        .and_then(|f| f.set_modified(horizon_clock::system_now()));
 }
 
 /// `HttpUtil.downloadFile`: into `<dir>/<SHA-1>`. With a hash the cached file
@@ -209,7 +209,7 @@ fn download_file_within(
     headers: &[(&'static str, String)],
     max_size: u64,
     progress: &Sender<Progress>,
-    timeout: std::time::Duration,
+    timeout: web_time::Duration,
 ) -> Result<PathBuf, String> {
     let target = request.sha1.as_ref().map(|sha1| dir.join(sha1));
     if let (Some(target), Some(sha1)) = (&target, &request.sha1) {
@@ -288,7 +288,7 @@ fn download_file_within(
 }
 fn rand_suffix() -> u64 {
     use std::hash::{BuildHasher, RandomState};
-    RandomState::new().hash_one(std::time::Instant::now())
+    RandomState::new().hash_one(web_time::Instant::now())
 }
 /// `downloadAndHash`: write what comes, at most `max_size` bytes.
 fn save_hashed(
@@ -506,17 +506,17 @@ mod tests {
             url,
             sha1: None,
         };
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let result = download_file_within(
             &dir,
             &request,
             &[],
             MAX_SIZE,
             &channel().0,
-            std::time::Duration::from_millis(300),
+            web_time::Duration::from_millis(300),
         );
         assert!(result.is_err());
-        assert!(started.elapsed() < std::time::Duration::from_secs(10));
+        assert!(started.elapsed() < web_time::Duration::from_secs(10));
         drop(release);
         server.join().unwrap();
         fs::remove_dir_all(dir).unwrap();
@@ -542,7 +542,7 @@ mod tests {
             if let Some(b) = queue.finished().pop() {
                 break b;
             }
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            std::thread::sleep(web_time::Duration::from_millis(10));
         };
         server.join().unwrap();
         let file = dir
@@ -569,7 +569,7 @@ mod tests {
     #[test]
     fn the_cleaner_keeps_the_newest_file_of_each_pack_longest() {
         let dir = scratch();
-        let at = |secs| SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(secs);
+        let at = |secs| SystemTime::UNIX_EPOCH + web_time::Duration::from_secs(secs);
         for (pack, file, time) in [
             ("a", "1", 10),
             ("a", "2", 20),

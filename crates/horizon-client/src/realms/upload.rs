@@ -11,7 +11,8 @@ use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
+use web_time::Duration;
 
 /// `RealmsUploadWorldPacker.SIZE_LIMIT`.
 pub const SIZE_LIMIT: u64 = 5 * 1024 * 1024 * 1024;

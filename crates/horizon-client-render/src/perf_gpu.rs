@@ -4,7 +4,7 @@ use horizon_perf_format::v1::{
     GpuBackend, GpuCounter, GpuCounts, GpuDevice, GpuFragmentUnit, GpuFrame, GpuFrames, GpuPart,
     GpuPartCounts, GpuPartsMode, GpuPass, GpuPassSplit, GpuPasses, GpuSource, Side,
 };
-use std::time::Instant;
+use web_time::Instant;
 
 use crate::gfx::pack_timing::{
     Counters, FragmentUnit, GpuReadout, PartsMode, PassCounters, Readings, TimedFrame, TimedFrames,
@@ -430,7 +430,7 @@ mod tests {
     fn the_end_section_takes_the_whole_capture_median_and_each_block_its_frames() {
         let start = Instant::now();
         let frame = |i: u32, world: f32| TimedFrame {
-            at: start + std::time::Duration::from_millis(u64::from(i) * 10),
+            at: start + web_time::Duration::from_millis(u64::from(i) * 10),
             total_ms: Some(world + 1.0),
             passes: vec![("World".into(), world), ("HUD".into(), 0.5)],
             parts: vec![("World".into(), vec![("sky".into(), world / 4.0)])],

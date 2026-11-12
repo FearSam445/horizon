@@ -72,7 +72,7 @@ pub struct VanillaTerrain {
     /// When the last proto chunk was generated, in milliseconds since
     /// `created`: the ring search waits for a pause in generation.
     last_proto: std::sync::atomic::AtomicU64,
-    created: std::time::Instant,
+    created: web_time::Instant,
     /// A superflat generator (`FlatLevelSource`).
     flat: bool,
 }
@@ -358,7 +358,7 @@ impl VanillaTerrain {
             preset: preset.to_owned(),
             dimension: dimension.to_owned(),
             last_proto: std::sync::atomic::AtomicU64::new(0),
-            created: std::time::Instant::now(),
+            created: web_time::Instant::now(),
             flat: false,
         })
     }
@@ -713,7 +713,7 @@ impl VanillaTerrain {
             .spawn(move || {
                 horizon_threads::idle_current();
                 loop {
-                    std::thread::sleep(std::time::Duration::from_millis(500));
+                    std::thread::sleep(web_time::Duration::from_millis(500));
                     // The world closed: nothing to search for.
                     let Some(terrain) = terrain.upgrade() else {
                         return;
@@ -788,7 +788,7 @@ pub fn shared_data_with(
     {
         return Ok(data.clone());
     }
-    let started = std::time::Instant::now();
+    let started = web_time::Instant::now();
     let modified = biome_modifiers_over_packs(dir, overrides);
     let data = GeneratorData::load_with(dir, registry, modified.as_ref().unwrap_or(overrides))?;
     log::info!("Horizon: worldgen data loaded in {:?}", started.elapsed());

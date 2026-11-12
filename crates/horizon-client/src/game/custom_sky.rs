@@ -8,7 +8,7 @@ use horizon_client::custom_sky::{Conditions, Weather};
 #[derive(Default)]
 pub(super) struct CustomSkyView {
     state: horizon_client::custom_sky::State,
-    last: Option<std::time::Instant>,
+    last: Option<web_time::Instant>,
 }
 
 impl Game<'_> {
@@ -34,7 +34,7 @@ impl Game<'_> {
             Dim::End => Some(1),
             Dim::Nether => None,
         };
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         let seconds = self
             .custom_sky
             .last

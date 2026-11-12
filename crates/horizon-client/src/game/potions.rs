@@ -2555,7 +2555,7 @@ mod sound_on_added_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -2631,7 +2631,7 @@ mod mob_absorption_max_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -2801,7 +2801,7 @@ mod mob_health_boost_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -3046,7 +3046,7 @@ mod depleted_absorption_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -3295,7 +3295,8 @@ mod arrow_contents {
     use crate::game::{Audio, Options, Progress, Settings, execution_role, load_resources};
     use horizon_client::chunk::Chunk;
     use serde_json::{Value, json};
-    use std::{path::PathBuf, sync::Arc, time::Instant};
+    use std::{path::PathBuf, sync::Arc};
+    use web_time::Instant;
 
     fn stack(row: &Value) -> ItemStack {
         let mut stack = ItemStack::new("minecraft:tipped_arrow", 1);

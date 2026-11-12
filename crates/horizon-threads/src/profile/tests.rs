@@ -1,7 +1,7 @@
 use std::hint::black_box;
 use std::sync::mpsc;
 use std::thread;
-use std::time::Duration;
+use web_time::Duration;
 
 use super::agg::{MAX_KEYS, MAX_NODES};
 use super::*;

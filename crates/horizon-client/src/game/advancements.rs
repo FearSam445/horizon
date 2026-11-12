@@ -24,8 +24,8 @@ use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet, VecDeque},
     sync::Arc,
-    time::Instant,
 };
+use web_time::Instant;
 pub(super) struct Toast {
     icon: String,
     frame: Frame,
@@ -292,7 +292,7 @@ fn vanilla_structure_tags(root: &std::path::Path) -> &'static Tags {
     })
 }
 fn now_text() -> String {
-    let secs = std::time::SystemTime::now()
+    let secs = horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs()) as i64;
     adv::date_text(secs)
@@ -3048,7 +3048,7 @@ mod structure_tag_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -3135,7 +3135,7 @@ mod random_chance_command_tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn registered_named_random_chance_uses_real_source_and_world_draws() {
         use crate::game::{Audio, Options, Settings, load_resources};
-        use std::time::Instant;
+        use web_time::Instant;
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let settings = Settings::default();
         let loaded = load_resources(

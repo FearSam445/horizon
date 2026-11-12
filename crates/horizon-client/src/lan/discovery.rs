@@ -10,8 +10,8 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     thread::JoinHandle,
-    time::Duration,
 };
+use web_time::Duration;
 
 pub const GROUP: Ipv4Addr = Ipv4Addr::new(224, 0, 2, 60);
 pub const PORT: u16 = 4445;

@@ -10,7 +10,7 @@ use horizon_client::{
 use horizon_core::{position::ChunkPos, random::RandomSource};
 
 /// How long `/forceload add` waits for its chunks, as the game tests' loads do.
-const FORCED_CHUNK_WAIT: std::time::Duration = std::time::Duration::from_secs(120);
+const FORCED_CHUNK_WAIT: web_time::Duration = web_time::Duration::from_secs(120);
 
 /// `LocationCheck.test` / `BlockPredicate`: the measured loaded block-state subset.
 fn loot_location_block(
@@ -104,14 +104,14 @@ impl Game<'_> {
             (min[0]..=max[0])
                 .any(|x| (min[1]..=max[1]).any(|z| !g.world.chunks.contains_key(&(x, z))))
         };
-        let deadline = std::time::Instant::now() + FORCED_CHUNK_WAIT;
+        let deadline = web_time::Instant::now() + FORCED_CHUNK_WAIT;
         while missing(self) {
-            if std::time::Instant::now() >= deadline {
+            if web_time::Instant::now() >= deadline {
                 log::warn!("Horizon: /forceload: chunks {min:?}..{max:?} are not loaded yet");
                 return;
             }
             let _ = self.streaming.update(&mut self.world);
-            self.streaming.wait(std::time::Duration::from_millis(5));
+            self.streaming.wait(web_time::Duration::from_millis(5));
         }
     }
     pub(super) fn cmd_forceload(&mut self, id: &str, ctx: &Context) -> R<i32> {
@@ -1050,7 +1050,7 @@ mod loot_mine_component_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -1231,7 +1231,7 @@ mod loot_mine_component_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -1347,7 +1347,7 @@ mod loot_position_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -1456,7 +1456,7 @@ mod loot_kill_target_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -1573,7 +1573,7 @@ mod loot_mine_location_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),

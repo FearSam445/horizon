@@ -331,7 +331,7 @@ pub(super) fn hold(out: &Path) -> io::Result<()> {
         }
     };
     // Only the order of the prune depends on it: a filesystem without the time loses nothing.
-    let _ = held[at].1.set_modified(std::time::SystemTime::now());
+    let _ = held[at].1.set_modified(horizon_clock::system_now());
     Ok(())
 }
 
@@ -473,7 +473,7 @@ mod tests {
     fn prune_keeps_the_most_recently_used_overlays_and_those_in_use() {
         let f = Fixture::new();
         let cache = f.0.join("cache");
-        let now = std::time::SystemTime::now();
+        let now = horizon_clock::system_now();
         // KEEP + 4 overlays, overlay 0 used last; one more not an overlay.
         let overlays: Vec<PathBuf> = (0..KEEP + 4)
             .map(|i| {
@@ -481,7 +481,7 @@ mod tests {
                 f.write(&format!("cache/{i:016x}/assets/a.png"), b"x");
                 f.write(&format!("cache/{i:016x}.overlay-cache.json"), b"{}");
                 let used = fs::File::create(use_path(&out)).unwrap();
-                used.set_modified(now - std::time::Duration::from_secs(60 * i as u64))
+                used.set_modified(now - web_time::Duration::from_secs(60 * i as u64))
                     .unwrap();
                 out
             })
@@ -526,7 +526,7 @@ mod tests {
         f.write("cache/00000000000000ff/assets/a.png", b"x");
         hold(&held).unwrap();
         // Older than KEEP others, and still in use.
-        let old = std::time::SystemTime::now() - std::time::Duration::from_secs(3600);
+        let old = horizon_clock::system_now() - web_time::Duration::from_secs(3600);
         fs::File::options()
             .write(true)
             .open(use_path(&held))
@@ -572,7 +572,7 @@ mod tests {
             let start = stamp(0);
             // A second at most: no clock is that coarse, and a test never hangs on one.
             for n in 1..1000 {
-                std::thread::sleep(std::time::Duration::from_millis(1));
+                std::thread::sleep(web_time::Duration::from_millis(1));
                 if stamp(n) != start {
                     break;
                 }
@@ -828,7 +828,7 @@ mod tests {
     fn a_large_zip_is_stamped_by_its_directory_and_time() {
         let f = Fixture::new();
         let path = f.0.join("large.zip");
-        let at = std::time::SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(1 << 30);
+        let at = std::time::SystemTime::UNIX_EPOCH + web_time::Duration::from_secs(1 << 30);
         let write = |name: &str, first: u8, modified| {
             let mut body = vec![0u8; 1 << 18];
             body[0] = first;
@@ -849,7 +849,7 @@ mod tests {
         assert_ne!(signature(u64::MAX), bytes);
         write("b", 0, at);
         assert_ne!(signature(0), directory);
-        write("a", 0, at + std::time::Duration::from_secs(60));
+        write("a", 0, at + web_time::Duration::from_secs(60));
         assert_ne!(signature(0), directory);
         assert_eq!(signature(u64::MAX), bytes);
     }
@@ -930,7 +930,7 @@ mod tests {
         packs::build_overlay(&vanilla, std::slice::from_ref(&pack), &out).unwrap();
         // A rebuild empties the output first: this file survives a cache hit only.
         fs::write(out.join("kept"), b"").unwrap();
-        let later = std::time::SystemTime::now() + std::time::Duration::from_secs(60);
+        let later = horizon_clock::system_now() + web_time::Duration::from_secs(60);
         fs::OpenOptions::new()
             .append(true)
             .open(&zip)
@@ -1074,7 +1074,8 @@ mod tests {
 
     #[test]
     fn concurrent_selections_wait_and_never_publish_mismatched_markers() {
-        use std::{sync::mpsc, time::Duration};
+        use std::sync::mpsc;
+        use web_time::Duration;
         let f = Fixture::new();
         let name = "assets/minecraft/lang/en_us.json";
         f.write(&format!("vanilla/{name}"), br#"{"v":1}"#);
@@ -1170,7 +1171,8 @@ mod tests {
     #[test]
     #[ignore = "requires prepared resources and real pack paths in environment"]
     fn benchmark_real_resource_root() {
-        use std::{hint::black_box, time::Instant};
+        use std::hint::black_box;
+        use web_time::Instant;
         let vanilla = PathBuf::from(std::env::var("HORIZON_OVERLAY_BENCH_VANILLA").unwrap());
         assert!(vanilla.join("horizon-resources.json").is_file());
         let paths: Vec<PathBuf> =

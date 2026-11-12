@@ -3,8 +3,8 @@ use horizon_threads::alloc_count::CountingAllocator;
 use std::{
     alloc::{GlobalAlloc, Layout},
     hint::black_box,
-    time::Instant,
 };
+use web_time::Instant;
 
 const PAIRS: u64 = 10_000_000;
 

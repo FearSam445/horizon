@@ -313,7 +313,7 @@ fn a_message_costs_little() {
     // A long message through the whole list stays far below a tick (debug builds included).
     let f = filter();
     let text = "the quick brown fox jumps over the lazy dog ".repeat(6);
-    let start = std::time::Instant::now();
+    let start = web_time::Instant::now();
     for _ in 0..1000 {
         assert!(!f.matches(&text));
     }

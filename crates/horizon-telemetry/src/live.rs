@@ -10,7 +10,7 @@
 //! [`WINDOW`] old and serves the counts exactly. It writes down only the totals, once a minute,
 //! for the history on playhorizon.dev/stats: never a session.
 use std::collections::BTreeMap;
-use std::time::Duration;
+use web_time::Duration;
 
 use serde::{Deserialize, Serialize};
 

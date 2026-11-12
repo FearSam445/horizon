@@ -25,7 +25,7 @@ fn check_respawn(check_sea_level: bool) {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -48,7 +48,7 @@ fn check_respawn(check_sea_level: bool) {
     let scratch = std::env::temp_dir().join(format!(
         "horizon-respawn-point-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()
@@ -215,7 +215,7 @@ fn a_mods_zero_health_kills_a_guest_as_kill_does() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -238,7 +238,7 @@ fn a_mods_zero_health_kills_a_guest_as_kill_does() {
     let scratch = std::env::temp_dir().join(format!(
         "horizon-status-death-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()

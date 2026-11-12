@@ -5,10 +5,8 @@
 use super::Game;
 use horizon_client::mesher::Vertex;
 use horizon_world::registry::BlockStateId;
-use std::{
-    collections::{HashMap, VecDeque},
-    time::{Duration, Instant},
-};
+use std::collections::{HashMap, VecDeque};
+use web_time::{Duration, Instant};
 
 /// `TransientBlock.DEFAULT_TIME_TO_LIVE`, in seconds.
 const DEFAULT_TIME_TO_LIVE: f64 = 1.0;

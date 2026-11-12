@@ -16,7 +16,7 @@ use horizon_client::{
     items::ItemStack,
     text::Text,
 };
-use std::time::Instant;
+use web_time::Instant;
 
 const SLOT: f32 = 18.0;
 /// The title row's height, and the gap under each recipe.

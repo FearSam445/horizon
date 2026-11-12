@@ -348,7 +348,7 @@ fn colormap_tint_cost() {
     let region: [[Option<&Chunk>; 3]; 3] =
         std::array::from_fn(|rz| std::array::from_fn(|rx| Some(&chunks[rz][rx])));
     let rounds = 50;
-    let start = std::time::Instant::now();
+    let start = web_time::Instant::now();
     let mut check = 0u64;
     for _ in 0..rounds {
         let mut tints = Tints::new(&region, &biomes, BiomeZoom::new(0), RADIUS, [0, 0, 64]);

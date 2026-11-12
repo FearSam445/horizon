@@ -24,8 +24,8 @@ use std::{
         Mutex,
         atomic::{AtomicUsize, Ordering},
     },
-    time::Instant,
 };
+use web_time::Instant;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 
@@ -381,11 +381,11 @@ fn main() -> Result<(), Error> {
         cpu_elapsed * 1000. / count as f64
     );
     let timings = timings.into_inner().unwrap();
-    let per_chunk = |f: fn(&StageTimings) -> std::time::Duration| {
+    let per_chunk = |f: fn(&StageTimings) -> web_time::Duration| {
         timings
             .iter()
             .map(f)
-            .sum::<std::time::Duration>()
+            .sum::<web_time::Duration>()
             .as_secs_f64()
             * 1000.
             / count as f64

@@ -71,7 +71,7 @@ impl Renderer {
     }
     /// Times a frame at most once per `gap` while passes are timed (the F3 overlay needs far fewer
     /// samples than a measurement).
-    pub fn set_pass_timing_gap(&mut self, gap: std::time::Duration) {
+    pub fn set_pass_timing_gap(&mut self, gap: web_time::Duration) {
         self.pass_timing_gap = gap;
     }
     /// Keeps each timed frame's pass times for `take_timed_frames` while `on` (a capture records them).

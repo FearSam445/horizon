@@ -174,7 +174,7 @@ mod tests {
             let _ = sent.send(result);
         });
         match finished
-            .recv_timeout(std::time::Duration::from_secs(20))
+            .recv_timeout(web_time::Duration::from_secs(20))
             .expect("ordered lanes must finish within the timeout")
         {
             Ok(value) => value,
@@ -394,7 +394,7 @@ mod tests {
             let _ = sent.send(caught.is_err());
         });
         let panicked = finished
-            .recv_timeout(std::time::Duration::from_secs(20))
+            .recv_timeout(web_time::Duration::from_secs(20))
             .expect("the lanes finished instead of waiting for the one that panicked");
         assert!(panicked, "the panic reached the caller");
     }

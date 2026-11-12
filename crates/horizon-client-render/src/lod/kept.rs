@@ -9,10 +9,8 @@
 //! is with the world.
 use super::{Column, Span, TileKey};
 use crate::fast_hash::FxHashMap;
-use std::{
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::sync::Arc;
+use web_time::{Duration, Instant};
 
 /// How long a tile is kept after the plan let it go.
 pub(super) const KEPT_FOR: Duration = Duration::from_secs(600);

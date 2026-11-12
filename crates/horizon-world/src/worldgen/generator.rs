@@ -1551,7 +1551,7 @@ where
             self.settings.noise_height,
             self.settings.sea_level,
         );
-        let mut clock = std::time::Instant::now();
+        let mut clock = web_time::Instant::now();
         let mut neighbors = Vec::with_capacity(9);
         // The biome ids present, as a bitset: ascending like a sorted set. The
         // registry's ordinary ids fit in the stack array; retain a spill only
@@ -2458,8 +2458,8 @@ impl<R: RandomSource> MaterialSurfaceQueries for SurfaceQueries<'_, '_, R> {
     }
 }
 
-fn lap(clock: &mut std::time::Instant) -> std::time::Duration {
-    let now = std::time::Instant::now();
+fn lap(clock: &mut web_time::Instant) -> web_time::Duration {
+    let now = web_time::Instant::now();
     let elapsed = now - *clock;
     *clock = now;
     elapsed
@@ -2468,14 +2468,14 @@ fn lap(clock: &mut std::time::Instant) -> std::time::Duration {
 #[derive(Clone, Copy, Debug, Default)]
 pub struct StageTimings {
     pub chunks: u64,
-    pub biomes: std::time::Duration,
+    pub biomes: web_time::Duration,
     /// Noise fill including aquifer setup.
-    pub noise: std::time::Duration,
-    pub surface: std::time::Duration,
+    pub noise: web_time::Duration,
+    pub surface: web_time::Duration,
     /// Structure starts/references and terrain adaptation.
-    pub structures: std::time::Duration,
+    pub structures: web_time::Duration,
     /// Carving mask generation/application and final heightmap priming.
-    pub carvers: std::time::Duration,
+    pub carvers: web_time::Duration,
 }
 /// Worker-owned mutable caches. Biome temperature caches mirror vanilla's
 /// thread-local caches and never change results.
@@ -4407,7 +4407,7 @@ mod tests {
             sample.water.is_some(),
             "fixture includes underwater terrain"
         );
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let mut exact = Vec::new();
         for z in 0..8 {
             for x in 0..8 {
@@ -4415,7 +4415,7 @@ mod tests {
             }
         }
         let dense_time = started.elapsed();
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let direct = worker.lod_grid(-1024, 0, 32, 8, false).unwrap();
         for z in 0..8 {
             for x in 0..8 {

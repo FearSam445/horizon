@@ -17,7 +17,7 @@ fn leave_block_goal_uses_real_neighbor_shapes_and_keeps_air_placement() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

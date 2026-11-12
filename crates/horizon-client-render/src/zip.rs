@@ -43,6 +43,12 @@ fn read_at(file: &fs::File, out: &mut [u8], at: u64) -> io::Result<usize> {
     return std::os::unix::fs::FileExt::read_at(file, out, at);
     #[cfg(windows)]
     return std::os::windows::fs::FileExt::seek_read(file, out, at);
+    // The browser build opens no files: its archives come from memory.
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = (file, out, at);
+        Err(io::ErrorKind::Unsupported.into())
+    }
 }
 /// The bytes of `file` from `start` to `end`.
 fn read_range(file: &fs::File, start: u64, end: u64) -> io::Result<Vec<u8>> {

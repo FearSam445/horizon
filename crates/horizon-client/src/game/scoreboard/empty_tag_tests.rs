@@ -13,7 +13,7 @@ fn empty_tag_selectors_follow_actual_tag_edits() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -36,7 +36,7 @@ fn empty_tag_selectors_follow_actual_tag_edits() {
     let scratch = std::env::temp_dir().join(format!(
         "horizon-empty-tags-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()

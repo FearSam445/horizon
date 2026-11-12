@@ -56,8 +56,8 @@ use horizon_world::{
 use std::{
     collections::{HashMap, VecDeque},
     sync::Arc,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 use winit::{event::MouseButton, keyboard::KeyCode};
 
 #[path = "remote_abilities.rs"]
@@ -1937,7 +1937,7 @@ impl Game<'_> {
         }
         // PlayerChatMessage.hasExpiredClient: MESSAGE_EXPIRES_AFTER_CLIENT is
         // the server's five minutes and two more.
-        let now = std::time::SystemTime::now()
+        let now = horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_millis() as i64);
         let expired = now
@@ -4955,7 +4955,7 @@ impl Game<'_> {
                     self.handle_chat_message_error(&p.chat_type, signature.as_ref());
                     return Ok(());
                 }
-                let now = std::time::SystemTime::now()
+                let now = horizon_clock::system_now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .map_or(0, |d| d.as_millis() as i64);
                 let incoming = secure_chat::Incoming {
@@ -11389,9 +11389,9 @@ fn snapshot_value(s: &play::AttributeSnapshot) -> f64 {
 
 /// `Util.getMillis` for the level load tracker's timeouts.
 fn client_millis() -> u64 {
-    static ORIGIN: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    static ORIGIN: std::sync::OnceLock<web_time::Instant> = std::sync::OnceLock::new();
     ORIGIN
-        .get_or_init(std::time::Instant::now)
+        .get_or_init(web_time::Instant::now)
         .elapsed()
         .as_millis() as u64
 }
@@ -11485,7 +11485,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -11563,7 +11563,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -11745,7 +11745,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -11855,7 +11855,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -12017,7 +12017,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -12080,7 +12080,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -12204,7 +12204,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -12347,7 +12347,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -13401,7 +13401,7 @@ mod tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),

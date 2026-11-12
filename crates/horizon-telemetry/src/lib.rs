@@ -70,7 +70,7 @@ pub fn today() -> u32 {
 }
 
 pub(crate) fn now_secs() -> u64 {
-    SystemTime::now()
+    horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_secs())
 }
@@ -80,7 +80,7 @@ pub(crate) fn random_hex(bytes: usize) -> String {
     let mut buf = vec![0u8; bytes];
     // Without the OS's randomness the time still makes names that don't collide in practice.
     if getrandom::fill(&mut buf).is_err() {
-        let nanos = SystemTime::now()
+        let nanos = horizon_clock::system_now()
             .duration_since(UNIX_EPOCH)
             .map_or(0, |d| d.as_nanos());
         for (i, b) in buf.iter_mut().enumerate() {

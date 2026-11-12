@@ -4110,7 +4110,7 @@ mod entity_collision_tests {
         // A stand loaded with Motion 1e10 asks for an area 1e10 blocks long
         // (about 1.25e9 cells): the boxes in it come back in order, at once.
         let huge = Aabb::new(Vec3::new(-1.0, 63.0, -1.0), Vec3::new(1.0e10, 66.0, 2.0));
-        let start = std::time::Instant::now();
+        let start = web_time::Instant::now();
         grid.near(huge, &mut out);
         assert_eq!(out, vec![unit(0.0), unit(2.0), unit(4.0)]);
         let far = Aabb::new(
@@ -4119,7 +4119,7 @@ mod entity_collision_tests {
         );
         grid.near(far, &mut out);
         assert_eq!(out.len(), 3);
-        assert!(start.elapsed() < std::time::Duration::from_secs(1));
+        assert!(start.elapsed() < web_time::Duration::from_secs(1));
     }
 
     /// A farm: 5000 drops and 1000 separated vehicles. Run with `-- --ignored --nocapture`.
@@ -4140,7 +4140,7 @@ mod entity_collision_tests {
                 Aabb::new(Vec3::new(x, 64.0, z), Vec3::new(x + 0.25, 64.25, z + 0.25))
             })
             .collect();
-        let start = std::time::Instant::now();
+        let start = web_time::Instant::now();
         let mut hits = 0;
         for item in &items {
             let area = item.inflate(Vec3::new(1.0, 1.0, 1.0));
@@ -4148,7 +4148,7 @@ mod entity_collision_tests {
         }
         let scan = start.elapsed();
         let mut grid = ObstacleGrid::new(boxes);
-        let start = std::time::Instant::now();
+        let start = web_time::Instant::now();
         let (mut out, mut found) = (Vec::new(), 0);
         for item in &items {
             grid.near(item.inflate(Vec3::new(1.0, 1.0, 1.0)), &mut out);

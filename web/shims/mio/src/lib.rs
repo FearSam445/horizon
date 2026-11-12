@@ -7,7 +7,10 @@ use std::ops::BitOr;
 use std::time::Duration;
 
 fn unsupported() -> io::Error {
-    io::Error::new(io::ErrorKind::Unsupported, "no sockets in the browser build")
+    io::Error::new(
+        io::ErrorKind::Unsupported,
+        "no sockets in the browser build",
+    )
 }
 
 /// A registration's id.
@@ -63,10 +66,20 @@ impl Poll {
 pub struct Registry(());
 
 impl Registry {
-    pub fn register<S: event::Source + ?Sized>(&self, _: &mut S, _: Token, _: Interest) -> io::Result<()> {
+    pub fn register<S: event::Source + ?Sized>(
+        &self,
+        _: &mut S,
+        _: Token,
+        _: Interest,
+    ) -> io::Result<()> {
         Err(unsupported())
     }
-    pub fn reregister<S: event::Source + ?Sized>(&self, _: &mut S, _: Token, _: Interest) -> io::Result<()> {
+    pub fn reregister<S: event::Source + ?Sized>(
+        &self,
+        _: &mut S,
+        _: Token,
+        _: Interest,
+    ) -> io::Result<()> {
         Err(unsupported())
     }
     pub fn deregister<S: event::Source + ?Sized>(&self, _: &mut S) -> io::Result<()> {

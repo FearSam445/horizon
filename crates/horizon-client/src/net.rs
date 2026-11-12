@@ -27,8 +27,8 @@ use std::{
         mpsc::{Receiver, Sender, channel},
     },
     thread::JoinHandle,
-    time::Duration,
 };
+use web_time::Duration;
 
 use horizon_hooks::tunnel;
 
@@ -1395,7 +1395,7 @@ pub fn ping(address: &str, timeout: Duration) -> Result<(serde_json::Value, u128
         }
         _ => return Err("unexpected status reply".into()),
     };
-    let start = std::time::Instant::now();
+    let start = web_time::Instant::now();
     c.send(&status::Serverbound::PingRequest(status::Ping { time: 1 }).encode())
         .map_err(e)?;
     let _ = c.recv().map_err(e)?;
@@ -1877,7 +1877,7 @@ mod tests {
             let (release, stalled) = channel();
             let (finished, completed) = channel();
             let thread = std::thread::spawn(move || {
-                let _ = stalled.recv_timeout(std::time::Duration::from_secs(3));
+                let _ = stalled.recv_timeout(web_time::Duration::from_secs(3));
                 let _ = finished.send(());
             });
             let mut session = Session {
@@ -1894,7 +1894,7 @@ mod tests {
                 recorder: Arc::new(Mutex::new(None)),
                 serial: next_serial(),
             };
-            let started = std::time::Instant::now();
+            let started = web_time::Instant::now();
             if explicit_disconnect {
                 session.disconnect();
                 session.disconnect(); // Repeated cleanup is harmless.
@@ -1907,7 +1907,7 @@ mod tests {
             let _ = release.send(());
             if reader_still_pending {
                 completed
-                    .recv_timeout(std::time::Duration::from_secs(2))
+                    .recv_timeout(web_time::Duration::from_secs(2))
                     .unwrap();
             }
             assert!(
@@ -1919,7 +1919,7 @@ mod tests {
                 "disconnect waited for the stalled reader"
             );
             assert!(
-                elapsed < std::time::Duration::from_secs(1),
+                elapsed < web_time::Duration::from_secs(1),
                 "disconnect took {elapsed:?}"
             );
         }

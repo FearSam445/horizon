@@ -85,8 +85,8 @@ use std::{
         Arc,
         atomic::{AtomicU8, Ordering},
     },
-    time::Instant,
 };
+use web_time::Instant;
 
 /// One section (`gpu_culling.wgsl`'s `Section`).
 #[repr(C)]

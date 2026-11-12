@@ -470,7 +470,7 @@ fn remember(state: &mut State, key: (i32, i32), columns: Option<Columns>) {
 }
 
 fn now() -> u32 {
-    std::time::SystemTime::now()
+    horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs() as u32)
 }

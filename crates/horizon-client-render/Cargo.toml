@@ -7,6 +7,10 @@ rust-version.workspace = true
 description = "The client's world data, rendering and screens: chunks, meshing, light, streaming, the renderer, the HUD, menus and settings; no gameplay"
 
 [dependencies]
+# SystemTime::now, also in the browser build (web/).
+horizon-clock = { path = "../../web/clock" }
+# std::time, with a clock in the browser build (web/).
+web-time = "1.1"
 # The settings stores of the crates above the engine (docs/layers.md, "Platform registries").
 horizon-hooks = { path = "../horizon-hooks" }
 # The GUI atlas's pixels, kept compressed once uploaded (hud.rs `pack_pixels`).

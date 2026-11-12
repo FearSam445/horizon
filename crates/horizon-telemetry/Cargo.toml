@@ -7,6 +7,10 @@ rust-version.workspace = true
 description = "Opt-in data collection: the player's consent, the payloads, the local outbox and its upload"
 
 [dependencies]
+# SystemTime::now, also in the browser build (web/).
+horizon-clock = { path = "../../web/clock" }
+# std::time, with a clock in the browser build (web/).
+web-time = "1.1"
 horizon-addresses = { path = "../horizon-addresses" }
 # The machine's description (horizon-system, through the platform's API).
 horizon-platform = { path = "../horizon-platform" }

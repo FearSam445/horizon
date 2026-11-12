@@ -14,8 +14,8 @@ use std::{
     hint::black_box,
     path::Path,
     sync::Arc,
-    time::Instant,
 };
+use web_time::Instant;
 
 fn bodies(encoder: &ChunkEncoder, columns: &[&Chunk], world: &World) -> Vec<Vec<u8>> {
     columns.iter().map(|c| encoder.body_in(c, world)).collect()

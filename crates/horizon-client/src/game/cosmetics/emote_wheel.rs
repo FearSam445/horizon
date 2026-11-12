@@ -5,7 +5,7 @@
 
 use crate::game::{Game, Screen};
 use horizon_client::{hud::HudBatch, text::Text};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 use winit::event::{ElementState, MouseButton, WindowEvent};
 use winit::keyboard::{KeyCode, PhysicalKey};
 

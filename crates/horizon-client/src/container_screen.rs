@@ -100,10 +100,10 @@ impl Button {
 /// `lastClickSlot` replaced by every click that reaches the container logic —
 /// `None` for a click outside the window, which ends the chain.
 pub fn double_click(
-    last: &mut Option<(std::time::Instant, Option<usize>, bool)>,
+    last: &mut Option<(web_time::Instant, Option<usize>, bool)>,
     slot: Option<usize>,
     right: bool,
-    now: std::time::Instant,
+    now: web_time::Instant,
 ) -> bool {
     let double = last.is_some_and(|(at, was_slot, was_right)| {
         was_slot == slot && was_right == right && now.duration_since(at).as_millis() < 250
@@ -488,7 +488,7 @@ mod tests {
     /// click on a real slot is not a double click.
     #[test]
     fn a_click_on_no_slot_ends_the_double_click_chain() {
-        use std::time::{Duration, Instant};
+        use web_time::{Duration, Instant};
         let start = Instant::now();
         let mut last = None;
         let at = |ms| start + Duration::from_millis(ms);

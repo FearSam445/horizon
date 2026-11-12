@@ -348,7 +348,7 @@ mod tests {
                 device
                     .poll(wgpu::PollType::Wait {
                         submission_index: None,
-                        timeout: Some(std::time::Duration::from_secs(30)),
+                        timeout: Some(web_time::Duration::from_secs(30)),
                     })
                     .unwrap();
                 assert_eq!(center.take_completed(&device).unwrap(), value);

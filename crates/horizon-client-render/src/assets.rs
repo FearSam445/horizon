@@ -561,7 +561,7 @@ mod tests {
         stored.pack();
         stored.pack();
         // The packing thread drops the raw copy once the compressed one is set.
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         while stored.0.raw.lock().unwrap().is_some() {
             assert!(started.elapsed().as_secs() < 10, "packing never finished");
             std::thread::yield_now();

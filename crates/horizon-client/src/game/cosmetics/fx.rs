@@ -13,7 +13,7 @@ use horizon_cosmetics::trail::{Budget, Emitter};
 use horizon_cosmetics::{Item, Slot};
 use horizon_hooks::players::{Kind, Light, Look, Particle, Pass, PlayerDraw, PlayerModel};
 use std::sync::Arc;
-use std::time::Instant;
+use web_time::Instant;
 
 /// How far from the camera (blocks) a wearer's companion, trail and aura are drawn.
 const FAR: f32 = 48.0;

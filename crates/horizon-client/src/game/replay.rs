@@ -9,10 +9,9 @@ use horizon_client::{
     text::Text,
 };
 use serde_json::{Value, json};
-use std::{
-    path::{Path, PathBuf},
-    time::{Duration, SystemTime, UNIX_EPOCH},
-};
+use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
+use web_time::Duration;
 
 /// The packet replay a `Game` plays, if any, and its playback clock.
 #[derive(Default)]
@@ -23,7 +22,7 @@ pub(super) struct Replay {
     pub(super) previous_camera_type: Option<super::perspective::CameraType>,
     /// Replay opened from the title screen owns the synthetic remote session.
     pub(super) standalone: bool,
-    pub(super) last_tick: Option<std::time::Instant>,
+    pub(super) last_tick: Option<web_time::Instant>,
     pub(super) virtual_tick_ms: f32,
 }
 
@@ -340,7 +339,7 @@ impl Game<'_> {
 
         self.dispatch_studio_replay_packets(packets);
         self.reset_studio_playback_ticks();
-        self.replay.last_tick = Some(std::time::Instant::now());
+        self.replay.last_tick = Some(web_time::Instant::now());
         Ok(())
     }
 
@@ -376,7 +375,7 @@ impl Game<'_> {
             return Ok(());
         };
 
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         let delta = match self.replay.last_tick {
             Some(last) => now
                 .saturating_duration_since(last)
@@ -570,7 +569,7 @@ impl Game<'_> {
             return Ok(json!({ "ok": false, "error": "recording already active" }));
         }
         let _ = std::fs::create_dir_all("recordings");
-        let ts = SystemTime::now()
+        let ts = horizon_clock::system_now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();

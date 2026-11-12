@@ -31,7 +31,7 @@ const MAX_SAVED: usize = 1024;
 pub const OBSERVE_AHEAD: usize = 8;
 /// How long a tile whose sample waited for data (`Lod::finish_waited`) waits
 /// before it is sampled again without word of it.
-const WAIT_RETRY: std::time::Duration = std::time::Duration::from_secs(10);
+const WAIT_RETRY: web_time::Duration = web_time::Duration::from_secs(10);
 const SAMPLE_JOBS: usize = 4;
 /// Sample jobs queued per sampling thread once the near terrain is in.
 /// Results are taken and jobs started once a frame: with four in flight, a
@@ -77,10 +77,10 @@ fn meshing_threads(cores: usize) -> usize {
 /// While the near terrain loads on a machine with four threads or fewer, far
 /// terrain starts one sample job at most this often and no detail: it would
 /// otherwise take the cores the near chunks and the frame need.
-const HELD_SAMPLE_STEP: std::time::Duration = std::time::Duration::from_millis(500);
+const HELD_SAMPLE_STEP: web_time::Duration = web_time::Duration::from_millis(500);
 /// How long a tile whose sampling failed (`LodSampler::grid` gave no
 /// columns: a server refused or lost it) waits before it is asked again.
-const RETRY: std::time::Duration = std::time::Duration::from_secs(2);
+const RETRY: web_time::Duration = web_time::Duration::from_secs(2);
 /// The most a tile a zoomed view magnifies may split past the plan it would
 /// have had ([`ZoomAim`]): cells three times smaller, so nine times the tiles
 /// where it applies. A spyglass covers about a sixteenth of the circle, so at
@@ -211,7 +211,7 @@ const RETURN_BACKLOG: usize = 32;
 /// return: their thousands of meshes held up the near chunks' and the seam's,
 /// showing caves through unmeshed ground meanwhile.
 const RETURN_FINE_LEVEL: u8 = 4;
-const RETURN_SEAM_WAIT: std::time::Duration = std::time::Duration::from_secs(10);
+const RETURN_SEAM_WAIT: web_time::Duration = web_time::Duration::from_secs(10);
 /// The most chunks one detail request asks for, one request each 250 ms:
 /// generated ones arrive at the decoration threads' pace, cached ones at once.
 const DETAIL_REQUEST: usize = 512;
@@ -225,7 +225,7 @@ const DETAIL_REQUEST: usize = 512;
 /// terrain at `lodDistance` 256: 18 FPS average, 482 ms at the 99th
 /// percentile, where the median frame was 6 ms. What the budget leaves waits
 /// in `Lod::detail_backlog` for the frames after it.
-const DETAIL_BUDGET: std::time::Duration = std::time::Duration::from_millis(3);
+const DETAIL_BUDGET: web_time::Duration = web_time::Duration::from_millis(3);
 /// Top solid face and optional fluid face, in absolute block coordinates.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Surface {
@@ -1258,7 +1258,7 @@ pub struct Lod {
     /// ones, each with its number.
     refreshes: u64,
     refreshed: VecDeque<(u64, [i32; 4])>,
-    detail_request_at: std::time::Instant,
+    detail_request_at: web_time::Instant,
     /// Four threads or fewer: far work waits for the near terrain (`hold`).
     small: bool,
     /// Sample jobs that may be queued or running at once.
@@ -1266,9 +1266,9 @@ pub struct Lod {
     /// The near terrain is loading (`set_near_loading`).
     near_loading: bool,
     /// When `request_samples` last started a job while held.
-    held_sample_at: std::time::Instant,
+    held_sample_at: web_time::Instant,
     /// Tiles whose sampling failed, and when they may be asked again.
-    retry: FxHashMap<TileKey, std::time::Instant>,
+    retry: FxHashMap<TileKey, web_time::Instant>,
     /// Each tile's samples, shared with mesh jobs in flight.
     ready: FxHashMap<TileKey, Arc<Vec<Column>>>,
     /// Fully covered subtrees, by tile.
@@ -1336,7 +1336,7 @@ pub struct Lod {
     /// Kept tiles the plan wants again, not taken back yet (`bring_back`).
     returning: Vec<TileKey>,
     /// When the plan last asked kept tiles back (`RETURN_SEAM_WAIT`).
-    returned_at: std::time::Instant,
+    returned_at: web_time::Instant,
     /// `LodSource::keeps_observed`: tiles sampled without an observed chunk
     /// are sampled again (`resample_over`).
     keeps_observed: bool,
@@ -1574,7 +1574,7 @@ impl Lod {
                                 {
                                     jobs = worker
                                         .wake
-                                        .wait_timeout(jobs, std::time::Duration::from_millis(100))
+                                        .wait_timeout(jobs, web_time::Duration::from_millis(100))
                                         .unwrap()
                                         .0;
                                 }
@@ -1668,11 +1668,11 @@ impl Lod {
             detail_backlog: std::collections::VecDeque::new(),
             refreshes: 0,
             refreshed: VecDeque::new(),
-            detail_request_at: std::time::Instant::now(),
+            detail_request_at: web_time::Instant::now(),
             small: cores <= 4,
             sample_jobs: sampling_threads(cores) * QUEUED_PER_SAMPLER,
             near_loading: false,
-            held_sample_at: std::time::Instant::now(),
+            held_sample_at: web_time::Instant::now(),
             retry: FxHashMap::default(),
             ready: FxHashMap::default(),
             complete: FxHashMap::default(),
@@ -1706,7 +1706,7 @@ impl Lod {
             saved_order: VecDeque::new(),
             kept: kept::KeptTiles::new(kept::KEPT_FOR, kept::KEPT_BYTES),
             returning: Vec::new(),
-            returned_at: std::time::Instant::now(),
+            returned_at: web_time::Instant::now(),
             keeps_observed,
         }
     }
@@ -2275,7 +2275,7 @@ impl Lod {
             self.wanted_stale = true;
         } else if self.plan.nodes.contains(&key) {
             self.retry
-                .insert(key, std::time::Instant::now() + WAIT_RETRY);
+                .insert(key, web_time::Instant::now() + WAIT_RETRY);
         }
     }
     /// A sample in: thrown away when a cell of it is a hole, its data on its
@@ -2291,7 +2291,7 @@ impl Lod {
     fn finish_sample(&mut self, key: TileKey, samples: Vec<Column>) {
         self.pending.remove(&key);
         if samples.len() != CELLS * CELLS {
-            let now = std::time::Instant::now();
+            let now = web_time::Instant::now();
             if self.retry.len() > 4096 {
                 self.retry.retain(|_, at| *at > now);
             }
@@ -2378,7 +2378,7 @@ impl Lod {
                 })
             }));
             // A sample may still be running: the held pace starts from now.
-            self.held_sample_at = std::time::Instant::now();
+            self.held_sample_at = web_time::Instant::now();
         }
         self.near_loading = loading;
         self.shared.near_loading.store(loading, Ordering::Relaxed);
@@ -2406,11 +2406,11 @@ impl Lod {
             // backlog grew by a request every 250 ms and never drained --
             // 0.5 FPS, with `update` averaging 9.7 s a frame.
             || !self.detail_backlog.is_empty()
-            || self.detail_request_at.elapsed() < std::time::Duration::from_millis(250)
+            || self.detail_request_at.elapsed() < web_time::Duration::from_millis(250)
         {
             return;
         }
-        self.detail_request_at = std::time::Instant::now();
+        self.detail_request_at = web_time::Instant::now();
         let mut keys: Vec<_> = self
             .active
             .iter()
@@ -2590,7 +2590,7 @@ impl Lod {
             self.kept.take(&key);
         }
         self.returning = returning;
-        self.returned_at = std::time::Instant::now();
+        self.returned_at = web_time::Instant::now();
         let nodes = &self.plan.nodes;
         self.mesh_samples.retain(|key| nodes.contains(key));
         // Queued tiles the view left are not sampled; a running one is dropped (`finish_sample`).
@@ -2747,7 +2747,7 @@ impl Lod {
         self.wanted_stale = true;
     }
     fn receive(&mut self, meshes: &mut Vec<(TileKey, SectionMesh)>) {
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         // What an earlier frame left, before anything new: a chunk's detail
         // must not overtake the detail of a chunk that arrived before it.
         while started.elapsed() < DETAIL_BUDGET {
@@ -3129,7 +3129,7 @@ impl Lod {
         if free == 0 {
             return;
         }
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         if self.held() {
             self.held_sample_at = now;
         }
@@ -3994,7 +3994,7 @@ mod tests {
         // `request_detail` records once it is past its guards: a test
         // scheduler has no active tile wanting detail, so `pending` would
         // stay false either way and prove nothing.
-        let long_ago = std::time::Instant::now() - std::time::Duration::from_secs(10);
+        let long_ago = web_time::Instant::now() - web_time::Duration::from_secs(10);
         lod.detail_request_at = long_ago;
         lod.detail_request_pending = false;
         lod.request_detail([0, 0]);
@@ -4472,7 +4472,7 @@ mod tests {
         let receive_observed = |lod: &mut Lod| {
             let Done::Observed(key, columns) = lod
                 .results
-                .recv_timeout(std::time::Duration::from_secs(5))
+                .recv_timeout(web_time::Duration::from_secs(5))
                 .unwrap()
             else {
                 panic!("expected the observed chunk's summary");
@@ -4624,7 +4624,7 @@ mod tests {
         // As a replan does (`update` only selects after a change).
         lod.reselect = true;
         let await_meshes = |lod: &mut Lod, count: usize| {
-            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+            let deadline = web_time::Instant::now() + web_time::Duration::from_secs(5);
             let mut uploaded = Vec::new();
             loop {
                 uploaded.extend(lod.update(camera, 2, 64, None, None));
@@ -4635,8 +4635,8 @@ mod tests {
                     lod.removed().is_empty(),
                     "retired before replacement meshes"
                 );
-                assert!(std::time::Instant::now() < deadline, "mesh worker stalled");
-                std::thread::sleep(std::time::Duration::from_millis(1));
+                assert!(web_time::Instant::now() < deadline, "mesh worker stalled");
+                std::thread::sleep(web_time::Duration::from_millis(1));
             }
         };
         let uploaded = await_meshes(&mut lod, 1);
@@ -4670,17 +4670,17 @@ mod tests {
             .insert(covered_fine, Arc::new(vec![Column::default(); 256]));
         lod.covered.insert((-1, -2));
         lod.reselect = true;
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(5);
         loop {
             lod.update(camera, 2, 64, None, None);
             if lod.outstanding_meshes == 0 && lod.active.is_empty() {
                 break;
             }
             assert!(
-                std::time::Instant::now() < deadline,
+                web_time::Instant::now() < deadline,
                 "covered normal chunk remained an active LOD mask"
             );
-            std::thread::sleep(std::time::Duration::from_millis(1));
+            std::thread::sleep(web_time::Duration::from_millis(1));
         }
         assert_eq!(lod.progress(), (1, 1));
 
@@ -4781,7 +4781,7 @@ mod tests {
         lod.covered = [(0, 0)].into_iter().collect();
         lod.full = lod.covered.clone();
         lod.detail_request_pending = false;
-        lod.detail_request_at = std::time::Instant::now() - std::time::Duration::from_secs(1);
+        lod.detail_request_at = web_time::Instant::now() - web_time::Duration::from_secs(1);
         lod.request_detail([0, 0]);
         let Some(Job::RequestDetail { chunks, .. }) = lod.shared.jobs.lock().unwrap().pop_front()
         else {
@@ -5734,7 +5734,7 @@ mod tests {
             settle: bool,
         ) {
             let lod = &mut self.lod;
-            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+            let deadline = web_time::Instant::now() + web_time::Duration::from_secs(120);
             let mut covered = Some(covered.clone());
             let mut quiet = 0;
             while quiet < if settle { 50 } else { 3 } {
@@ -5760,7 +5760,7 @@ mod tests {
                     && !unsampled;
                 quiet = if idle { quiet + 1 } else { 0 };
                 assert!(
-                    std::time::Instant::now() < deadline,
+                    web_time::Instant::now() < deadline,
                     "far terrain never settled: {} pending, {} meshing, {} observing, {} jobs, {} unsampled, {} waiting",
                     lod.pending.len(),
                     lod.outstanding_meshes,
@@ -5775,7 +5775,7 @@ mod tests {
                         .count(),
                     lod.retry.len(),
                 );
-                std::thread::sleep(std::time::Duration::from_millis(2));
+                std::thread::sleep(web_time::Duration::from_millis(2));
             }
         }
         /// The chunks of `chunks` the active tiles don't draw as observed:

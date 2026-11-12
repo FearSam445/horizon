@@ -3,7 +3,7 @@
 //! pack zips or folders, which are never committed; this prints what was read and how long it took.
 
 use std::path::Path;
-use std::time::Instant;
+use web_time::Instant;
 
 use std::collections::BTreeMap;
 
@@ -162,7 +162,7 @@ fn real_packs_read() {
             }
             // The post-processing set of each dimension, as the game loads it.
             for id in [0, -1, 1] {
-                let start = std::time::Instant::now();
+                let start = web_time::Instant::now();
                 let folder = dimension_folder(&pack, id);
                 // Vertex inputs like the game's (gfx/pack_post.rs writes the real ones).
                 let terrain = horizon_shaders::GbuffersInputs {

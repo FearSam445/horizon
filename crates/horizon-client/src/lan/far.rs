@@ -10,8 +10,8 @@ use horizon_world::registry::BlockRegistry;
 use std::{
     collections::VecDeque,
     sync::{Arc, Mutex, mpsc},
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// Saved chunks being read at once, all players together.
 const ASKED: usize = 32;

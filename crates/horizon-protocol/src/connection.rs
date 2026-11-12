@@ -13,8 +13,8 @@ use std::{
         Arc, Condvar, Mutex,
         atomic::{AtomicI64, Ordering},
     },
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// Called when a [`Pipe`] end has bytes to read or was closed ([`Pipe::on_ready`]).
 type Notify = Arc<dyn Fn() + Send + Sync>;

@@ -21,7 +21,7 @@ fn a_new_player_after_a_portal_keeps_the_old_ones_modifiers() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

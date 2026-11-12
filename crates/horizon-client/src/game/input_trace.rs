@@ -12,11 +12,8 @@ use super::{Game, Screen};
 use horizon_client::{Result, keybinds};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::{
-    collections::VecDeque,
-    sync::mpsc::Sender,
-    time::{Duration, Instant},
-};
+use std::{collections::VecDeque, sync::mpsc::Sender};
+use web_time::{Duration, Instant};
 use winit::{
     event::{ElementState, MouseScrollDelta, WindowEvent},
     keyboard::PhysicalKey,

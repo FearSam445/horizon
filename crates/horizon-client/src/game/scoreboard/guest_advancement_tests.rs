@@ -19,7 +19,7 @@ fn selector_reads_independent_host_and_guest_progress() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -42,7 +42,7 @@ fn selector_reads_independent_host_and_guest_progress() {
     let scratch = std::env::temp_dir().join(format!(
         "horizon-guest-selector-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()

@@ -1,7 +1,7 @@
 use std::hint::black_box;
 use std::sync::mpsc;
 use std::thread;
-use std::time::Duration;
+use web_time::Duration;
 
 use super::*;
 use crate::sampler::{self, Config, Kind, Record};
@@ -150,7 +150,7 @@ fn store_cost() {
     const N: u32 = 20_000_000;
     let names: Vec<String> = (0..150).map(|i| format!("minecraft:mob_{i}")).collect();
     let time = |what: &str, mut f: Box<dyn FnMut(u32)>| {
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         (0..N).for_each(&mut f);
         eprintln!(
             "{what}: {:.2} ns",

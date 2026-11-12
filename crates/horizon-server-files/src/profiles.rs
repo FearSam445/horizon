@@ -7,7 +7,7 @@ use crate::{
     user_lists::NameAndId,
 };
 use horizon_protocol::rsa::RsaPublicKey;
-use std::time::Duration;
+use web_time::Duration;
 
 /// Mojang's services discovery document.
 pub const DEFAULT_DISCOVERY: &str = "https://discovery.minecraftservices.com/minecraft/client";

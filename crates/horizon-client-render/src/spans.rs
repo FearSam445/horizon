@@ -2,8 +2,8 @@
 use std::{
     cell::{Cell, RefCell},
     sync::atomic::{AtomicBool, Ordering},
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
 thread_local! {
@@ -297,8 +297,8 @@ pub mod timeline {
             Arc, Mutex, PoisonError,
             atomic::{AtomicBool, AtomicU32, Ordering},
         },
-        time::{Duration, Instant},
     };
+    use web_time::{Duration, Instant};
 
     /// The most spans a thread holds between two drains; a thread that records more drops them.
     const THREAD_EVENTS_MAX: usize = 1 << 18;
@@ -475,8 +475,8 @@ pub mod startup {
             Mutex, OnceLock,
             atomic::{AtomicBool, AtomicU32, Ordering},
         },
-        time::Instant,
     };
+    use web_time::Instant;
 
     static ON: AtomicBool = AtomicBool::new(false);
     static SINK: OnceLock<Option<Mutex<std::fs::File>>> = OnceLock::new();
@@ -668,7 +668,7 @@ mod tests {
     #[test]
     fn samples_inside_a_span_carry_its_id() {
         use horizon_threads::{sampler, work};
-        use std::time::{Duration, Instant};
+        use web_time::{Duration, Instant};
         let worker = std::thread::spawn(|| {
             assert!(sampler::sampled_thread("spans-id-test"));
             let config = sampler::Config {
@@ -879,7 +879,7 @@ mod tests {
         off.lap("unseen");
         super::enable(true);
         let mut laps = super::laps();
-        std::thread::sleep(std::time::Duration::from_millis(2));
+        std::thread::sleep(web_time::Duration::from_millis(2));
         laps.lap("first");
         laps.lap("second");
         super::enable(false);
@@ -912,12 +912,12 @@ mod tests {
     #[test]
     fn thread_cpu_counts_work_not_sleep() {
         let start = super::thread_cpu().unwrap();
-        std::thread::sleep(std::time::Duration::from_millis(50));
+        std::thread::sleep(web_time::Duration::from_millis(50));
         let slept = super::thread_cpu().unwrap() - start;
         // Busy until the clock shows 10 ms of work (a loaded machine gives
         // the thread less than its wall time).
         let mut x = 0u64;
-        let busy = std::time::Instant::now();
+        let busy = web_time::Instant::now();
         let worked = loop {
             x = std::hint::black_box(x.wrapping_mul(31).wrapping_add(7));
             let worked = super::thread_cpu().unwrap() - start - slept;
@@ -934,7 +934,7 @@ mod tests {
     fn the_timeline_keeps_each_threads_spans_with_their_depth_and_place_in_time() {
         use super::timeline;
         use std::sync::{Arc, Barrier};
-        use std::time::{Duration, Instant};
+        use web_time::{Duration, Instant};
         let _switch = spans_switch();
         assert!(timeline::start(Instant::now()));
         assert!(

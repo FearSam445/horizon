@@ -7,6 +7,10 @@ rust-version.workspace = true
 description = "Horizon vanilla world data, NBT, regions and chunk storage"
 
 [dependencies]
+# SystemTime::now, also in the browser build (web/).
+horizon-clock = { path = "../../web/clock" }
+# std::time, with a clock in the browser build (web/).
+web-time = "1.1"
 libm = "=0.2.16"
 log = "0.4"
 serde_json = { version = "1.0.151", features = ["raw_value"] }

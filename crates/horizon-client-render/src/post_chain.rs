@@ -2395,10 +2395,10 @@ mod tests {
         let format = wgpu::TextureFormat::Rgba8Unorm;
         effects.preload(&device, &queue, &root, &["minecraft:preloaded"], format);
         assert!(effects.pending.contains("minecraft:preloaded"));
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         while !effects.pending.is_empty() {
             assert!(started.elapsed().as_secs() < 60, "the chain never arrived");
-            std::thread::sleep(std::time::Duration::from_millis(1));
+            std::thread::sleep(web_time::Duration::from_millis(1));
             effects.collect_preloaded();
         }
         let chain = effects.chains["minecraft:preloaded"]

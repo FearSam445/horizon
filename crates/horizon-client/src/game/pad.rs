@@ -19,7 +19,7 @@ use horizon_client::{
 };
 use horizon_client_input::radial;
 use serde_json::{Value, json};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 use winit::event::MouseButton;
 use winit::keyboard::KeyCode;
 
@@ -380,9 +380,7 @@ impl Game<'_> {
             self.pad_output_off();
             self.pad_cancel_inputs(event_loop);
             // The radial menu closed with the pad: its overlay fades out, as for a cancel.
-            self.pad
-                .radial_look
-                .observe(None, std::time::Instant::now());
+            self.pad.radial_look.observe(None, web_time::Instant::now());
             self.pad.state = PadState::default();
             self.pad.in_use = false;
             // The keyboard's menu focus follows its widget all the same.

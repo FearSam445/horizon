@@ -2,10 +2,8 @@
 use super::PackAtlas;
 use crate::gfx::{section_instance, section_visibility};
 use crate::mesher::TerrainVertex;
-use std::{
-    path::PathBuf,
-    time::{Duration, Instant},
-};
+use std::path::PathBuf;
+use web_time::{Duration, Instant};
 use wgpu::util::DeviceExt;
 
 struct ProbePack(PathBuf);

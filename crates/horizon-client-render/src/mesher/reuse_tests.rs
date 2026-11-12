@@ -451,7 +451,7 @@ fn benchmark_padded_reuse() {
     for sample in 0..9 {
         // Alternate execution order to expose, rather than hide, order effects.
         for reused in [sample % 2 == 0, sample % 2 != 0] {
-            let start = std::time::Instant::now();
+            let start = web_time::Instant::now();
             for _ in 0..ITERATIONS {
                 if reused {
                     pad.fill(std::hint::black_box(&region), 0, &mut own);

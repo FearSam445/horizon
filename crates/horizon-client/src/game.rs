@@ -616,8 +616,8 @@ use std::{
         mpsc::{Receiver, TryRecvError},
     },
     thread::JoinHandle,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 use winit::{
     application::ApplicationHandler,
     error::EventLoopError,
@@ -2144,7 +2144,7 @@ struct Game<'a> {
     /// When `resourcepacks/` was last looked at for the open pack screen, and what it held
     /// (`watch_pack_folder`).
     pack_folder: Option<(
-        std::time::Instant,
+        web_time::Instant,
         Vec<(String, u64, Option<std::time::SystemTime>)>,
     )>,
     /// A pack reload staged on a worker (`LoadingOverlay`): the frame draws
@@ -2234,7 +2234,7 @@ struct Game<'a> {
     /// The wheel and hovered slot of `BundleMouseActions`.
     bundle_mouse: bundles::BundleMouse,
     /// The last inventory click, for the double click that gathers a stack.
-    last_inv_click: Option<(std::time::Instant, Option<usize>, bool)>,
+    last_inv_click: Option<(web_time::Instant, Option<usize>, bool)>,
     /// `lastQuickMoved`: what the last Shift click moved, which a Shift
     /// double click moves every stack of.
     last_quick_moved: Option<ItemStack>,
@@ -2447,7 +2447,7 @@ struct Game<'a> {
     /// An open book, book and quill or lectern screen.
     book: Option<books::BookScreen>,
     /// The last click on the book screen, for double clicks.
-    book_last_click: Option<std::time::Instant>,
+    book_last_click: Option<web_time::Instant>,
     /// Lecterns whose page-turn pulse is running (ticks left).
     lectern_pulses: Vec<((i32, i32, i32), i32)>,
     /// LevelLoadingScreen.smoothedProgress while the player is not placed yet.
@@ -2456,7 +2456,7 @@ struct Game<'a> {
     /// while the title says `createWorld.preparing`.
     creation_job: Option<std::thread::JoinHandle<std::result::Result<(), String>>>,
     /// When `loading_progress` last eased (the server thread's load, 50 ms a step).
-    loading_progress_at: Option<std::time::Instant>,
+    loading_progress_at: Option<web_time::Instant>,
     /// A received packet started or ended a piston's move: `poll_remote`
     /// syncs the moving pistons once its packets are handled, not once per packet.
     moving_pistons_stale: bool,
@@ -2928,7 +2928,7 @@ struct Game<'a> {
     /// (`snapshot_test_defs`), so a miss is final.
     test_defs_snapshot: bool,
     /// `GameTestBlockHighlightRenderer.markers`: block, text, removal time.
-    test_highlights: HashMap<(i32, i32, i32), (String, std::time::Instant)>,
+    test_highlights: HashMap<(i32, i32, i32), (String, web_time::Instant)>,
     /// `GameTestTicker.SINGLETON`: the game tests running on this server.
     game_tests: game_tests::GameTests,
     /// KeyboardHandler's debug key state (game/debug_keys.rs), the physical

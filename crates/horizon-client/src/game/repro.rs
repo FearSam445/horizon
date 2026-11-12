@@ -23,14 +23,15 @@ use horizon_core::geometry::Vec3;
 use horizon_system::scrub::Scrubber;
 use serde::Deserialize;
 use serde_json::{Value, json};
+use std::time::SystemTime;
 use std::{
     fs,
     io::{self, BufWriter, Write},
     path::{Path, PathBuf},
     sync::mpsc::{self, Receiver, Sender, TryRecvError},
     thread,
-    time::{Duration, Instant, SystemTime},
 };
+use web_time::{Duration, Instant};
 use winit::{
     dpi::PhysicalPosition,
     event::{DeviceId, ElementState, MouseScrollDelta, TouchPhase, WindowEvent},
@@ -619,7 +620,7 @@ impl Game<'_> {
             dir: dir.clone(),
             start_tick: start_step,
             started: Instant::now(),
-            started_at: SystemTime::now(),
+            started_at: horizon_clock::system_now(),
             input_base: self.input_trace.events(),
             start: start_state,
             mode,
@@ -867,8 +868,9 @@ impl Game<'_> {
         });
         let started_at = self.repro.recording.as_ref().map_or_else(
             || {
-                recording_started_at(&dir)
-                    .unwrap_or_else(|| SystemTime::now() - Duration::from_secs(MAX_RECORDING_SECS))
+                recording_started_at(&dir).unwrap_or_else(|| {
+                    horizon_clock::system_now() - Duration::from_secs(MAX_RECORDING_SECS)
+                })
             },
             |rec| rec.started_at,
         );

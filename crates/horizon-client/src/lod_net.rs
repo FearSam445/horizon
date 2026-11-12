@@ -23,7 +23,8 @@ use horizon_protocol::{
     buf::{Reader, Writer},
 };
 use horizon_world::registry::BlockStateId;
-use std::{collections::HashMap, time::Instant};
+use std::collections::HashMap;
+use web_time::Instant;
 
 mod client;
 mod server;

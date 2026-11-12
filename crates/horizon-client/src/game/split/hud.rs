@@ -12,7 +12,7 @@ use horizon_client::hud_kit::{
     room::Room,
 };
 use horizon_client::pad_glyph::{Glyph, Glyphs};
-use std::time::Duration;
+use web_time::Duration;
 
 /// Where the join strip and notices go with nothing above them, in GUI px from the view's top.
 const TOP: f32 = 18.0;

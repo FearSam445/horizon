@@ -8,7 +8,7 @@
 use super::{DisplayReading, DisplayWatch, Renderer, hdr, output};
 use crate::graphics::HdrMode;
 use output::{EffectiveOutput, OutputCapabilities};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// What an output's resources are made for: the encoding presented and the frame.
 type Key = (Option<hdr::Output>, output::FrameConfiguration);
@@ -516,7 +516,7 @@ mod tests {
         let settings = on();
         let (mut caps, mut reading) = window(Some(Pq), Some(true));
         let applied = snapshot(&settings, NO_PACK, caps, reading);
-        let start = std::time::Instant::now();
+        let start = web_time::Instant::now();
         let mut watch = DisplayWatch {
             #[cfg(target_os = "linux")]
             wayland: None,

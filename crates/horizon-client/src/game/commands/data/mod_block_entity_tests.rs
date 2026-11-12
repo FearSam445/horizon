@@ -80,7 +80,7 @@ fn actual_data_commands_preserve_same_mod_entity_runtime_state() {
         None,
         &base,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

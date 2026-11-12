@@ -21,8 +21,8 @@ use std::{
         mpsc,
     },
     thread,
-    time::Instant,
 };
+use web_time::Instant;
 
 #[cfg(unix)]
 pub use std::os::unix::net::{UnixListener, UnixStream};
@@ -43,7 +43,7 @@ impl Stream {
         })
     }
     /// A read timeout (None waits forever).
-    pub fn set_read_timeout(&self, timeout: Option<std::time::Duration>) -> io::Result<()> {
+    pub fn set_read_timeout(&self, timeout: Option<web_time::Duration>) -> io::Result<()> {
         match self {
             #[cfg(unix)]
             Self::Unix(s) => s.set_read_timeout(timeout),
@@ -358,7 +358,7 @@ fn spawn_listener<S: Send + 'static>(
                     return;
                 }
                 let Ok(stream) = next else {
-                    thread::sleep(std::time::Duration::from_millis(10));
+                    thread::sleep(web_time::Duration::from_millis(10));
                     continue;
                 };
                 let sender = sender.clone();
@@ -499,7 +499,7 @@ mod tests {
     }
 
     use super::*;
-    use std::time::Duration;
+    use web_time::Duration;
 
     /// The check agrees with the system at every length around its limit.
     #[cfg(unix)]
@@ -545,7 +545,7 @@ mod tests {
             if let Some(r) = server.try_recv() {
                 break r;
             }
-            thread::sleep(std::time::Duration::from_millis(5));
+            thread::sleep(web_time::Duration::from_millis(5));
         };
         assert_eq!(request.line, "status");
         request.reply.send(r#"{"ok":true}"#.into()).unwrap();

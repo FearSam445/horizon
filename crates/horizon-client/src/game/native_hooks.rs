@@ -1066,8 +1066,8 @@ use std::{
     fs,
     path::{Path, PathBuf},
     sync::Arc,
-    time::Duration,
 };
+use web_time::Duration;
 use winit::{event::MouseButton, keyboard::KeyCode};
 
 #[path = "native_screen_observer.rs"]

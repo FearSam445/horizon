@@ -7,8 +7,8 @@ use std::{
     hint::black_box,
     io::BufReader,
     path::Path,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 

@@ -92,6 +92,36 @@ impl Hardware {
     }
 }
 
+/// The browser build: a page sees only its architecture and thread count.
+#[cfg(target_arch = "wasm32")]
+impl Hardware {
+    pub fn detect() -> Hardware {
+        Hardware {
+            os: "web".to_owned(),
+            arch: std::env::consts::ARCH.to_owned(),
+            cpu_threads: Some(1),
+            ..Hardware::default()
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn power_source() -> Option<&'static str> {
+    None
+}
+#[cfg(target_arch = "wasm32")]
+pub fn load_average() -> Option<f64> {
+    None
+}
+#[cfg(target_arch = "wasm32")]
+pub fn rss_bytes(_pid: u32) -> Option<u64> {
+    None
+}
+#[cfg(target_arch = "wasm32")]
+pub fn cpu_seconds(_pid: u32) -> Option<f64> {
+    None
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 /// What `horizon_system::Machine` reads.
 struct Probes {

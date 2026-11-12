@@ -1226,7 +1226,7 @@ impl Hub {
         let Some(transfers) = &self.transfers else {
             return;
         };
-        for uuid in transfers.table().expire(std::time::Instant::now()) {
+        for uuid in transfers.table().expire(web_time::Instant::now()) {
             events.push(HostEvent::Warn(format!(
                 "player {} was expected from another server and never came",
                 horizon_protocol::crypto::uuid_string(uuid)
@@ -2435,7 +2435,7 @@ impl Hub {
                     // Frozen for a hand-over: it answers the server and nothing more.
                     self.keep_acknowledgements(i, &mut events);
                 }
-                let started = timed.then(std::time::Instant::now);
+                let started = timed.then(web_time::Instant::now);
                 let waiting = self.guests[i].inbox.len();
                 self.process_inbox(i, ctx, &mut events);
                 // Its moves are dropped, so whether the last one left it floating is
@@ -3550,7 +3550,7 @@ impl Hub {
             if g.fake {
                 // A fake player has no advancements screen or recipe book to fill.
             } else if !g.advancements_loaded {
-                let now = std::time::SystemTime::now()
+                let now = horizon_clock::system_now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .map_or(0, |d| d.as_millis() as i64);
                 let sync = self.sync.clone();
@@ -3731,7 +3731,7 @@ impl Hub {
     pub fn reload_resources(&mut self, sync: Arc<SyncData>) {
         self.lan.shared.set_sync(sync.clone());
         self.sync = sync.clone();
-        let now = std::time::SystemTime::now()
+        let now = horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_millis() as i64);
         for g in &mut self.guests {

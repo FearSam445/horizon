@@ -170,7 +170,7 @@ fn run(args: &[String]) -> Result<(), Box<dyn Error>> {
                     properties: properties.into(),
                 },
             )?;
-            let timestamp = std::time::SystemTime::now()
+            let timestamp = horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)?
                 .as_secs() as u32;
             let next = ChunkRecord::from_nbt(

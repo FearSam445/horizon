@@ -19,7 +19,7 @@ impl Game<'_> {
             || self.screenshot_sequence.is_some()
             || self.repro.recording_active()
             || self.repro.replaying();
-        Clock::new(std::time::Instant::now(), still)
+        Clock::new(web_time::Instant::now(), still)
     }
 
     /// What the HUD shows on a `w` x `h` GUI px view this frame, as keep-outs: the boss bars

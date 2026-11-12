@@ -880,7 +880,7 @@ impl Game<'_> {
         }
         // handleExitToTitleScreen: outside hardcore, Title Screen asks first.
         if hit == Some(1) && !self.level.hardcore {
-            self.ui.death_confirm = Some(std::time::Instant::now());
+            self.ui.death_confirm = Some(web_time::Instant::now());
             self.audio.play_button_click();
             return Ok(());
         }
@@ -951,7 +951,7 @@ impl Game<'_> {
                 };
                 self.audio.play_button_click();
                 if hit == 1 && !self.level.hardcore {
-                    self.ui.death_confirm = Some(std::time::Instant::now());
+                    self.ui.death_confirm = Some(web_time::Instant::now());
                     self.death_focus = Some(0);
                     return Ok(());
                 }

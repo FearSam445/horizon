@@ -2,7 +2,7 @@
 use crate::spans::timeline::{self, ThreadEvents};
 use horizon_perf_format::v1::{Side, TimelineChunk, Warning, WarningCode};
 use horizon_perf_format::{Interner, ProtoMessage};
-use std::time::Instant;
+use web_time::Instant;
 
 /// Seconds between two drains: one chunk per thread each.
 pub const CHUNK_S: f64 = 1.0;

@@ -14,8 +14,8 @@ use horizon_client_render::{
 use std::{
     fs,
     path::{Path, PathBuf},
-    time::Instant,
 };
+use web_time::Instant;
 
 /// A small deterministic generator: the same files on every run and every branch.
 struct Noise(u64);

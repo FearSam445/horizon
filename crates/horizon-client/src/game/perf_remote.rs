@@ -12,7 +12,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
-use std::time::Instant;
+use web_time::Instant;
 
 /// The guest whose capture runs on this server.
 pub(in crate::game) struct Requester {

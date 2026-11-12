@@ -27,7 +27,7 @@ fn game() -> (Game<'static>, mpsc::Receiver<horizon_client::lan::Out>) {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

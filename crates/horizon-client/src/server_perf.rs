@@ -14,7 +14,8 @@ use horizon_perf_format::{
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::thread::{self, JoinHandle};
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
+use web_time::Instant;
 
 #[cfg(test)]
 mod tests;
@@ -824,7 +825,7 @@ impl Session {
 }
 
 fn unix_ms() -> i64 {
-    SystemTime::now()
+    horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as i64)
 }

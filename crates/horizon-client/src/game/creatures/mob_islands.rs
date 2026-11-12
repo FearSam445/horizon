@@ -1113,7 +1113,7 @@ mod tests {
             sent.send(()).unwrap();
         });
         finished
-            .recv_timeout(std::time::Duration::from_secs(120))
+            .recv_timeout(web_time::Duration::from_secs(120))
             .expect("started workers finish after spawn/setup failure, with no stranded lane");
     }
 
@@ -1447,7 +1447,7 @@ mod tests {
             let _ = sent.send(());
         });
         finished
-            .recv_timeout(std::time::Duration::from_secs(20))
+            .recv_timeout(web_time::Duration::from_secs(20))
             .expect("foreign wait released");
     }
 

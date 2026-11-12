@@ -9,7 +9,7 @@ use std::sync::atomic::{
 };
 use std::sync::atomic::{Ordering::*, compiler_fence};
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use web_time::Instant;
 
 use crate::unwind::{self, MAX_FRAMES, StackBounds};
 

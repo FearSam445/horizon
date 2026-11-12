@@ -168,7 +168,7 @@ impl WorldRequest {
             name: name.unwrap_or(&folder).to_owned(),
             // WorldOptions.randomSeed when no seed was given.
             seed: seed.unwrap_or_else(|| {
-                let t = std::time::SystemTime::now()
+                let t = horizon_clock::system_now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .map_or(0, |d| d.as_nanos() as u64);
                 (t ^ (t >> 29)).wrapping_mul(0x9E37_79B9_7F4A_7C15) as i64
@@ -367,7 +367,7 @@ impl WorldLoader {
 /// How long the preloaded world data outlives the world screens: a player
 /// who goes back to the title or to Multiplayer and opens no world for this
 /// long gets the memory back.
-const PRELOAD_KEPT: std::time::Duration = std::time::Duration::from_secs(60);
+const PRELOAD_KEPT: web_time::Duration = web_time::Duration::from_secs(60);
 
 enum Preload {
     Idle,
@@ -375,7 +375,7 @@ enum Preload {
     /// the player last left the world screens.
     Started {
         thread: std::thread::JoinHandle<()>,
-        left: Option<std::time::Instant>,
+        left: Option<web_time::Instant>,
     },
     /// A world opened: the data is the world's now, and stays.
     Used,
@@ -436,7 +436,7 @@ pub(super) fn preload_world_data(
         Preload::Idle => {}
         Preload::Started { left, .. } if on_world_screens => *left = None,
         Preload::Started { thread, left } => {
-            let left = *left.get_or_insert_with(std::time::Instant::now);
+            let left = *left.get_or_insert_with(web_time::Instant::now);
             if left.elapsed() >= PRELOAD_KEPT && thread.is_finished() {
                 horizon_client::vanillagen::forget_shared_data();
                 horizon_client::structure_blocks::forget_loot_data();
@@ -475,7 +475,7 @@ pub(super) fn preload_launch_world(
         .spawn(move || {
             // Not behind the server: the world's opening waits for it.
             let _step = startup::step("world.preload");
-            let started = std::time::Instant::now();
+            let started = web_time::Instant::now();
             let sync = spawn_sync_preload(&resources, false);
             // Errors are left for the world opening to report. The world's
             // flags from its level.dat: the feature packs a flag forces on.

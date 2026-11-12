@@ -270,17 +270,17 @@ pub struct Resolver {
     entries: std::collections::HashMap<NameOrId, Entry>,
     done: std::sync::mpsc::Receiver<(NameOrId, Option<ResolvedProfile>)>,
     send: std::sync::mpsc::Sender<(NameOrId, Option<ResolvedProfile>)>,
-    last_sweep: std::time::Instant,
+    last_sweep: web_time::Instant,
     heads: HeadProfiles,
 }
 struct Entry {
-    touched: std::time::Instant,
+    touched: web_time::Instant,
     /// `None` while the fetch is in flight.
     resolved: Option<Option<ResolvedProfile>>,
 }
 /// `ProfileResolver.Cached`'s cache bounds.
 const MAX_PROFILES: usize = 256;
-const PROFILE_TTL: std::time::Duration = std::time::Duration::from_secs(10 * 60);
+const PROFILE_TTL: web_time::Duration = web_time::Duration::from_secs(10 * 60);
 
 /// `StringUtil.isValidPlayerName` (the check `fetchByName` makes first).
 fn valid_player_name(name: &str) -> bool {
@@ -338,16 +338,16 @@ impl Resolver {
             entries: Default::default(),
             done,
             send,
-            last_sweep: std::time::Instant::now(),
+            last_sweep: web_time::Instant::now(),
             heads: HeadProfiles::default(),
         }
     }
     /// `CacheBuilder.expireAfterAccess` with `maximumSize`.
     fn sweep(&mut self) {
-        if self.last_sweep.elapsed() < std::time::Duration::from_secs(30) {
+        if self.last_sweep.elapsed() < web_time::Duration::from_secs(30) {
             return;
         }
-        self.last_sweep = std::time::Instant::now();
+        self.last_sweep = web_time::Instant::now();
         self.entries
             .retain(|_, e| e.touched.elapsed() < PROFILE_TTL);
         while self.entries.len() > MAX_PROFILES
@@ -366,14 +366,14 @@ impl Resolver {
             self.entries.insert(
                 key,
                 Entry {
-                    touched: std::time::Instant::now(),
+                    touched: web_time::Instant::now(),
                     resolved: Some(resolved),
                 },
             );
         }
         self.sweep();
         if let Some(entry) = self.entries.get_mut(key) {
-            entry.touched = std::time::Instant::now();
+            entry.touched = web_time::Instant::now();
             return match &entry.resolved {
                 Some(resolved) => Resolve::Done(resolved.clone()),
                 None => Resolve::Pending,
@@ -385,7 +385,7 @@ impl Resolver {
         self.entries.insert(
             key.clone(),
             Entry {
-                touched: std::time::Instant::now(),
+                touched: web_time::Instant::now(),
                 resolved: resolved.then_some(None),
             },
         );
@@ -932,9 +932,9 @@ pub struct Downloader {
     /// When each failed texture download was last tried, so it can be retried:
     /// a transient network error must not pin a player to the default skin for
     /// the rest of the session.
-    failed: std::collections::HashMap<(Kind, String), std::time::Instant>,
+    failed: std::collections::HashMap<(Kind, String), web_time::Instant>,
     /// How long a failed texture download waits before it is tried again.
-    retry_after: std::time::Duration,
+    retry_after: web_time::Duration,
     /// The `states` keys, oldest first, so the oldest settled one can go ([`Bounds::states`]).
     state_order: std::collections::VecDeque<(Kind, String)>,
     /// The `resources` keys, oldest first ([`Bounds::resources`]).
@@ -1015,7 +1015,7 @@ impl Downloader {
             resource_root: Default::default(),
             resources: Default::default(),
             failed: Default::default(),
-            retry_after: std::time::Duration::from_secs(60),
+            retry_after: web_time::Duration::from_secs(60),
             state_order: Default::default(),
             resource_order: Default::default(),
             in_flight: 0,
@@ -1112,7 +1112,7 @@ impl Downloader {
                     Download::Ready
                 }
                 None => {
-                    self.failed.insert(key.clone(), std::time::Instant::now());
+                    self.failed.insert(key.clone(), web_time::Instant::now());
                     Download::Failed
                 }
             };
@@ -1333,7 +1333,7 @@ impl SkinSlots {
 fn http_get(url: &str) -> Option<Vec<u8>> {
     use std::io::Read;
     let response = ureq::AgentBuilder::new()
-        .timeout(std::time::Duration::from_secs(15))
+        .timeout(web_time::Duration::from_secs(15))
         .user_agent("Java")
         .build()
         .get(url)
@@ -1979,13 +1979,13 @@ mod tests {
         url: &str,
         want: super::Download,
     ) -> super::Download {
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(10);
         loop {
             let state = d.state(kind, url);
-            if state == want || std::time::Instant::now() > deadline {
+            if state == want || web_time::Instant::now() > deadline {
                 return state;
             }
-            std::thread::sleep(std::time::Duration::from_millis(5));
+            std::thread::sleep(web_time::Duration::from_millis(5));
         }
     }
 
@@ -2038,7 +2038,7 @@ mod tests {
         assert_eq!(d.state(super::Kind::Elytra, &url), super::Download::Failed);
         assert_eq!(served.load(Ordering::SeqCst), 1);
         // After it, the download is started again and takes the good answer.
-        d.retry_after = std::time::Duration::ZERO;
+        d.retry_after = web_time::Duration::ZERO;
         assert_eq!(d.state(super::Kind::Elytra, &url), super::Download::Pending);
         assert_eq!(
             wait_state(&mut d, super::Kind::Elytra, &url, super::Download::Ready),
@@ -2069,13 +2069,13 @@ mod download_bound_tests {
 
     /// Asks again until the texture's download has settled.
     fn wait(d: &mut Downloader, url: &str) -> Download {
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(10);
         loop {
             let state = d.state(Kind::Skin, url);
-            if state != Download::Pending || std::time::Instant::now() > deadline {
+            if state != Download::Pending || web_time::Instant::now() > deadline {
                 return state;
             }
-            std::thread::sleep(std::time::Duration::from_millis(2));
+            std::thread::sleep(web_time::Duration::from_millis(2));
         }
     }
 
@@ -2086,14 +2086,14 @@ mod download_bound_tests {
     fn slow_failure(_: &str) -> Option<Vec<u8>> {
         let now = RUNNING.fetch_add(1, Ordering::SeqCst) + 1;
         PEAK.fetch_max(now, Ordering::SeqCst);
-        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::thread::sleep(web_time::Duration::from_millis(20));
         RUNNING.fetch_sub(1, Ordering::SeqCst);
         None
     }
 
     /// The same, not counted: tests run side by side, and the count is another test's.
     fn sleepy_failure(_: &str) -> Option<Vec<u8>> {
-        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::thread::sleep(web_time::Duration::from_millis(20));
         None
     }
 
@@ -2108,7 +2108,7 @@ mod download_bound_tests {
         };
         let mut d = downloader("threads", bounds, slow_failure);
         let urls: Vec<String> = (0..60).map(url).collect();
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(20);
         let mut first = true;
         loop {
             let states: Vec<Download> = urls.iter().map(|u| d.state(Kind::Skin, u)).collect();
@@ -2123,11 +2123,11 @@ mod download_bound_tests {
                 break;
             }
             assert!(
-                std::time::Instant::now() < deadline,
+                web_time::Instant::now() < deadline,
                 "{} still pending",
                 states.len()
             );
-            std::thread::sleep(std::time::Duration::from_millis(2));
+            std::thread::sleep(web_time::Duration::from_millis(2));
         }
         assert!(
             PEAK.load(Ordering::SeqCst) <= 4,
@@ -2191,7 +2191,7 @@ mod download_bound_tests {
 
     /// A fetch long enough for a test to ask between its start and its end.
     fn slowish_failure(_: &str) -> Option<Vec<u8>> {
-        std::thread::sleep(std::time::Duration::from_millis(150));
+        std::thread::sleep(web_time::Duration::from_millis(150));
         None
     }
 
@@ -2209,13 +2209,13 @@ mod download_bound_tests {
         assert_eq!(wait(&mut d, &url(0)), Download::Failed);
         // Another texture takes the only place; the first one's retry becomes due but has to wait.
         assert_eq!(d.state(Kind::Skin, &url(1)), Download::Pending);
-        d.retry_after = std::time::Duration::ZERO;
+        d.retry_after = web_time::Duration::ZERO;
         assert_eq!(d.state(Kind::Skin, &url(0)), Download::Failed);
         assert_eq!(d.in_flight, 1);
         d.retry_after = wait_time;
         assert_eq!(wait(&mut d, &url(1)), Download::Failed);
         // The place is free: the retry starts.
-        d.retry_after = std::time::Duration::ZERO;
+        d.retry_after = web_time::Duration::ZERO;
         assert_eq!(d.state(Kind::Skin, &url(0)), Download::Pending);
         assert_eq!(d.in_flight, 1);
     }

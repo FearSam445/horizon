@@ -6,10 +6,8 @@ use horizon_client::held::Source;
 use horizon_client::{Result, items::ItemStack};
 use horizon_core::geometry::Vec3;
 use serde_json::{Value, json};
-use std::{
-    sync::mpsc::Sender,
-    time::{Duration, Instant},
-};
+use std::sync::mpsc::Sender;
+use web_time::{Duration, Instant};
 use winit::{event::MouseButton, keyboard::KeyCode};
 
 /// The control protocol's version (`docs/api/stability.md`): before 1.0 an

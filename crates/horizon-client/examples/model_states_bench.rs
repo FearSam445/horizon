@@ -10,7 +10,8 @@ use horizon_world::{
     registry::{BlockRegistry, BlockStateId},
 };
 use serde_json::{Value, json};
-use std::{collections::BTreeMap, fs, hint::black_box, path::PathBuf, time::Instant};
+use std::{collections::BTreeMap, fs, hint::black_box, path::PathBuf};
+use web_time::Instant;
 
 struct Fixture {
     root: PathBuf,

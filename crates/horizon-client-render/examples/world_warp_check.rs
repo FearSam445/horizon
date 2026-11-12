@@ -327,7 +327,7 @@ fn bench(renderer: &mut Renderer, out: &Path) -> Result<(), Box<dyn std::error::
         for _ in 0..30 {
             renderer.render(&frame).unwrap();
         }
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         const FRAMES: u32 = 240;
         for _ in 0..FRAMES {
             renderer.render(&frame).unwrap();

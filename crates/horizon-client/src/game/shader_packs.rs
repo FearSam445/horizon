@@ -310,7 +310,7 @@ impl Game<'_> {
             && !(super::native_shaders::linear_frame_switch() && refused(&path, fingerprint(&path)))
         {
             let name = name.as_str();
-            let started = std::time::Instant::now();
+            let started = web_time::Instant::now();
             // A pack is not the game's own code: one that makes the shader compiler (or our
             // translation of it) panic is turned off instead of crashing every world load (#3525).
             let loaded = horizon_client::crash::contain(|| {
@@ -402,7 +402,7 @@ impl Game<'_> {
                             blocks: ids.clone(),
                             block_states: RefCell::default(),
                         });
-                        let started_ids = std::time::Instant::now();
+                        let started_ids = web_time::Instant::now();
                         let table = terrain_state_ids(self.pack.assets.registry, &ids);
                         log::info!(
                             "shader pack {name}: mc_Entity for {} of {} block states in {} ms",

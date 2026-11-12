@@ -21,7 +21,8 @@ use horizon_protocol::{
     ids,
     packets::play::Clientbound,
 };
-use std::{collections::BTreeMap, error::Error, time::Instant};
+use std::{collections::BTreeMap, error::Error};
+use web_time::Instant;
 
 struct Packet {
     id: i32,

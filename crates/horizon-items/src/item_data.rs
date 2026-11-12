@@ -2742,7 +2742,8 @@ mod tests {
     #[test]
     #[ignore = "microbenchmark; run with --ignored --nocapture"]
     fn benchmark_decode_components() {
-        use std::{hint::black_box, time::Instant};
+        use std::hint::black_box;
+        use web_time::Instant;
         for (name, tag) in component_cases() {
             let reps = 10_000;
             let mut times = [Vec::new(), Vec::new()];

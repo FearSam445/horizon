@@ -13,7 +13,7 @@ use crate::game::{Dim, Game, lan::LanHost};
 use horizon_client::lan::arrivals;
 use horizon_protocol::packets::play::{self, Clientbound as C};
 use serde_json::{Value, json};
-use std::time::Instant;
+use web_time::Instant;
 
 impl Game<'_> {
     /// A proxy's `player-*` request; the reply is one JSON line, `{"ok": true, ...}` or

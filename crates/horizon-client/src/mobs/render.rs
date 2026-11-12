@@ -3511,7 +3511,8 @@ mod scroll_tests {
     #[test]
     #[ignore = "manual benchmark; needs the prepared resources"]
     fn benchmark_mob_farm_geometry() {
-        use std::{hash::Hasher, hint::black_box, time::Instant};
+        use std::{hash::Hasher, hint::black_box};
+        use web_time::Instant;
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
         if !root.join("entity-models.json").exists() {

@@ -20,8 +20,8 @@ use std::{
         mpsc::{self, Receiver, SyncSender, TrySendError},
     },
     thread::JoinHandle,
-    time::Instant,
 };
+use web_time::Instant;
 
 type ChunkKey = (i32, i32);
 type SectionKey = (i32, i32, i32);
@@ -102,7 +102,7 @@ enum CacheMissReason {
 #[derive(Clone, Copy)]
 struct TimingStart {
     wall: Instant,
-    thread_cpu: Option<std::time::Duration>,
+    thread_cpu: Option<web_time::Duration>,
 }
 
 #[derive(Default)]

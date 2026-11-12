@@ -105,7 +105,7 @@ impl Game<'_> {
         let Some(window) = self.window.clone() else {
             return Ok(());
         };
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         if let Some(renderer) = &mut self.renderer {
             renderer.release_surface();
         }

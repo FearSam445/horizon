@@ -618,7 +618,7 @@ mod connected_spawnpoint_rotation_tests {
         let scratch = std::env::temp_dir().join(format!(
             "horizon-forced-spawn-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now()
+            horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
                 .as_nanos()

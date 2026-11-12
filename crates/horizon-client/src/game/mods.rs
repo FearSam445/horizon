@@ -22,7 +22,7 @@ pub(super) struct ModsState {
     pub(super) applied: Option<std::collections::BTreeSet<String>>,
     /// A live switch's resource reload is running: when it applied, the server
     /// reloads its data from the new root. Its start, for the log.
-    pub(super) live: Option<std::time::Instant>,
+    pub(super) live: Option<web_time::Instant>,
     /// The content mods installed, and those of them with only assets and
     /// data (`mod_content::live_switch`): they switch with a world open.
     content_ids: std::collections::BTreeSet<String>,
@@ -689,7 +689,7 @@ impl Game<'_> {
             next
         );
         self.mods.applied = Some(next);
-        self.mods.live = Some(std::time::Instant::now());
+        self.mods.live = Some(web_time::Instant::now());
         self.reload_packs();
     }
     /// A live switch's resources applied: the server reloads its data packs
@@ -706,7 +706,7 @@ impl Game<'_> {
         let root = self.options.resources.clone();
         let enabled = self.applied_mods();
         let reload = move |g: &mut Game<'_>| {
-            let at = std::time::Instant::now();
+            let at = web_time::Instant::now();
             g.options.resources = root;
             g.settings.mods.enabled = enabled.clone();
             g.mods.applied = Some(enabled);
@@ -1044,7 +1044,7 @@ mod tests {
         let switches_on_restart = Some(Err("horizon.mods.switch.worldgen"));
         assert_eq!(verdict(&ruby, &manifest, true), switches_on_restart);
         assert_eq!(verdict(&ruby, &manifest, false), Some(Ok(())));
-        let later = std::time::SystemTime::now() + std::time::Duration::from_secs(5);
+        let later = horizon_clock::system_now() + web_time::Duration::from_secs(5);
         let mut folder = std::fs::OpenOptions::new();
         folder.read(true);
         // Windows opens a folder only with FILE_FLAG_BACKUP_SEMANTICS, and sets its time only

@@ -1333,7 +1333,8 @@ mod tests {
     #[test]
     #[ignore = "microbenchmark; run with --ignored --nocapture"]
     fn benchmark_unpack() {
-        use std::{hint::black_box, time::Instant};
+        use std::hint::black_box;
+        use web_time::Instant;
         let values: Vec<u32> = (0..4096).map(|i| (i % 12) as u32).collect();
         let list = PalettedContainer::from_values(BLOCKS, &values);
         let global = PalettedContainer::from_values(
@@ -1483,7 +1484,8 @@ mod tests {
     #[test]
     #[ignore = "microbenchmark; run with --ignored --nocapture"]
     fn benchmark_palette_ids() {
-        use std::{hint::black_box, time::Instant};
+        use std::hint::black_box;
+        use web_time::Instant;
         for (name, values) in palette_cases() {
             let mut times = [Vec::new(), Vec::new()];
             for round in 0..25 {
@@ -1602,7 +1604,8 @@ mod tests {
     #[test]
     #[ignore = "microbenchmark; run with --ignored --nocapture"]
     fn benchmark_pack() {
-        use std::{hint::black_box, time::Instant};
+        use std::hint::black_box;
+        use web_time::Instant;
         for (name, container) in pack_cases() {
             let reps = if container.uniform().is_some() {
                 2000

@@ -1181,7 +1181,7 @@ impl Game<'_> {
         let modifier = self.item_modifier_arg(ctx, "modifier")?;
         let source = self.command_source.unwrap_or_else(|| self.player_source());
         let view = source.entity.map(|t| self.entity_view_asked(t, &modifier));
-        let seed = std::time::SystemTime::now()
+        let seed = horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_nanos() as i64);
         let mut rng = horizon_core::random::LegacyRandom::new(seed);
@@ -1768,7 +1768,7 @@ mod stand_equip_event_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -1862,7 +1862,7 @@ mod mob_equipment_command_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),
@@ -2243,7 +2243,7 @@ mod mob_equipment_stack_tests {
             None,
             &root,
             &settings,
-            std::time::Instant::now(),
+            web_time::Instant::now(),
             false,
             true,
             &Progress::new(),

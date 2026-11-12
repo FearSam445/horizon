@@ -52,7 +52,7 @@ fn actual_player_save_tracks_mutable_body_and_keeps_guest_context() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

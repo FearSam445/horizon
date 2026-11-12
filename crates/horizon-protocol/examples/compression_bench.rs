@@ -2,7 +2,8 @@
 //! compression on one thread, not actual server throughput or network latency.
 use flate2::{Compress, Compression, FlushCompress, Status};
 use horizon_protocol::buf::write_varint;
-use std::{error::Error, time::Instant};
+use std::error::Error;
+use web_time::Instant;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let path = std::env::args()

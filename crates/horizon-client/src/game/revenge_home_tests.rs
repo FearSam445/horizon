@@ -26,7 +26,7 @@ fn game() -> Game<'static> {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

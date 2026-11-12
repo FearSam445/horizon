@@ -9,8 +9,8 @@ use std::{
     collections::HashMap,
     path::{Path, PathBuf},
     sync::RwLock,
-    time::Instant,
 };
+use web_time::Instant;
 
 /// `GuiSpriteScaling.NineSlice`: the sprite's size in GUI pixels, whatever
 /// its texture's resolution, its borders (left, top, right, bottom) in the

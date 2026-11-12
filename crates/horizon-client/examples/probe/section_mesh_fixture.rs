@@ -20,8 +20,8 @@ use std::{
     io::{BufRead, BufReader, BufWriter, Write},
     path::PathBuf,
     sync::Arc,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 fn int(value: &Value) -> Result<i32> {

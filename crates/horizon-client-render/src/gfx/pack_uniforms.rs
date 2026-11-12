@@ -425,8 +425,8 @@ pub struct FrameUniforms {
     pub values: Vec<Value>,
     /// The block atlas's size (`atlasSize`), 0 without one.
     pub atlas: [u32; 2],
-    start: std::time::Instant,
-    last: Option<std::time::Instant>,
+    start: web_time::Instant,
+    last: Option<web_time::Instant>,
     frame: u32,
     /// The tick `eval_custom` restarts the custom uniforms at: every frame's under STILL; on a
     /// scripted clock's frame 1 only 0 (where a freshly parsed pack starts), so its later frames
@@ -449,7 +449,7 @@ impl Default for FrameUniforms {
         Self {
             values: Vec::new(),
             atlas: [0; 2],
-            start: std::time::Instant::now(),
+            start: web_time::Instant::now(),
             last: None,
             frame: 0,
             custom_restart: None,
@@ -779,7 +779,7 @@ impl FrameUniforms {
 
     /// This frame's values for a render size of `size` pixels.
     pub fn update(&mut self, frame: &Frame, inputs: &PackInputs, size: [u32; 2]) {
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         let measured = self.last.map_or(0.0, |l| (now - l).as_secs_f32());
         self.last = Some(now);
         self.custom_restart = match inputs.frame_timing {
@@ -2425,7 +2425,7 @@ pub(super) mod initial_history_tests {
         input.eye_light = [0, 0];
         input.rain = 1.0;
         u.center_depth_raw = Some(0.0);
-        u.last = Some(std::time::Instant::now() - std::time::Duration::from_secs(3));
+        u.last = Some(web_time::Instant::now() - web_time::Duration::from_secs(3));
         u.update(&f, &input, [800, 450]);
         assert_eq!(
             float(&u, "frameTimeCounter")[0],

@@ -15,7 +15,7 @@ fn a_carried_block_is_not_placed_into_an_entity() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

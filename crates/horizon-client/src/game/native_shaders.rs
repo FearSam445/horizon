@@ -8,8 +8,8 @@
 use std::{
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 use horizon_client::text::Text;
 use horizon_shader_api::{Api, Manifest, Pack, Primaries, check};
@@ -313,7 +313,7 @@ mod tests {
         let manifest_path = pack.join(horizon_shader_api::MANIFEST);
         let manifest = std::fs::read_to_string(&manifest_path).unwrap();
         std::fs::write(&manifest_path, "temporarily invalid").unwrap();
-        state.resolved_at = Some(std::time::Instant::now() - super::LOOK_EVERY);
+        state.resolved_at = Some(web_time::Instant::now() - super::LOOK_EVERY);
         assert_eq!(state.resolve_path(&dir, "horizon:p", false), pack);
         assert_ne!(fingerprint(&pack).unwrap(), first);
         std::fs::write(&manifest_path, manifest).unwrap();
@@ -334,7 +334,7 @@ mod tests {
             .unwrap()
             .replace("id = \"p\"", "id = \"other\"");
         std::fs::write(manifest_path, text).unwrap();
-        state.resolved_at = Some(std::time::Instant::now() - super::LOOK_EVERY);
+        state.resolved_at = Some(web_time::Instant::now() - super::LOOK_EVERY);
         assert_eq!(
             state.resolve_path(&dir, "horizon:p", false),
             dir.join("horizon:p"),

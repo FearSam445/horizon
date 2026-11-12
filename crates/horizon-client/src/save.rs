@@ -2194,7 +2194,7 @@ fn write_region_records(
     folder: &str,
     records: &[((i32, i32), &Record)],
 ) -> Result<()> {
-    let timestamp = std::time::SystemTime::now()
+    let timestamp = horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs() as u32);
     let compressed = compress_records(records, timestamp);
@@ -2551,22 +2551,22 @@ fn is_portal_ticket(ticket: &Tag) -> bool {
 }
 #[derive(Default)]
 struct LodDecoded {
-    chunks: crate::fast_hash::FxHashMap<(i32, i32), (std::time::Instant, LodSurfaces)>,
+    chunks: crate::fast_hash::FxHashMap<(i32, i32), (web_time::Instant, LodSurfaces)>,
     order: std::collections::VecDeque<(i32, i32)>,
 }
 /// Saved chunks kept decoded for far terrain (each tens of kilobytes), and
 /// for how long: edits saved later show after it.
 const LOD_DECODED: usize = 1024;
-const LOD_DECODED_TTL: std::time::Duration = std::time::Duration::from_secs(30);
+const LOD_DECODED_TTL: web_time::Duration = web_time::Duration::from_secs(30);
 /// A region file's saved chunks (bit `x + z * 32`), `None` without the file,
 /// as of `checked`.
 struct LodRegion {
-    checked: std::time::Instant,
+    checked: web_time::Instant,
     chunks: Option<[u64; 16]>,
 }
 /// How long far terrain trusts a region file's chunk list: chunks saved after
 /// it was read show in the far view this long after.
-const LOD_REGION_TTL: std::time::Duration = std::time::Duration::from_secs(10);
+const LOD_REGION_TTL: web_time::Duration = web_time::Duration::from_secs(10);
 impl SaveDir {
     /// This dimension's server-owned mod attachments: `data/horizon/attachments.dat`, Horizon's
     /// own namespace. A file that doesn't read is moved aside to `attachments.dat.corrupt`, with
@@ -2775,7 +2775,7 @@ impl SaveDir {
             regions.insert(
                 key,
                 LodRegion {
-                    checked: std::time::Instant::now(),
+                    checked: web_time::Instant::now(),
                     chunks,
                 },
             );
@@ -3483,7 +3483,7 @@ pub fn random_uuid() -> [i32; 4] {
     };
     static NEXT: OnceLock<AtomicU64> = OnceLock::new();
     let next = NEXT.get_or_init(|| {
-        let t = std::time::SystemTime::now()
+        let t = horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_nanos() as u64);
         AtomicU64::new(t ^ (std::process::id() as u64).rotate_left(32))
@@ -4709,7 +4709,7 @@ impl Level {
             "locked",
             Tag::Byte(i8::from(self.difficulty_locked)),
         );
-        let now = std::time::SystemTime::now()
+        let now = horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_millis() as i64);
         for (key, value) in [
@@ -5253,7 +5253,7 @@ impl SaveDir {
         }
         let columns = self.lod_surfaces(x, z, assets, biomes)?;
         let mut decoded = self.lod_decoded.lock().unwrap();
-        let fresh = (std::time::Instant::now(), columns.clone());
+        let fresh = (web_time::Instant::now(), columns.clone());
         if decoded.chunks.insert((x, z), fresh).is_none() {
             decoded.order.push_back((x, z));
             while decoded.order.len() > LOD_DECODED {
@@ -9172,7 +9172,7 @@ mod far_census {
             let step = tiles.len().div_ceil(limit).max(1);
             let mut saved = Census::default();
             let mut seeded = Census::default();
-            let started = std::time::Instant::now();
+            let started = web_time::Instant::now();
             for &(tx, tz) in tiles.iter().step_by(step) {
                 let (x, z) = (tx * size - width, tz * size - width);
                 let columns = sampler.grid(x, z, width, 18);

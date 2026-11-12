@@ -7,8 +7,8 @@ use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
     thread,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 use horizon_client::logging::{data_dir, game_home};
 use serde_json::{Value, json};

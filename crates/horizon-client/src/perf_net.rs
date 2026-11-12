@@ -6,7 +6,7 @@ use horizon_protocol::{
     Error, Result,
     buf::{Reader, Writer},
 };
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 pub const CHANNEL: &str = "horizon:perf";
 /// The server brand of every Horizon server and LAN host.

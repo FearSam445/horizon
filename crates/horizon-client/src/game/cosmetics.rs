@@ -22,7 +22,7 @@ use horizon_hooks::players::{
 };
 use std::sync::mpsc::{Receiver, channel};
 use std::sync::{Arc, Mutex, PoisonError};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// Horizon's mark before a Horizon player's name, over their name tag and in the player list.
 const MARK: Mark = &horizon_cosmetics::mark::MARK;

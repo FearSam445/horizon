@@ -698,10 +698,10 @@ pub fn report_error(
 
 /// Called every frame: panics once `HORIZON_DEBUG_CRASH` asks (development builds only).
 pub fn debug_crash_tick() {
-    static AT: std::sync::OnceLock<Option<(std::time::Instant, std::time::Duration)>> =
+    static AT: std::sync::OnceLock<Option<(web_time::Instant, web_time::Duration)>> =
         std::sync::OnceLock::new();
     if let Some((first, after)) =
-        AT.get_or_init(|| debug_crash_after().map(|d| (std::time::Instant::now(), d)))
+        AT.get_or_init(|| debug_crash_after().map(|d| (web_time::Instant::now(), d)))
         && first.elapsed() >= *after
     {
         panic!("Manually triggered debug crash");
@@ -710,13 +710,13 @@ pub fn debug_crash_tick() {
 
 /// Development builds crash on purpose when `HORIZON_DEBUG_CRASH` is set (vanilla has F3+C held
 /// for ten seconds): the number is seconds after the first frame (default 5).
-pub fn debug_crash_after() -> Option<std::time::Duration> {
+pub fn debug_crash_after() -> Option<web_time::Duration> {
     if !cfg!(debug_assertions) {
         return None;
     }
     let value = std::env::var("HORIZON_DEBUG_CRASH").ok()?;
     let seconds = value.parse::<f64>().unwrap_or(5.0).max(0.0);
-    Some(std::time::Duration::from_secs_f64(seconds))
+    Some(web_time::Duration::from_secs_f64(seconds))
 }
 
 #[cfg(test)]

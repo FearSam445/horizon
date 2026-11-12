@@ -13,7 +13,7 @@ fn selectors_reject_criteria_absent_from_the_selected_definition() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -36,7 +36,7 @@ fn selectors_reject_criteria_absent_from_the_selected_definition() {
     let scratch = std::env::temp_dir().join(format!(
         "horizon-criterion-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()

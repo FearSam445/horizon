@@ -336,15 +336,15 @@ mod tests {
         let mut grid = SeenGrid::new(boxes.iter().copied());
         let mut out = Vec::new();
 
-        let t = std::time::Instant::now();
+        let t = web_time::Instant::now();
         let rounds = 100;
         let mut fallback_count = 0;
-        let mut query_dur = std::time::Duration::ZERO;
-        let mut update_dur = std::time::Duration::ZERO;
+        let mut query_dur = web_time::Duration::ZERO;
+        let mut update_dur = web_time::Duration::ZERO;
         for _ in 0..rounds {
             for i in 0..n {
                 let area = boxes[i];
-                let t0 = std::time::Instant::now();
+                let t0 = web_time::Instant::now();
                 if !grid.candidates(area, &mut out) {
                     fallback_count += 1;
                     out.clear();
@@ -355,7 +355,7 @@ mod tests {
                 let x = 3.5 + next(1.5);
                 let z = 3.5 + next(1.5);
                 boxes[i] = boxed(x, 64.0, z, 0.6);
-                let t1 = std::time::Instant::now();
+                let t1 = web_time::Instant::now();
                 grid.update(i, boxes[i]);
                 update_dur += t1.elapsed();
             }

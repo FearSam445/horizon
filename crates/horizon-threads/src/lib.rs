@@ -284,11 +284,9 @@ fn favour() -> bool {
 /// clock and cycles convert to time. `None` elsewhere: unix callers read
 /// `CLOCK_THREAD_CPUTIME_ID` themselves.
 #[cfg(all(windows, target_arch = "x86_64"))]
-pub fn thread_cpu() -> Option<std::time::Duration> {
-    use std::{
-        sync::OnceLock,
-        time::{Duration, Instant},
-    };
+pub fn thread_cpu() -> Option<web_time::Duration> {
+    use std::sync::OnceLock;
+    use web_time::{Duration, Instant};
     use windows_sys::Win32::System::{
         Threading::GetCurrentThread, WindowsProgramming::QueryThreadCycleTime,
     };
@@ -310,7 +308,7 @@ pub fn thread_cpu() -> Option<std::time::Duration> {
 }
 
 #[cfg(not(all(windows, target_arch = "x86_64")))]
-pub fn thread_cpu() -> Option<std::time::Duration> {
+pub fn thread_cpu() -> Option<web_time::Duration> {
     None
 }
 

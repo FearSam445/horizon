@@ -16,7 +16,7 @@ fn loaded_air_is_discarded_on_first_actual_game_tick() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

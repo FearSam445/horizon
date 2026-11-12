@@ -13,6 +13,7 @@ use super::*;
 use crate::registry::snapshot as registry_snapshot;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::time::SystemTime;
 use std::{
     io::Write,
     path::PathBuf,
@@ -20,7 +21,6 @@ use std::{
         Mutex, OnceLock,
         atomic::{AtomicU32, Ordering},
     },
-    time::SystemTime,
 };
 
 const MAGIC: &[u8; 8] = b"HZBEHAV\0";

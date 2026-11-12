@@ -32,8 +32,8 @@ use std::{
         atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc,
     },
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 pub(super) mod events;
 mod management;
@@ -2525,11 +2525,11 @@ mod tests {
     use super::{
         capture_log, log, log_from, overload_warning, panic_message, parse_whitelist_bypass,
     };
+    use std::time::{SystemTime, UNIX_EPOCH};
     use std::{
         fs,
         io::{self, BufRead, BufReader, Read, Write},
         process::{Command, Stdio},
-        time::{SystemTime, UNIX_EPOCH},
     };
 
     /// A console line runs in the overworld even after a server tick left the nether in place.
@@ -2597,9 +2597,9 @@ mod tests {
     /// Vanilla's words, with how far behind the server is in milliseconds and in whole ticks.
     #[test]
     fn the_overload_warning_reads_as_vanilla_s() {
-        let tick = std::time::Duration::from_millis(50);
+        let tick = web_time::Duration::from_millis(50);
         assert_eq!(
-            overload_warning(std::time::Duration::from_millis(13_027), tick),
+            overload_warning(web_time::Duration::from_millis(13_027), tick),
             "Can't keep up! Is the server overloaded? Running 13027ms or 260 ticks behind"
         );
     }
@@ -2661,7 +2661,7 @@ mod tests {
         }
 
         for closed_stdout in [false, true] {
-            let unique = SystemTime::now()
+            let unique = horizon_clock::system_now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos();

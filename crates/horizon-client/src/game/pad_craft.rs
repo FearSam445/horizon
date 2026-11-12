@@ -35,10 +35,8 @@
 //! what's in the grid goes back ([`DirectCraft::stop`]).
 use super::Game;
 use horizon_client::{gamepad, items::ItemStack};
-use std::{
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::sync::Arc;
+use web_time::{Duration, Instant};
 
 /// How long a request waits for the server's answer before the craft ends.
 const ANSWER_WAIT: Duration = Duration::from_secs(2);

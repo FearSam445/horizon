@@ -9,7 +9,7 @@ use crate::{
     text::Text,
     ui,
 };
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 pub const TITLE: &str = "gui.socialInteractions.title";
 /// `SocialInteractionsScreen`'s page.

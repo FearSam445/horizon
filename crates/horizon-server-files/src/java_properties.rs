@@ -356,7 +356,7 @@ pub fn days_from_civil(y: i64, m: u32, d: u32) -> i64 {
 
 /// Milliseconds since the epoch, now.
 pub fn now_millis() -> i64 {
-    std::time::SystemTime::now()
+    horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as i64)
 }

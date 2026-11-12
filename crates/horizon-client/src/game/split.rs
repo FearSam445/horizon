@@ -38,8 +38,8 @@ use std::{
     cell::RefCell,
     path::{Path, PathBuf},
     sync::Arc,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 use winit::{
     application::ApplicationHandler,
     dpi::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize},

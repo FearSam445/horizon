@@ -22,7 +22,7 @@ use std::sync::{
     atomic::{AtomicU8, Ordering},
     mpsc::Sender,
 };
-use std::time::Instant;
+use web_time::Instant;
 
 /// How far the server thread has got with the side of a capture the window asked for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -120,8 +120,8 @@ fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
 /// The frame the next animations see. Its `frame_time` and `frame_counter` come from the
 /// calls themselves: the time since the previous one, and how many there were.
 pub fn set_frame(mut frame: Frame) {
-    static LAST: Mutex<Option<std::time::Instant>> = Mutex::new(None);
-    let now = std::time::Instant::now();
+    static LAST: Mutex<Option<web_time::Instant>> = Mutex::new(None);
+    let now = web_time::Instant::now();
     let mut last = lock(&LAST);
     frame.frame_time = last.map_or(0.0, |t| (now - t).as_secs_f32());
     *last = Some(now);

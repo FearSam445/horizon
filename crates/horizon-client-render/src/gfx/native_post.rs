@@ -357,16 +357,16 @@ pub struct NativeFrame {
     /// is drawn and `has_reflection` stays 0.
     pub reflects: bool,
     /// Last frame's view-projection, camera and time (`write`).
-    last: Option<([[f32; 4]; 4], glam::DVec3, std::time::Instant)>,
+    last: Option<([[f32; 4]; 4], glam::DVec3, web_time::Instant)>,
     /// The eased eye light (block, sky) and being in water and lava (`write`); NaN until the
     /// first frame sets them.
     eye: [f32; 4],
     /// A post stage must use black history after a long gap until it has rendered a frame.
     history_reset: bool,
-    start: std::time::Instant,
+    start: web_time::Instant,
     frames: u32,
     /// `frame.wetness`, and when it was last written.
-    wetness: (f32, Option<std::time::Instant>),
+    wetness: (f32, Option<web_time::Instant>),
     /// The shader API line of the pack, whether the world's frame holds linear light for it
     /// (`[frame] blend = "linear"`), and under 0.2 the decoding copy and the mirror it decoded
     /// (`linear_mirror`).
@@ -588,7 +588,7 @@ impl NativeFrame {
             last: None,
             eye: [f32::NAN; 4],
             history_reset: true,
-            start: std::time::Instant::now(),
+            start: web_time::Instant::now(),
             frames: 0,
             wetness: (0.0, None),
         }
@@ -813,7 +813,7 @@ impl NativeFrame {
         // eased values sit at their targets.
         // A scripted clock (`PackInputs::frame_timing`) comes first, and eased values
         // move by its delta.
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         let timing = frame.pack.frame_timing;
         // Seconds, frame index, and the seconds eased values move by when not the
         // measured ones.
@@ -900,7 +900,7 @@ impl NativeFrame {
         self.last = None;
         self.frames = 0;
         self.wetness = (0.0, None);
-        self.start = std::time::Instant::now();
+        self.start = web_time::Instant::now();
     }
 
     /// Takes the post stage's pending history reset. It stays pending if post rendering is
@@ -1791,7 +1791,7 @@ mod tests {
         // Wetness starts dry, as on a fresh pack; frame 1's delta of 0 leaves it there.
         assert_eq!((first.eye_light_smooth[1], first.wetness), (1.0, 0.0));
         assert!(native.take_history_reset());
-        native.last.as_mut().unwrap().2 -= std::time::Duration::from_secs(5);
+        native.last.as_mut().unwrap().2 -= web_time::Duration::from_secs(5);
         frame.pack.eye_light = [0, 0];
         frame.pack.frame_timing = Some(FrameTiming::nth(2, 2000.0));
         let second = native.next_inputs(&frame, [4, 4], SDR);

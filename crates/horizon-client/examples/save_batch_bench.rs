@@ -18,7 +18,8 @@ use horizon_world::{
     nbt::{self, Limits, Tag},
     registry::BlockRegistry,
 };
-use std::{collections::HashMap, hint::black_box, sync::Arc, time::Instant};
+use std::{collections::HashMap, hint::black_box, sync::Arc};
+use web_time::Instant;
 
 type Entities = HashMap<(i32, i32, i32), BlockEntity>;
 type Names = HashMap<(i32, i32, i32), Tag>;

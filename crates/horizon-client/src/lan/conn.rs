@@ -32,8 +32,8 @@ use std::{
         atomic::{AtomicI32, AtomicI64, AtomicU32, AtomicUsize, Ordering},
         mpsc::{RecvTimeoutError, Sender, channel},
     },
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// ServerCommonPacketListenerImpl.keepConnectionAlive: a keep-alive every 15 s,
 /// and a client that has not answered the last one by the next is dropped.
@@ -1136,7 +1136,7 @@ fn serve_login(
         table
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .take_until(uuid, std::time::Instant::now())
+            .take_until(uuid, web_time::Instant::now())
     });
     // A login that does not reach play (it failed in configuration) gives the
     // expectation back, so the proxy's next attempt is still expected.
@@ -1145,7 +1145,7 @@ fn serve_login(
             table.lock().unwrap_or_else(|e| e.into_inner()).put_back(
                 uuid,
                 deadline,
-                std::time::Instant::now(),
+                web_time::Instant::now(),
             );
         }
     };

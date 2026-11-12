@@ -14,7 +14,7 @@ fn admitted_raid_loses_removed_loaded_bed_without_erasing_memory() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

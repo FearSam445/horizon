@@ -5,12 +5,13 @@
 //! `server-terrain/<server>/BlueMap/detected.txt` so a rejoin asks nothing.
 //! A `blueMap:` line the player wrote always wins.
 use crate::bluemap::Settings;
+use std::time::SystemTime;
 use std::{
     net::IpAddr,
     path::{Path, PathBuf},
     sync::Mutex,
-    time::{Duration, SystemTime},
 };
+use web_time::Duration;
 
 /// The answer kept per server, beside its BlueMap tiles.
 pub const FILE: &str = "detected.txt";
@@ -386,7 +387,7 @@ mod tests {
     #[test]
     fn the_players_map_wins_and_detection_waits_for_the_setting() {
         let dir = scratch("source");
-        let now = SystemTime::now();
+        let now = horizon_clock::system_now();
         let mut settings = Settings::default();
         let address = "play.example.net";
         assert_eq!(

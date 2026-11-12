@@ -6,8 +6,8 @@ use std::{
     collections::BTreeMap,
     path::{Path, PathBuf},
     sync::OnceLock,
-    time::Instant,
 };
+use web_time::Instant;
 
 /// `Util.getMillis`, measured from the first call.
 pub fn current_time() -> i64 {

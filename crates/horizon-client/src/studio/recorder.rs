@@ -7,6 +7,7 @@ use super::mcpr::{McprWriter, Metadata, TimestampedPacket};
 use crate::net::PacketRecorder;
 pub use crate::net::RecorderStatus;
 use horizon_protocol::{buf::Reader, crypto::generate_secret, packets::play};
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{
     io,
     path::{Path, PathBuf},
@@ -16,8 +17,8 @@ use std::{
         mpsc::{Receiver, SyncSender, TrySendError, sync_channel},
     },
     thread::{self, JoinHandle},
-    time::{Instant, SystemTime, UNIX_EPOCH},
 };
+use web_time::Instant;
 
 static RECORDING_NAME_SEQUENCE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
@@ -49,7 +50,7 @@ impl StudioRecorder {
         let bytes_written = Arc::new(AtomicU64::new(0));
 
         let start_time = Instant::now();
-        let start_unix_ms = SystemTime::now()
+        let start_unix_ms = horizon_clock::system_now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_millis() as u64;
@@ -475,7 +476,7 @@ mod tests {
         let temp_dir = std::env::temp_dir().join(format!(
             "studio_rec_{}_{}",
             std::process::id(),
-            SystemTime::now()
+            horizon_clock::system_now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_nanos()

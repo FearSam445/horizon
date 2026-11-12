@@ -23,7 +23,7 @@
 use super::hub::Hub;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// `server.toml`'s `[transfer]`, as horizon-server passes it: `--transfers
 /// expect_seconds=10,max_expect_seconds=60,max_expected=64,max_freeze_seconds=30,max_hold_seconds=60,stop_wait_seconds=10`.
@@ -861,7 +861,7 @@ mod hub_tests {
     };
     use horizon_protocol::ids::play::clientbound as id;
     use std::sync::mpsc::{Receiver, channel};
-    use std::time::{Duration, Instant};
+    use web_time::{Duration, Instant};
 
     fn hub() -> Hub {
         hub_with(NetConfig {

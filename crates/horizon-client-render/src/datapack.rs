@@ -319,7 +319,7 @@ pub fn install_new_world_packs(game_dir: &Path, world: &Path) -> Result<(), Stri
 /// A new empty folder for Create World's packs
 /// (`Files.createTempDirectory("mcworld-")`).
 pub fn temp_folder() -> std::io::Result<PathBuf> {
-    let nanos = std::time::SystemTime::now()
+    let nanos = horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
@@ -1387,11 +1387,11 @@ mod tests {
             .map(|i| (format!("t:f{}", i % 25_000), true))
             .collect();
         store.function_tags.insert("t:big".into(), big);
-        let start = std::time::Instant::now();
+        let start = web_time::Instant::now();
         let got = store.tag_functions("t:big");
         assert_eq!(got.len(), 25_000);
         assert_eq!(got[0], "t:f0");
-        assert!(start.elapsed() < std::time::Duration::from_secs(5));
+        assert!(start.elapsed() < web_time::Duration::from_secs(5));
         // A cycle terminates and keeps first-seen order.
         store.function_tags.insert(
             "t:a".into(),

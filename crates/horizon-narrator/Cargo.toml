@@ -7,6 +7,8 @@ rust-version.workspace = true
 description = "The narrator: vanilla's text-to-speech (GameNarrator, com.mojang.text2speech) and screen narration state"
 
 [dependencies]
+# std::time, with a clock in the browser build (web/).
+web-time = "1.1"
 log = "0.4"
 
 # NarratorWindows: SAPI's SpVoice over COM, the voice the Windows narrator settings pick.

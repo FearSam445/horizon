@@ -9,7 +9,8 @@ extern crate horizon_client_lib as horizon_client;
 #[path = "../../horizon-items/src/blocks/decode.rs"]
 mod decode;
 
-use std::{hint::black_box, path::Path, time::Instant};
+use std::{hint::black_box, path::Path};
+use web_time::Instant;
 
 // The included private decoder expects the parent crate Result alias.
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;

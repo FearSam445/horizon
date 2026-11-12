@@ -4,7 +4,7 @@
 //! OptionsList screens and drawn with the shared widgets.
 mod pack_drop;
 
-use std::time::Instant;
+use web_time::Instant;
 
 pub use crate::settings::Opt;
 
@@ -6721,7 +6721,7 @@ mod tests {
         ui.slider_value = Some((
             Opt::RenderDistance,
             0.51,
-            Instant::now() - std::time::Duration::from_millis(600),
+            Instant::now() - web_time::Duration::from_millis(600),
         ));
         assert_eq!(ui.slider_shown(Opt::RenderDistance, 0.5), 0.5);
     }

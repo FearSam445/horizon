@@ -51,8 +51,8 @@ use std::{
         Arc,
         atomic::{AtomicUsize, Ordering},
     },
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,

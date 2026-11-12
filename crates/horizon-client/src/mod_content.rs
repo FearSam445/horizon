@@ -3112,7 +3112,7 @@ pub fn resource_root(base: &Path, mods: &[ContentMod], cache: &Path) -> Result<P
 /// The length of a root's folder name: the start of its stamp.
 const ROOT_NAME: usize = 16;
 /// How long a root no start or switch used is kept.
-const KEEP_ROOTS: std::time::Duration = std::time::Duration::from_secs(24 * 3600);
+const KEEP_ROOTS: web_time::Duration = web_time::Duration::from_secs(24 * 3600);
 /// The file beside `root` whose time is its last reuse (`<root>.used`).
 fn used_path(root: &Path) -> PathBuf {
     root.with_extension("used")
@@ -3123,7 +3123,7 @@ fn used_path(root: &Path) -> PathBuf {
 /// the folder). A game still running on a removed root was started more than
 /// `keep` ago and reads its tables already; only the folders' own names are
 /// touched.
-fn prune_roots(roots: &Path, current: &Path, keep: std::time::Duration) {
+fn prune_roots(roots: &Path, current: &Path, keep: web_time::Duration) {
     let Ok(entries) = fs::read_dir(roots) else {
         return;
     };

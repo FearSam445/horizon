@@ -319,7 +319,7 @@ mod tests {
     use crate::{blocks::RenderShape, graphics::LeafCullingMode};
     use horizon_core::geometry::Direction;
     use horizon_world::fluid::FluidState;
-    use std::time::Instant;
+    use web_time::Instant;
 
     fn info(leaves: bool, opaque: bool) -> Info {
         Info {

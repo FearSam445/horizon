@@ -1476,9 +1476,11 @@ dependencies = [
 name = "horizon-bench"
 version = "0.1.0"
 dependencies = [
+ "horizon-clock",
  "horizon-system",
  "serde",
  "serde_json",
+ "web-time",
 ]
 
 [[package]]
@@ -1497,6 +1499,7 @@ dependencies = [
  "serde",
  "serde_json",
  "toml",
+ "web-time",
 ]
 
 [[package]]
@@ -1520,6 +1523,7 @@ dependencies = [
  "horizon-client-input",
  "horizon-client-lib",
  "horizon-client-render",
+ "horizon-clock",
  "horizon-command",
  "horizon-core",
  "horizon-cosmetics",
@@ -1562,6 +1566,7 @@ dependencies = [
  "toml",
  "unicode-bidi",
  "ureq",
+ "web-time",
  "wgpu",
  "winit",
  "winresource",
@@ -1574,6 +1579,7 @@ version = "0.1.0"
 dependencies = [
  "horizon-world",
  "serde_json",
+ "web-time",
 ]
 
 [[package]]
@@ -1582,9 +1588,11 @@ version = "0.1.0"
 dependencies = [
  "arboard",
  "horizon-client-core",
+ "horizon-clock",
  "horizon-theme",
  "horizon-web-arboard",
  "png",
+ "web-time",
  "winit",
 ]
 
@@ -1609,6 +1617,7 @@ dependencies = [
  "horizon-client-core",
  "horizon-client-input",
  "horizon-client-render",
+ "horizon-clock",
  "horizon-command",
  "horizon-core",
  "horizon-hdr",
@@ -1649,6 +1658,7 @@ dependencies = [
  "sha2",
  "unicode-bidi",
  "ureq",
+ "web-time",
  "wgpu",
  "winit",
  "xxhash-rust",
@@ -1670,6 +1680,7 @@ dependencies = [
  "horizon-assets",
  "horizon-client-core",
  "horizon-client-input",
+ "horizon-clock",
  "horizon-command",
  "horizon-core",
  "horizon-hdr",
@@ -1704,10 +1715,18 @@ dependencies = [
  "symphonia",
  "unicode-bidi",
  "ureq",
+ "web-time",
  "wgpu",
  "winit",
  "zip",
  "zune-jpeg",
+]
+
+[[package]]
+name = "horizon-clock"
+version = "0.1.0"
+dependencies = [
+ "web-time",
 ]
 
 [[package]]
@@ -1725,6 +1744,7 @@ name = "horizon-core"
 version = "0.1.0"
 dependencies = [
  "libm",
+ "web-time",
 ]
 
 [[package]]
@@ -1739,6 +1759,7 @@ dependencies = [
  "serde",
  "serde_json",
  "ureq",
+ "web-time",
 ]
 
 [[package]]
@@ -1814,11 +1835,13 @@ name = "horizon-items"
 version = "0.1.0"
 dependencies = [
  "horizon-client-core",
+ "horizon-clock",
  "horizon-core",
  "horizon-world",
  "log",
  "serde",
  "serde_json",
+ "web-time",
 ]
 
 [[package]]
@@ -1886,6 +1909,7 @@ dependencies = [
  "objc2 0.6.5",
  "objc2-app-kit 0.3.2",
  "objc2-foundation 0.3.2",
+ "web-time",
  "windows 0.62.2",
 ]
 
@@ -1917,10 +1941,12 @@ dependencies = [
 name = "horizon-optifine"
 version = "0.1.0"
 dependencies = [
+ "horizon-clock",
  "horizon-core",
  "horizon-system",
  "log",
  "regex",
+ "web-time",
 ]
 
 [[package]]
@@ -1946,6 +1972,7 @@ dependencies = [
  "prost-build",
  "prost-types",
  "protox",
+ "web-time",
 ]
 
 [[package]]
@@ -2027,6 +2054,7 @@ dependencies = [
  "sha1",
  "sha2",
  "socket2 0.5.10",
+ "web-time",
 ]
 
 [[package]]
@@ -2081,12 +2109,14 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "getrandom 0.3.4",
+ "horizon-clock",
  "horizon-core",
  "horizon-protocol",
  "horizon-web-ureq",
  "horizon-world",
  "log",
  "ureq",
+ "web-time",
 ]
 
 [[package]]
@@ -2111,6 +2141,7 @@ dependencies = [
  "horizon-core",
  "naga",
  "png",
+ "web-time",
  "zip",
 ]
 
@@ -2124,16 +2155,21 @@ version = "0.1.0"
 dependencies = [
  "getrandom 0.3.4",
  "horizon-addresses",
+ "horizon-clock",
  "horizon-platform",
  "ruzstd",
  "serde",
  "serde_json",
  "ureq",
+ "web-time",
 ]
 
 [[package]]
 name = "horizon-theme"
 version = "0.1.0"
+dependencies = [
+ "web-time",
+]
 
 [[package]]
 name = "horizon-threads"
@@ -2141,6 +2177,7 @@ version = "0.1.0"
 dependencies = [
  "addr2line",
  "framehop",
+ "horizon-clock",
  "horizon-web-libmimalloc-sys",
  "horizon-web-mimalloc",
  "libc",
@@ -2149,6 +2186,7 @@ dependencies = [
  "mimalloc",
  "object",
  "rustc-demangle",
+ "web-time",
  "windows-sys 0.61.2",
 ]
 
@@ -2181,6 +2219,7 @@ name = "horizon-world"
 version = "0.1.0"
 dependencies = [
  "flate2",
+ "horizon-clock",
  "horizon-core",
  "horizon-threads",
  "libm",
@@ -2190,6 +2229,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "web-time",
  "xxhash-rust",
 ]
 

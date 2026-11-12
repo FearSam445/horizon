@@ -20,7 +20,7 @@ pub use layout::{Control, Mode, Placement, Settings};
 
 use crate::gamepad::{Button, PadState};
 use std::collections::BTreeMap;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// A world touch held this long without dragging becomes a hold (mining, eating).
 const HOLD_DELAY: Duration = Duration::from_millis(350);

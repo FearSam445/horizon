@@ -88,8 +88,8 @@ fn run(silent: bool, opened: &Sender<bool>, commands: &Receiver<Command>) {
         }
     };
     let _ = opened.send(true);
-    const IDLE: std::time::Duration = std::time::Duration::from_millis(50);
-    let mut last_idle = std::time::Instant::now();
+    const IDLE: web_time::Duration = web_time::Duration::from_millis(50);
+    let mut last_idle = web_time::Instant::now();
     loop {
         match commands.recv_timeout(IDLE.saturating_sub(last_idle.elapsed())) {
             Ok(Command::Say(message, interrupt, volume)) => speech.say(&message, interrupt, volume),
@@ -103,7 +103,7 @@ fn run(silent: bool, opened: &Sender<bool>, commands: &Receiver<Command>) {
         }
         // Every 50 ms, however many commands arrive in between.
         if last_idle.elapsed() >= IDLE {
-            last_idle = std::time::Instant::now();
+            last_idle = web_time::Instant::now();
             speech.idle();
         }
     }

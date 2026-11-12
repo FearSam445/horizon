@@ -53,7 +53,7 @@ pub fn duration_text(millis: i64) -> String {
 }
 
 pub fn now_millis() -> i64 {
-    std::time::SystemTime::now()
+    horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as i64)
 }

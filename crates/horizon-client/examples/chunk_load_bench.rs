@@ -40,8 +40,8 @@ use std::{
         atomic::{AtomicUsize, Ordering},
     },
     thread,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 type Error = Box<dyn std::error::Error>;
 

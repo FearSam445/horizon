@@ -6,7 +6,8 @@
 //! `cargo run --release -p horizon-optifine --example cem_expr_bench`
 
 use horizon_optifine::cem::expr::compile;
-use std::{hint::black_box, time::Instant};
+use std::hint::black_box;
+use web_time::Instant;
 
 const NAMES: &[&str] = &[
     "limb_swing",

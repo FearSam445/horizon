@@ -182,7 +182,7 @@ mod tests {
                 ("with", Tag::List(vec![tag])),
             ]);
         }
-        let started = std::time::Instant::now();
+        let started = web_time::Instant::now();
         let text = plain(&tag, &Language::new());
         assert!(text.len() <= MAX_TEXT);
         assert!(
@@ -190,7 +190,7 @@ mod tests {
             "filled up to the cap: {}",
             text.len()
         );
-        assert!(started.elapsed() < std::time::Duration::from_secs(5));
+        assert!(started.elapsed() < web_time::Duration::from_secs(5));
         // A cut never splits a character.
         let mut out = "x".repeat(MAX_TEXT - 1);
         push_capped(&mut out, "é");

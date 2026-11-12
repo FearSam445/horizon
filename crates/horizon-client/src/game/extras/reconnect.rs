@@ -19,7 +19,7 @@ impl Game<'_> {
     }
     /// Auto-reconnect: the server let the player in.
     pub(in crate::game) fn extras_joined(&mut self) {
-        self.extras.reconnect.joined(std::time::Instant::now());
+        self.extras.reconnect.joined(web_time::Instant::now());
     }
     /// Auto-reconnect: the player left the server on purpose.
     pub(in crate::game) fn extras_left(&mut self) {
@@ -37,7 +37,7 @@ impl Game<'_> {
             self.extras.reconnect.reset();
             return None;
         }
-        let now = std::time::Instant::now();
+        let now = web_time::Instant::now();
         self.extras.reconnect.ended(reason, key, from_server, now)
     }
     /// Show the attempt's countdown on the Disconnected screen.
@@ -52,7 +52,7 @@ impl Game<'_> {
             log::info!(
                 "Horizon: reconnecting to {} in {} s",
                 horizon_client::net::shown_address(&retry.address),
-                retry.seconds_left(std::time::Instant::now())
+                retry.seconds_left(web_time::Instant::now())
             );
             *slot = Some(retry);
         }

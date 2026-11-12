@@ -12,7 +12,8 @@
 use super::Game;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
-use std::time::{Duration, Instant, SystemTime};
+use std::time::SystemTime;
+use web_time::{Duration, Instant};
 
 /// How often the files' modification times are read.
 const CHECK_EVERY: Duration = Duration::from_secs(1);

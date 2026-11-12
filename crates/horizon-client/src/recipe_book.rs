@@ -1538,7 +1538,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "horizon-mod-recipe-index-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now()
+            horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
                 .as_nanos()

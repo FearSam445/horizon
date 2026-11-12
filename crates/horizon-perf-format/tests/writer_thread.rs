@@ -1,6 +1,6 @@
 use std::io::{self, Read, Write};
 use std::sync::{Arc, Condvar, Mutex};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 use flate2::read::GzDecoder;
 use horizon_perf_format::v1::{Capture, HealthSample, Side, Stop};

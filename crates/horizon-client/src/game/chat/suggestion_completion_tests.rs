@@ -33,7 +33,7 @@ fn chat_completion_reaches_mods_from_keyboard_and_mouse_in_own_process() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

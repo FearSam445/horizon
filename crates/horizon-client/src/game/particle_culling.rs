@@ -808,7 +808,7 @@ mod tests {
 
     #[test]
     fn answers_of_an_earlier_job_survive_a_later_job_for_other_clusters() {
-        use std::time::{Duration, Instant};
+        use web_time::{Duration, Instant};
         let world = World::new(horizon_world::registry::BlockStateId(0), 0);
         let mut culler = ParticleAsyncCuller::new().unwrap();
         culler.begin_frame(glam::DVec3::ZERO, &world);

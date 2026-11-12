@@ -1,7 +1,7 @@
 use super::*;
 use crate::lan::far::{Far, Saved};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 fn far_hub(
     read: impl Fn(i32, i32) -> Option<Vec<u8>> + Send + Sync + 'static,

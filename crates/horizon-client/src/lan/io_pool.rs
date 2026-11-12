@@ -15,8 +15,8 @@ use std::{
         Arc, Mutex, MutexGuard, OnceLock, PoisonError,
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// Packets queued for one network client beyond this many bytes disconnect it.
 pub(super) const MAX_PENDING: usize = 96 << 20;

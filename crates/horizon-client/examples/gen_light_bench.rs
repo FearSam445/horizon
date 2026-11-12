@@ -44,8 +44,8 @@ use std::{
     process::Command,
     sync::Arc,
     thread,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 type Error = Box<dyn std::error::Error>;
 

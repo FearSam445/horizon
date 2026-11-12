@@ -1248,7 +1248,8 @@ mod tests {
     #[test]
     #[ignore = "microbenchmark; run with --ignored --nocapture"]
     fn benchmark_section_get_set() {
-        use std::{hint::black_box, time::Instant};
+        use std::hint::black_box;
+        use web_time::Instant;
         const OPS: usize = 50_000;
         const ROUNDS: u32 = 51;
         let registry = benchmark_registry(32);

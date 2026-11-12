@@ -84,7 +84,7 @@ fn game_gateway_phases() -> [[i32; 2]; 4] {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

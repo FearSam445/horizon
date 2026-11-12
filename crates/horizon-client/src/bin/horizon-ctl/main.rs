@@ -11,8 +11,8 @@ use std::{
     path::{Path, PathBuf},
     process::ExitCode,
     thread,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 use horizon_client::control::Stream;
 use serde_json::{Value, json};

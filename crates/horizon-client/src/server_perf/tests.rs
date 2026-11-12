@@ -1006,7 +1006,7 @@ fn horizon_perf_queries_read_back_the_spans_the_network_and_the_world() {
     let saved = perf.stop_capture(12.0, R::Normal, end).unwrap().unwrap();
     let env = Env {
         horizon_home: None,
-        poll: std::time::Duration::from_millis(2),
+        poll: web_time::Duration::from_millis(2),
     };
     let rows = |op: &str| -> Vec<Row> {
         let mut out = Vec::new();

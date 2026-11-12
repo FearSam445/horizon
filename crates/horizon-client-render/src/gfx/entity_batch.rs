@@ -225,7 +225,8 @@ impl EntityBatch {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{hint::black_box, time::Instant};
+    use std::hint::black_box;
+    use web_time::Instant;
     #[test]
     fn native_models_keep_opaque_order_and_do_not_move_existing_materials_or_tails() {
         let quad = |layer, x| {

@@ -23,7 +23,7 @@
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard, OnceLock, RwLock};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// How urgent a job is, before its source's key: every queued job of a lower
 /// class runs before any of a higher one.
@@ -508,7 +508,7 @@ mod tests {
     use super::*;
     use std::collections::VecDeque;
     use std::sync::mpsc;
-    use std::time::Instant;
+    use web_time::Instant;
 
     /// Jobs with fixed ranks; each records its name when it runs.
     struct Fixed {

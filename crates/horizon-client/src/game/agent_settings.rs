@@ -78,7 +78,7 @@ impl Game<'_> {
 
     /// An agent's command arrived.
     pub(super) fn agent_command_seen(&mut self) {
-        self.agent_last = Some(std::time::Instant::now());
+        self.agent_last = Some(web_time::Instant::now());
     }
 
     /// The AI Agent page's lines: the state, then where agents connect.

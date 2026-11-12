@@ -9,7 +9,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Sender};
 use std::thread;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 use horizon_bench::compare::Ab;
 use horizon_bench::{App, Frames, Kind, Report};

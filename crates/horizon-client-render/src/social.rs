@@ -30,8 +30,8 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     thread,
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// `Options.sharePresence` (`PresenceSharing`): how much of the player the service sees.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

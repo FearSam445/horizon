@@ -306,7 +306,8 @@ fn visibility_preserves_every_face_pair() {
 #[test]
 #[ignore = "opt-in microbenchmark: cargo test --profile fast ... visibility_benchmark -- --ignored --exact --nocapture"]
 fn visibility_benchmark() {
-    use std::{hint::black_box, time::Instant};
+    use std::hint::black_box;
+    use web_time::Instant;
     const WARMUP: usize = 200;
     const ITERATIONS: usize = 1000;
     const SAMPLES: usize = 11;

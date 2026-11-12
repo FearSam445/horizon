@@ -1064,7 +1064,7 @@ mod tests {
     #[test]
     #[ignore = "benchmark"]
     fn benchmark_fill_noise() {
-        use std::time::Instant;
+        use web_time::Instant;
         let registry = test_registry();
 
         let volume = DensityVolume::new([16, 384, 16], [0, -64, 0], [1, 1, 1]).unwrap();

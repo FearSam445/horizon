@@ -14,10 +14,8 @@ use horizon_protocol::{
     registry::{Builtin, Dynamic, ceil_log2},
     servers::parse_address,
 };
-use std::{
-    collections::BTreeMap,
-    time::{Duration, Instant},
-};
+use std::collections::BTreeMap;
+use web_time::{Duration, Instant};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args: Vec<String> = std::env::args().collect();

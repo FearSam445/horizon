@@ -9,7 +9,8 @@ use horizon_client::{
     text::Text,
 };
 use serde_json::{Value, json};
-use std::{path::PathBuf, time::Duration};
+use std::path::PathBuf;
+use web_time::Duration;
 
 /// Studio's state in a `Game`: the replay editor's free camera, timeline and top bar. Studio is a
 /// Horizon extra (docs/layers.md: the replay editor) on top of the platform's replay

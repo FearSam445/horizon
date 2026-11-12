@@ -19,7 +19,7 @@ use crate::Item;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Condvar, Mutex, PoisonError};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// Players per request.
 pub const BATCH: usize = 64;

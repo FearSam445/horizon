@@ -11,7 +11,7 @@
 use crate::{BATCH, Item, Slot, Transport};
 use std::collections::HashMap;
 use std::sync::{Arc, Condvar, Mutex, PoisonError};
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// The shortest time between two requests.
 pub const POLL: Duration = Duration::from_secs(1);

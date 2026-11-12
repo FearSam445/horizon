@@ -7,8 +7,8 @@ use horizon_client::assets::{Assets, RenderAssets};
 use std::{
     hash::{DefaultHasher, Hash, Hasher},
     path::Path,
-    time::Instant,
 };
+use web_time::Instant;
 
 fn digest(render: &RenderAssets) -> u64 {
     let mut h = DefaultHasher::new();

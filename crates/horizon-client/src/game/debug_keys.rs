@@ -15,7 +15,7 @@ use horizon_client::{
 use horizon_core::geometry::{Axis, Vec3};
 use horizon_protocol::packets::play::{BlockEntityTagQuery, EntityTagQuery, Serverbound};
 use horizon_world::nbt::Tag;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 use winit::keyboard::KeyCode;
 
 /// `ChatFormatting.YELLOW` and `RED`.

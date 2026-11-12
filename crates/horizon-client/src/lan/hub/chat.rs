@@ -55,7 +55,7 @@ pub fn native_chat_decorate(player: u128, name: &str, message: &str, decorated: 
 
 /// Now, in epoch milliseconds (Instant.now()).
 pub fn now_millis() -> i64 {
-    std::time::SystemTime::now()
+    horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as i64)
 }

@@ -16,7 +16,8 @@ use horizon_protocol::packets::{
     play::{self, Clientbound as C, DialogHolder},
 };
 use horizon_world::nbt::{JavaString, Tag};
-use std::{collections::HashMap, time::Instant};
+use std::collections::HashMap;
+use web_time::Instant;
 
 /// Waypoint.Icon: the locator bar style and colour of a transmitter.
 #[derive(Clone, Debug, PartialEq)]
@@ -212,7 +213,7 @@ fn two_places(v: f64) -> String {
 }
 /// `Util.getFilenameFormattedDateTime` (`yyyy-MM-dd_HH.mm.ss`, local time).
 fn filename_date_time() -> String {
-    let secs = std::time::SystemTime::now()
+    let secs = horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs() as i64);
     let (y, mo, d, h, mi, s) = civil(secs);

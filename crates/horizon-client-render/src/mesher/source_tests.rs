@@ -16,7 +16,7 @@ fn fixture() -> (Scratch, Assets, RenderAssets, MeshTables, Biomes) {
     let path = std::env::temp_dir().join(format!(
         "terrain-source-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()

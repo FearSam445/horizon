@@ -5,8 +5,8 @@
 use std::{
     io::{Read, Write},
     net::{SocketAddr, TcpStream, UdpSocket},
-    time::Duration,
 };
+use web_time::Duration;
 
 const TYPE_SRV: u16 = 33;
 /// JNDI's `com.sun.jndi.dns.timeout.initial`, per name server.

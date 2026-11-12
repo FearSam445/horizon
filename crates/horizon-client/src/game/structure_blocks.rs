@@ -680,7 +680,7 @@ pub(super) fn load_settings(
 /// `StructureBlockEntity.createRandom`'s seed: 0 is the clock.
 pub(super) fn create_seed(seed: i64) -> i64 {
     if seed == 0 {
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(1, |d| d.as_millis() as i64)
     } else {

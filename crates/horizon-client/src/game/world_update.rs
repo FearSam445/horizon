@@ -84,7 +84,7 @@ impl Game<'_> {
                     settings,
                     address,
                     &maps,
-                    std::time::SystemTime::now(),
+                    horizon_clock::system_now(),
                 )
                 .map(|source| {
                     use horizon_client::{bluemap, bluemap_detect::Source};
@@ -453,7 +453,7 @@ impl Game<'_> {
                 // A finished job can hold hundreds of tiles: spread them
                 // over frames rather than stall one.
                 horizon_client::spans::time("lod_upload", || {
-                    renderer.upload_lods(std::time::Duration::from_millis(2))
+                    renderer.upload_lods(web_time::Duration::from_millis(2))
                 });
             }
         }

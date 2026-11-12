@@ -214,7 +214,7 @@ mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::mpsc;
-    use std::time::{Duration, Instant};
+    use web_time::{Duration, Instant};
 
     /// The two answers, how often each request was made, and an optional hold: the first
     /// request waits for a message on it.

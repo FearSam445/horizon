@@ -12,7 +12,7 @@ fn warning_dispatch_uses_neutral_at_tick_four() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),
@@ -35,7 +35,7 @@ fn warning_dispatch_uses_neutral_at_tick_four() {
     let scratch = std::env::temp_dir().join(format!(
         "horizon-ominous-sound-{}-{}",
         std::process::id(),
-        std::time::SystemTime::now()
+        horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos()

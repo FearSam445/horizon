@@ -6,12 +6,8 @@
 //! bindings, deadzones and the look curve, button edges from successive pad
 //! states, and `horizon-controller.txt`, kept next to `options.txt` so that
 //! file stays exactly vanilla's. The game reads the pads with gilrs.
-use std::{
-    collections::BTreeMap,
-    fs,
-    path::Path,
-    time::{Duration, Instant},
-};
+use std::{collections::BTreeMap, fs, path::Path};
+use web_time::{Duration, Instant};
 
 pub const FILE: &str = "horizon-controller.txt";
 
@@ -1822,7 +1818,7 @@ bind_key.hotbar.2:north
         let dir = std::env::temp_dir().join(format!(
             "horizon-pad-{}-{}",
             std::process::id(),
-            std::time::SystemTime::now()
+            horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
                 .as_nanos()

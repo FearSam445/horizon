@@ -2,7 +2,7 @@
 //! polls it, checks it without loading and lets it go.
 use super::super::*;
 use crate::mod_api::NativeChunkLoad;
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 const OVERWORLD: &str = "minecraft:overworld";
 const OWNER: &str = "test:loader";
@@ -20,7 +20,7 @@ fn game() -> Game<'static> {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

@@ -19,7 +19,7 @@ use horizon_client::{
     widgets::{self, ScreenInfo},
 };
 use horizon_world::nbt::Tag;
-use std::time::Instant;
+use web_time::Instant;
 use winit::keyboard::KeyCode;
 
 /// An open `DialogScreen`.

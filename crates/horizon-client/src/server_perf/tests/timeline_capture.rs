@@ -14,7 +14,7 @@ fn on_thread(name: &str, f: impl FnOnce() + Send + 'static) {
 }
 
 fn sleep_ms(ms: u64) {
-    std::thread::sleep(std::time::Duration::from_millis(ms));
+    std::thread::sleep(web_time::Duration::from_millis(ms));
 }
 
 fn chunks_of<'a>(c: &'a Capture, thread: &str) -> Vec<&'a TimelineChunk> {

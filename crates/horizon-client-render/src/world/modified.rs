@@ -1,10 +1,7 @@
 //! `LevelChunk.markUnsaved` and `ChunkMap`'s insertion-ordered eager queue.
 use crate::fast_hash::{FxHashMap, FxHashSet};
-use std::{
-    collections::BTreeMap,
-    ops::Deref,
-    time::{Duration, Instant},
-};
+use std::{collections::BTreeMap, ops::Deref};
+use web_time::{Duration, Instant};
 
 type Key = (i32, i32);
 const COOLDOWN: Duration = Duration::from_millis(10_000);

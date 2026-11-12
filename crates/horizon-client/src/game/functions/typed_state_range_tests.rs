@@ -48,15 +48,15 @@ mod typed_state_range_read_tests {
         game.streaming.paused = false;
         assert!(game.run_command("forceload add 0 0 15 15"));
         game.update_chunk_tickets();
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(120);
         while !game.streaming.is_lit(0, 0) || !game.world.chunks.contains_key(&(0, 0)) {
             let _ = game.streaming.update(&mut game.world);
             game.spawn_loaded_entities();
             assert!(
-                std::time::Instant::now() < deadline,
+                web_time::Instant::now() < deadline,
                 "server column did not finish loading"
             );
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            std::thread::sleep(web_time::Duration::from_millis(10));
         }
         game.spawn_loaded_entities();
         game.update_chunk_tickets();
@@ -196,15 +196,15 @@ mod typed_state_range_read_tests {
         game.streaming.paused = false;
         assert!(game.run_command("forceload add 0 0 15 15"));
         game.update_chunk_tickets();
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+        let deadline = web_time::Instant::now() + web_time::Duration::from_secs(120);
         while !game.streaming.is_lit(0, 0) || !game.world.chunks.contains_key(&(0, 0)) {
             let _ = game.streaming.update(&mut game.world);
             game.spawn_loaded_entities();
             assert!(
-                std::time::Instant::now() < deadline,
+                web_time::Instant::now() < deadline,
                 "server column did not finish loading"
             );
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            std::thread::sleep(web_time::Duration::from_millis(10));
         }
         game.spawn_loaded_entities();
         game.update_chunk_tickets();

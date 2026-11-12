@@ -29,7 +29,7 @@ use std::sync::{
     Arc,
     mpsc::{Receiver, Sender, TryRecvError},
 };
-use std::time::{Duration, Instant};
+use web_time::{Duration, Instant};
 
 /// How often a progress notice is set again so the action bar keeps it until the work is done.
 const PROGRESS_EVERY: Duration = Duration::from_secs(2);
@@ -1215,7 +1215,7 @@ mod tests {
         assert_eq!(parse_trace(&["a", "2", "3"]), Err(TRACE_USAGE));
     }
     use crate::game::integrated::capture::Phase;
-    use std::time::Duration;
+    use web_time::Duration;
 
     fn live(phase: Phase) -> Arc<Live> {
         let live = Live::new();

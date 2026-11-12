@@ -21,11 +21,12 @@ use crate::{
     lod::{Column, Span},
 };
 use horizon_world::registry::{BlockRegistry, BlockStateId};
+use std::time::SystemTime;
 use std::{
     path::{Path, PathBuf},
     sync::{Arc, Condvar, Mutex, OnceLock, Weak},
-    time::{Duration, Instant, SystemTime},
 };
+use web_time::{Duration, Instant};
 
 /// Downloaded tiles kept on disk per server, at most.
 const DISK_CAP: u64 = 256 << 20;
@@ -1148,7 +1149,7 @@ fn read_cached(file: &Path, lowres: &Lowres) -> Option<(Option<Tile>, bool)> {
         std::fs::metadata(path)
             .and_then(|m| m.modified())
             .ok()
-            .and_then(|t| SystemTime::now().duration_since(t).ok())
+            .and_then(|t| horizon_clock::system_now().duration_since(t).ok())
             .is_some_and(|age| age < MAX_AGE)
     };
     // One that doesn't decode (cut short, or of an older `tileSize`) is
@@ -1376,7 +1377,7 @@ impl Worker {
                 let _ = std::fs::File::options()
                     .append(true)
                     .open(&png)
-                    .and_then(|f| f.set_modified(SystemTime::now()));
+                    .and_then(|f| f.set_modified(horizon_clock::system_now()));
                 (true, None)
             }
             (Some(_), Some(body)) => {
@@ -1453,7 +1454,7 @@ impl Worker {
             self.claim = Some(claim);
             // What a look finished meanwhile found: one of this server's
             // addresses only (`bluemap_detect::source`).
-            match detect::remembered(&inner.dir, SystemTime::now()) {
+            match detect::remembered(&inner.dir, horizon_clock::system_now()) {
                 Remembered::Found(url) if !inner.probes.contains(&url) => {}
                 Remembered::Found(url) => {
                     let _ = inner.base.set(url);
@@ -1465,7 +1466,7 @@ impl Worker {
             }
         }
         let Some(candidate) = inner.probes.get(self.probed) else {
-            detect::remember(&inner.dir, None, SystemTime::now());
+            detect::remember(&inner.dir, None, horizon_clock::system_now());
             log::debug!("Horizon: no BlueMap found for {}", inner.level);
             return self.found_nothing(inner);
         };
@@ -1474,7 +1475,7 @@ impl Worker {
         if detect::probe(&self.agent, candidate) {
             log::info!("Horizon: found the server's BlueMap");
             log::debug!("Horizon: BlueMap at {candidate}");
-            detect::remember(&inner.dir, Some(candidate), SystemTime::now());
+            detect::remember(&inner.dir, Some(candidate), horizon_clock::system_now());
             let _ = inner.base.set(candidate.clone());
             self.claim = None;
             return Duration::ZERO;

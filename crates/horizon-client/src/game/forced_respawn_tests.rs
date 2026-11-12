@@ -12,7 +12,7 @@ fn overworld_spawnpoint_is_validated_at_both_player_blocks() {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

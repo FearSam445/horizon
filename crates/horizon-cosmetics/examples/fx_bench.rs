@@ -8,7 +8,7 @@ use horizon_cosmetics::trail::{Budget, Emitter};
 use horizon_cosmetics::{Item, Part, pose_matrix};
 use std::collections::HashMap;
 use std::hint::black_box;
-use std::time::Instant;
+use web_time::Instant;
 
 fn png(width: u32, height: u32) -> String {
     use base64::Engine;

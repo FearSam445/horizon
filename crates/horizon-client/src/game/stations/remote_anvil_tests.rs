@@ -19,7 +19,7 @@ fn client_on_a_server_with_a_custom_enchantment() -> Game<'static> {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

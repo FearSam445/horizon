@@ -204,7 +204,7 @@ fn opened_loot_parity_fixture() {
 #[test]
 fn eager_save_edits_reach_disk_during_ticks_and_again_after_cooldown() {
     use crate::world::ModifiedChunks;
-    use std::time::{Duration, Instant};
+    use web_time::{Duration, Instant};
     let (registry, biomes) = fixture();
     let registry = Box::leak(Box::new(registry));
     let biomes = Arc::new(biomes);

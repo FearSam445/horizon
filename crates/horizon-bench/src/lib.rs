@@ -16,6 +16,9 @@ mod hardware;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use hardware::power_source;
+/// The browser build's process probes: a page can't read them.
+#[cfg(target_arch = "wasm32")]
+pub use hardware::{cpu_seconds, load_average, power_source, rss_bytes};
 pub use hardware::{Display, Gpu, Hardware};
 /// The process probes, from the platform (`horizon-system`).
 #[cfg(not(target_arch = "wasm32"))]
@@ -253,7 +256,6 @@ pub struct Report {
 
 impl Report {
     /// An empty report for this machine, created now.
-    #[cfg(not(target_arch = "wasm32"))]
     pub fn new(kind: Kind, app: App) -> Report {
         Self::with_hardware(kind, app, Hardware::detect())
     }
@@ -347,7 +349,7 @@ impl Report {
 
 /// The current time, UTC, `YYYY-MM-DDTHH:MM:SSZ`.
 pub fn utc_now() -> String {
-    let secs = SystemTime::now()
+    let secs = horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_secs());
     utc(secs)

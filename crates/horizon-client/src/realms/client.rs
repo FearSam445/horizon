@@ -8,7 +8,7 @@ use horizon_core::version;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::io::Read;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::time::Duration;
+use web_time::Duration;
 
 /// `RealmsClient.Environment.PRODUCTION`'s base URL.
 pub const DEFAULT_REALMS_HOST: &str = "https://pc.realms.minecraft.net";

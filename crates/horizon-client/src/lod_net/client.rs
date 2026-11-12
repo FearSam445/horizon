@@ -14,8 +14,8 @@ use std::{
         atomic::{AtomicUsize, Ordering},
         mpsc,
     },
-    time::{Duration, Instant},
 };
+use web_time::{Duration, Instant};
 
 /// How long a client waits for a tile before asking again.
 const TIMEOUT: Duration = Duration::from_secs(30);

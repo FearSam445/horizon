@@ -21,7 +21,7 @@ fn frame_adoption(glow_first: bool) {
         None,
         &root,
         &settings,
-        std::time::Instant::now(),
+        web_time::Instant::now(),
         false,
         true,
         &Progress::new(),

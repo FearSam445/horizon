@@ -36,7 +36,7 @@ fn push(kind: &str, mut fields: Value) {
     let mut events = EVENTS.lock().unwrap_or_else(|e| e.into_inner());
     fields["seq"] = events.next.into();
     fields["type"] = kind.into();
-    fields["time"] = std::time::SystemTime::now()
+    fields["time"] = horizon_clock::system_now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as u64)
         .into();
