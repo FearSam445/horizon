@@ -73,6 +73,32 @@ the chunk worker pool (`streaming.rs`) must become a per-frame job queue.
   GPU, and a page never exits (a failed start shows its reason on the page).
 - **Stack: 8 MiB** (wasm's default 1 MiB overflowed in the renderer).
 
+## Single-player on one thread (how it fits together)
+- The window's frame (`web_frame::run`): connection tasks and network turns,
+  the server's step, then chunk jobs, in about 8 ms.
+- The window joins its server through an in-memory pipe. Both ends' protocol
+  code is `async` (`recv_async`); the browser polls them as futures, the
+  desktop runs them on threads with `block_on`. Tested on one thread:
+  `a_memory_login_runs_on_one_thread_when_both_ends_are_polled`.
+- Waits: a sleep runs chunk jobs (`horizon_thread::set_idle`), the chunk
+  results queue runs jobs while it waits, finite jobs run inline
+  (`spawn_bounded`), and named worker threads fail so their callers' fallbacks
+  run. `std::process::id`, std's condvars, sleeps and `recv_timeout` panic on
+  wasm32 and are kept off the single-player path.
+- Game files: the page reads the zip's table of contents and hands over only
+  the files the game uses, still packed (`zip_reader.js`, `add_packed`).
+- Kept between visits: what the game writes (worlds, options, its home), as one
+  block in IndexedDB.
+
+## Known limits and next steps
+- A world's first opening runs in one go and freezes the page until its spawn
+  area is made: make `prepare_levels`/`settle_spawn` steps of the frame.
+- No sound (a WebAudio mixer for `audio.rs`), no screenshots, no multiplayer
+  (WebSocket relay), no shader packs.
+- Not yet tested with real game files or in WebKit (the iPad's engine).
+- Size: 18.5 MiB page, 36 MiB wasm; leaving out unused features (mods,
+  telemetry, realms) would shrink it.
+
 ## Milestones
 1. ✅ `cargo check -p horizon-client --target wasm32-unknown-unknown` passes (cfg-gates above).
 2. ✅ Renders through WebGL2 in a page: the "no game files" screen, then the
