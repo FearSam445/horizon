@@ -721,7 +721,7 @@ impl PostEffects {
         let (tx, rx) = mpsc::channel();
         let (device, queue, root) = (device.clone(), queue.clone(), root.to_owned());
         let format = format.remove_srgb_suffix();
-        let spawned = std::thread::Builder::new()
+        let spawned = horizon_thread::Builder::new()
             .name("Post effects".into())
             .spawn({
                 let ids = ids.clone();
@@ -2400,7 +2400,7 @@ mod tests {
         let started = web_time::Instant::now();
         while !effects.pending.is_empty() {
             assert!(started.elapsed().as_secs() < 60, "the chain never arrived");
-            std::thread::sleep(web_time::Duration::from_millis(1));
+            horizon_thread::sleep(web_time::Duration::from_millis(1));
             effects.collect_preloaded();
         }
         let chain = effects.chains["minecraft:preloaded"]

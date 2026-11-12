@@ -89,7 +89,7 @@ impl Fixture {
         let deadline = web_time::Instant::now() + web_time::Duration::from_secs(5);
         while matches!(self.title.mode, Mode::Backup { .. }) {
             assert!(web_time::Instant::now() < deadline);
-            std::thread::sleep(web_time::Duration::from_millis(10));
+            horizon_thread::sleep(web_time::Duration::from_millis(10));
             self.title.poll_backup();
         }
     }
@@ -2190,7 +2190,7 @@ fn wait_while_optimizing(f: &mut Fixture) {
     let deadline = web_time::Instant::now() + web_time::Duration::from_secs(10);
     while matches!(f.title.mode, Mode::Optimize { .. }) {
         assert!(web_time::Instant::now() < deadline);
-        std::thread::sleep(web_time::Duration::from_millis(10));
+        horizon_thread::sleep(web_time::Duration::from_millis(10));
         f.title.poll_backup();
     }
 }

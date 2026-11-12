@@ -69,7 +69,7 @@ impl Watchdog {
             running: AtomicBool::new(true),
         });
         let shared = watchdog.clone();
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("Server Watchdog".into())
             .spawn(move || shared.run(max))
             .ok()?;
@@ -135,7 +135,7 @@ impl Watchdog {
             }
             // Thread.sleep(nextTickTime + maxTickTime - now).
             let wait = (next + max).saturating_sub(now).max(1_000_000);
-            std::thread::sleep(Duration::from_nanos(wait));
+            horizon_thread::sleep(Duration::from_nanos(wait));
         }
     }
 }
@@ -936,7 +936,7 @@ impl Game<'_> {
         }
         // The console thread starts first, as in initServer.
         let (tx, console) = mpsc::channel();
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("Server console handler".into())
             .spawn(move || {
                 let stdin = std::io::stdin();
@@ -1522,7 +1522,7 @@ impl Game<'_> {
                     if Instant::now() > deadline {
                         return Err("the spawn area did not load".into());
                     }
-                    std::thread::sleep(Duration::from_millis(2));
+                    horizon_thread::sleep(Duration::from_millis(2));
                 };
                 self.level.spawn = Some([f64::from(x), f64::from(y), f64::from(z)]);
                 self.level.world_spawn.get_or_insert([x, y, z]);
@@ -1540,7 +1540,7 @@ impl Game<'_> {
             if Instant::now() > deadline {
                 return Err("the spawn area did not load".into());
             }
-            std::thread::sleep(Duration::from_millis(2));
+            horizon_thread::sleep(Duration::from_millis(2));
         }
         self.player = None;
         Ok(())
@@ -2469,7 +2469,7 @@ impl Game<'_> {
                 );
             }
         }
-        std::thread::sleep(Duration::from_millis(100));
+        horizon_thread::sleep(Duration::from_millis(100));
         log("INFO", "Saving worlds");
         // ServerPlayer.disconnect: nobody is left in a bed.
         self.free_player_beds()?;
@@ -2645,7 +2645,7 @@ mod tests {
             io::stdout().write_all(READY.as_bytes()).unwrap();
             io::stdout().flush().unwrap();
             io::stdin().read_exact(&mut [0]).unwrap();
-            std::thread::Builder::new()
+            horizon_thread::Builder::new()
                 .name("Server thread".into())
                 .spawn(|| {
                     let captured = capture_log(|| {

@@ -55,7 +55,7 @@ impl Feed {
             wake: Condvar::new(),
         });
         let inner = shared.clone();
-        let _ = std::thread::Builder::new()
+        let _ = horizon_thread::Builder::new()
             .name("Cosmetics emotes".into())
             .spawn(move || {
                 loop {
@@ -372,7 +372,7 @@ mod tests {
             if feed.playing(1).is_some() || Instant::now() > deadline {
                 break;
             }
-            std::thread::sleep(Duration::from_millis(20));
+            horizon_thread::sleep(Duration::from_millis(20));
         }
         assert_eq!(
             feed.playing(1).map(|s| s.item.id.clone()).as_deref(),

@@ -1,5 +1,6 @@
 // Opens web/out/horizon.html in headless Chromium, prints its console and
-// errors, and saves a screenshot: node web/test/boot.js [seconds] [screenshot.png]
+// errors, and saves a screenshot: node web/test/boot.js [seconds] [screenshot.png] [game-files.zip]
+// Without a zip it starts without game files.
 const { chromium } = require('playwright');
 const path = require('path');
 
@@ -13,7 +14,11 @@ const path = require('path');
   page.on('console', (m) => console.log(`${stamp()} [${m.type()}] ${m.text()}`));
   page.on('pageerror', (e) => console.log(`${stamp()} [pageerror] ${e.message}`));
   page.on('crash', () => console.log(`${stamp()} [crash] the page crashed`));
+  const zip = process.argv[4];
   await page.goto('file://' + path.resolve(__dirname, '..', 'out', 'horizon.html'));
+  await page.waitForSelector('#horizon-files', { timeout: 60000 });
+  if (zip) await page.setInputFiles('#horizon-files input[type=file]', path.resolve(zip));
+  else await page.click('#horizon-files button');
   await page.waitForTimeout(seconds * 1000);
   const mem = await page.evaluate(() => performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) + ' MiB JS heap' : 'n/a').catch(() => 'n/a');
   console.log(`${stamp()} [memory] ${mem}`);

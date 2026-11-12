@@ -1482,6 +1482,7 @@ dependencies = [
  "horizon-clock",
  "horizon-fs",
  "horizon-system",
+ "horizon-thread",
  "serde",
  "serde_json",
  "web-time",
@@ -1551,6 +1552,7 @@ dependencies = [
  "horizon-system",
  "horizon-telemetry",
  "horizon-theme",
+ "horizon-thread",
  "horizon-threads",
  "horizon-web-fs4",
  "horizon-web-ureq",
@@ -1584,6 +1586,7 @@ name = "horizon-client-core"
 version = "0.1.0"
 dependencies = [
  "horizon-fs",
+ "horizon-thread",
  "horizon-world",
  "serde_json",
  "web-time",
@@ -1598,6 +1601,7 @@ dependencies = [
  "horizon-clock",
  "horizon-fs",
  "horizon-theme",
+ "horizon-thread",
  "horizon-web-arboard",
  "png",
  "wasm-bindgen",
@@ -1646,6 +1650,7 @@ dependencies = [
  "horizon-shaders",
  "horizon-telemetry",
  "horizon-theme",
+ "horizon-thread",
  "horizon-threads",
  "horizon-web-fs4",
  "horizon-web-mio",
@@ -1708,6 +1713,7 @@ dependencies = [
  "horizon-shaders",
  "horizon-system",
  "horizon-theme",
+ "horizon-thread",
  "horizon-threads",
  "horizon-web-ureq",
  "horizon-world",
@@ -1758,6 +1764,7 @@ name = "horizon-core"
 version = "0.1.0"
 dependencies = [
  "horizon-fs",
+ "horizon-thread",
  "libm",
  "web-time",
 ]
@@ -1770,6 +1777,7 @@ dependencies = [
  "glam",
  "horizon-addresses",
  "horizon-fs",
+ "horizon-thread",
  "horizon-web-ureq",
  "png",
  "serde",
@@ -1865,6 +1873,7 @@ dependencies = [
  "horizon-clock",
  "horizon-core",
  "horizon-fs",
+ "horizon-thread",
  "horizon-world",
  "log",
  "serde",
@@ -1933,6 +1942,7 @@ dependencies = [
 name = "horizon-narrator"
 version = "0.1.0"
 dependencies = [
+ "horizon-thread",
  "libloading",
  "log",
  "objc2 0.6.5",
@@ -1974,6 +1984,7 @@ dependencies = [
  "horizon-core",
  "horizon-fs",
  "horizon-system",
+ "horizon-thread",
  "log",
  "regex",
  "web-time",
@@ -1999,6 +2010,7 @@ version = "0.1.0"
 dependencies = [
  "flate2",
  "horizon-fs",
+ "horizon-thread",
  "prost",
  "prost-build",
  "prost-types",
@@ -2080,6 +2092,7 @@ dependencies = [
  "getrandom 0.3.4",
  "horizon-core",
  "horizon-fs",
+ "horizon-thread",
  "horizon-world",
  "ipconfig",
  "log",
@@ -2186,6 +2199,7 @@ name = "horizon-system"
 version = "0.1.0"
 dependencies = [
  "horizon-fs",
+ "horizon-thread",
 ]
 
 [[package]]
@@ -2197,6 +2211,7 @@ dependencies = [
  "horizon-clock",
  "horizon-fs",
  "horizon-platform",
+ "horizon-thread",
  "ruzstd",
  "serde",
  "serde_json",
@@ -2213,6 +2228,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "horizon-thread"
+version = "0.1.0"
+
+[[package]]
 name = "horizon-threads"
 version = "0.1.0"
 dependencies = [
@@ -2220,6 +2239,7 @@ dependencies = [
  "framehop",
  "horizon-clock",
  "horizon-fs",
+ "horizon-thread",
  "horizon-web-libmimalloc-sys",
  "horizon-web-mimalloc",
  "libc",
@@ -2237,6 +2257,7 @@ name = "horizon-web"
 version = "0.1.0"
 dependencies = [
  "horizon-client",
+ "horizon-fs",
  "log",
  "wasm-bindgen",
  "web-sys",
@@ -2274,6 +2295,7 @@ dependencies = [
  "horizon-clock",
  "horizon-core",
  "horizon-fs",
+ "horizon-thread",
  "horizon-threads",
  "libm",
  "log",

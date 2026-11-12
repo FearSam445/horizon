@@ -20,12 +20,12 @@ use horizon_client::{
     world::World,
 };
 use horizon_core::biome::BiomeZoom;
+use horizon_thread as thread;
 use horizon_world::registry::BlockStateId;
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
     sync::Arc,
-    thread,
 };
 use web_time::{Duration, Instant};
 

@@ -7184,7 +7184,7 @@ impl Renderer {
             pack_post::PackPost::new(&device, &queue, &adapter, pack, format, world, &cancelled)
         };
         // A pack is not the game's code: a panic building it turns the pack off (#3525).
-        let thread = std::thread::Builder::new()
+        let thread = horizon_thread::Builder::new()
             .name("Shader pack".into())
             .spawn(move || crate::crash::contain(build));
         match thread {
@@ -15218,7 +15218,7 @@ struct PackLoading {
     /// Held to be dropped with it: that cancels the build.
     _cancel: CancelOnDrop,
     #[allow(clippy::type_complexity)]
-    thread: std::thread::JoinHandle<
+    thread: horizon_thread::JoinHandle<
         std::result::Result<std::result::Result<pack_post::PackPost, pack_post::Refused>, String>,
     >,
     label: String,

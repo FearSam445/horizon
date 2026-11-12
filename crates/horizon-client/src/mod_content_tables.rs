@@ -59,7 +59,7 @@ pub(super) fn tables(
     };
     let next = std::sync::atomic::AtomicUsize::new(0);
     let threads = horizon_threads::worker_count();
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         let workers: Vec<_> = (0..threads.min(TABLE_THREADS))
             .map(|_| {
                 scope.spawn(|| -> std::result::Result<(), String> {

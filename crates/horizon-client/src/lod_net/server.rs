@@ -6,11 +6,11 @@ use super::{
     Bucket, IN_FLIGHT, MAX_DISTANCE, Offer, PER_SECOND, Request, SIDE, encode_reply, refusal,
 };
 use crate::streaming::{LodSampler, LodSource};
+use horizon_thread as thread;
 use std::{
     collections::{HashMap, VecDeque},
     panic::{AssertUnwindSafe, catch_unwind},
     sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError},
-    thread,
 };
 use web_time::Instant;
 

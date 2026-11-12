@@ -262,7 +262,7 @@ fn read_contents(
     };
     let next = AtomicUsize::new(0);
     let threads = horizon_threads::worker_count().clamp(1, packages.len().max(1));
-    let mut done: Vec<_> = std::thread::scope(|scope| {
+    let mut done: Vec<_> = horizon_thread::scope(|scope| {
         let workers: Vec<_> = (0..threads)
             .map(|_| {
                 scope.spawn(|| {

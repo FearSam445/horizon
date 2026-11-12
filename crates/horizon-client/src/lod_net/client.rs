@@ -268,14 +268,14 @@ mod tests {
         let inbox = Arc::new(Inbox::default());
         let source = RemoteSource::new(inbox.clone(), Offer::new(64), HashMap::new(), 10);
         let mut sampler = source.clone().sampler();
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             loop {
                 if let Some(data) = inbox.requests().pop() {
                     let id = Request::decode(&data).unwrap().id;
                     inbox.deliver(refusal(id));
                     return;
                 }
-                std::thread::sleep(Duration::from_millis(1));
+                horizon_thread::sleep(Duration::from_millis(1));
             }
         });
         // No columns, not 256 empty ones: Lod doesn't keep it.

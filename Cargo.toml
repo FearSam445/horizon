@@ -122,7 +122,7 @@ inherits = "release"
 opt-level = 1
 lto = false
 codegen-units = 16
-incremental = true
+incremental = false
 panic = "abort"
 
 [profile.web]

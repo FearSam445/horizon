@@ -5,7 +5,7 @@ use timeline::Caps;
 
 /// Runs `f` on a thread named `name`, whose spans the timeline files under that name.
 fn on_thread(name: &str, f: impl FnOnce() + Send + 'static) {
-    std::thread::Builder::new()
+    horizon_thread::Builder::new()
         .name(name.into())
         .spawn(f)
         .unwrap()
@@ -14,7 +14,7 @@ fn on_thread(name: &str, f: impl FnOnce() + Send + 'static) {
 }
 
 fn sleep_ms(ms: u64) {
-    std::thread::sleep(web_time::Duration::from_millis(ms));
+    horizon_thread::sleep(web_time::Duration::from_millis(ms));
 }
 
 fn chunks_of<'a>(c: &'a Capture, thread: &str) -> Vec<&'a TimelineChunk> {

@@ -12,13 +12,11 @@ mod motion;
 mod optical_flow;
 
 use glam::{DMat4, DVec3, Mat4};
-use std::{
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-        mpsc,
-    },
-    thread,
+use horizon_thread as thread;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+    mpsc,
 };
 use web_time::{Duration, Instant};
 

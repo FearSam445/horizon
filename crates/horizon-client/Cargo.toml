@@ -11,6 +11,8 @@ autoexamples = false
 autotests = false
 
 [dependencies]
+# std::thread, inline in the browser build's one thread (web/).
+horizon-thread = { path = "../../web/thread" }
 # std::fs, in memory in the browser build (web/).
 horizon-fs = { path = "../../web/fs" }
 # SystemTime::now, also in the browser build (web/).

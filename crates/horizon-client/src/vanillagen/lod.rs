@@ -5,6 +5,7 @@ use crate::{
     lod::{Column, Span, Surface},
     streaming::LodDetail,
 };
+use horizon_thread as thread;
 use horizon_world::{
     heightmap::HeightmapState,
     registry::BlockStateId,
@@ -20,7 +21,6 @@ use std::{
         atomic::{AtomicBool, Ordering},
         mpsc,
     },
-    thread,
 };
 
 mod islands;
@@ -971,7 +971,7 @@ mod tests {
                 web_time::Instant::now() < deadline,
                 "decoration worker stalled"
             );
-            std::thread::sleep(web_time::Duration::from_millis(5));
+            horizon_thread::sleep(web_time::Duration::from_millis(5));
         };
         let count = |suffix: &str| {
             generated

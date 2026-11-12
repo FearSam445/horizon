@@ -86,7 +86,7 @@ impl Cosmetics {
             .take()
             .expect("worker");
         let shared = c.shared.clone();
-        let _ = std::thread::Builder::new()
+        let _ = horizon_thread::Builder::new()
             .name("Cosmetics".into())
             .spawn(move || {
                 loop {

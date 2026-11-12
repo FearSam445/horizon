@@ -273,7 +273,7 @@ pub fn free_columns<T: Send + 'static>(columns: T, count: usize) {
         return;
     }
     // Should the thread not start, the closure drops `columns` here.
-    let _ = std::thread::Builder::new()
+    let _ = horizon_thread::Builder::new()
         .name("Chunk freeing".into())
         .spawn(move || drop(columns));
 }
@@ -1171,7 +1171,7 @@ mod tests {
             assert_eq!(chunk.motion_blocking(0, 0, |v| v != 0), MIN_Y + 5);
             chunk.set(0, MIN_Y + 5, 0, 1);
             let ready = std::sync::Barrier::new(2);
-            std::thread::scope(|scope| {
+            horizon_thread::scope(|scope| {
                 scope.spawn(|| {
                     ready.wait();
                     assert_eq!(chunk.world_surface(0, 0, |v| v == 0), MIN_Y + 6);

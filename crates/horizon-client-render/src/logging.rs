@@ -438,7 +438,7 @@ impl log::Log for Logger {
         } else {
             format!("[{}] {}", record.target(), record.args())
         };
-        let current = std::thread::current();
+        let current = horizon_thread::current();
         let thread = match current.name() {
             Some("main") => self.main_thread,
             Some(name) => name,
@@ -586,7 +586,7 @@ pub fn init(home: &Path, main_thread: &'static str) {
             dir,
             date: Local::now().date_naive(),
         };
-        if let Err(e) = std::thread::Builder::new()
+        if let Err(e) = horizon_thread::Builder::new()
             .name("Log writer".into())
             .spawn(move || writer.run(receive))
         {
@@ -607,7 +607,7 @@ pub fn init(home: &Path, main_thread: &'static str) {
 /// A line in the log from code that prints it elsewhere itself (the dedicated server console).
 pub fn write_only(level: log::Level, message: &str) {
     if let Some(logger) = LOGGER.get() {
-        let current = std::thread::current();
+        let current = horizon_thread::current();
         let thread = match current.name() {
             Some("main") | None => logger.main_thread,
             Some(name) => name,
@@ -684,7 +684,7 @@ mod tests {
             dir: dir.clone(),
             date: Local::now().date_naive(),
         };
-        let handle = std::thread::spawn(move || writer.run(receive));
+        let handle = horizon_thread::spawn(move || writer.run(receive));
         let logger = Logger {
             out,
             recent: Mutex::new(VecDeque::new()),

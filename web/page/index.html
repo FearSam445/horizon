@@ -11,6 +11,15 @@
     font: 16px/1.5 system-ui, sans-serif; pointer-events: none; white-space: pre-line; }
   #horizon-status .bar { width: 240px; height: 4px; margin: 12px auto 0; background: #2a2f3a; border-radius: 2px; overflow: hidden; }
   #horizon-status .bar > i { display: block; height: 100%; width: 0; background: #f0795a; transition: width .2s; }
+  #horizon-files { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(440px, calc(100vw - 32px));
+    box-sizing: border-box; padding: 24px; border-radius: 12px; background: #161a22; color: #e8e8ea;
+    font: 15px/1.5 system-ui, sans-serif; box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+  #horizon-files .title { margin: 0 0 8px; font-size: 20px; font-weight: 600; }
+  #horizon-files p { margin: 0 0 16px; color: #c9cbd1; }
+  #horizon-files b { color: #e8e8ea; }
+  #horizon-files .button { display: inline-block; padding: 10px 18px; border-radius: 999px; background: #f0795a; color: #16110f;
+    font-weight: 600; cursor: pointer; }
+  #horizon-files .link { margin-left: 12px; background: none; border: 0; color: #9aa0ad; font: inherit; cursor: pointer; text-decoration: underline; }
 </style>
 </head>
 <body>

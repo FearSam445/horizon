@@ -980,7 +980,7 @@ mod tests {
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-skin-layers-{}-{:?}",
             std::process::id(),
-            std::thread::current().id()
+            horizon_thread::current().id()
         ));
         fs::create_dir_all(&dir).unwrap();
         fs::write(dir.join("options.txt"), "fov:0.5\nthreeDSkinLayers:true\n").unwrap();
@@ -1002,7 +1002,7 @@ mod tests {
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-{name}-{}-{:?}",
             std::process::id(),
-            std::thread::current().id()
+            horizon_thread::current().id()
         ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();

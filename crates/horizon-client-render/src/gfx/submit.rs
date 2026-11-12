@@ -35,7 +35,7 @@ pub struct Job {
 
 struct Thread {
     jobs: Option<mpsc::Sender<Job>>,
-    handle: Option<std::thread::JoinHandle<()>>,
+    handle: Option<horizon_thread::JoinHandle<()>>,
 }
 
 /// What the submit thread sent back, once it is taken in by [`Queue::wait`].
@@ -72,7 +72,7 @@ impl Queue {
         let (jobs, job_rx) = mpsc::channel::<Job>();
         let (done_tx, done) = mpsc::channel();
         let queue = this.queue.clone();
-        let spawned = std::thread::Builder::new()
+        let spawned = horizon_thread::Builder::new()
             .name("Render submit".into())
             .spawn(move || {
                 for job in job_rx {

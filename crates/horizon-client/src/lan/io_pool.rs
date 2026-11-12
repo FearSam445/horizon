@@ -273,7 +273,7 @@ struct Pool {
 /// The pool, started the first time: one thread per two cores.
 fn pool() -> Result<&'static Pool, String> {
     static POOL: OnceLock<Result<Pool, String>> = OnceLock::new();
-    let threads = std::thread::available_parallelism().map_or(1, |n| n.get().div_ceil(2));
+    let threads = horizon_thread::available_parallelism().map_or(1, |n| n.get().div_ceil(2));
     POOL.get_or_init(|| start(threads).map_err(|e| format!("network threads: {e}")))
         .as_ref()
         .map_err(Clone::clone)
@@ -289,7 +289,7 @@ fn start(threads: usize) -> std::io::Result<Pool> {
             load: AtomicUsize::new(0),
         });
         let mine = worker.clone();
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name(format!("horizon-net-{n}"))
             .spawn(move || run(poll, &mine))?;
         workers.push(worker);
@@ -343,7 +343,7 @@ fn run(mut poll: Poll, worker: &Arc<Worker>) {
             && e.kind() != ErrorKind::Interrupted
         {
             log::warn!("[lan] network poll: {e}");
-            std::thread::sleep(SWEEP);
+            horizon_thread::sleep(SWEEP);
         }
         let now = Instant::now();
         for event in &events {
@@ -969,7 +969,7 @@ mod tests {
         // through: Windows takes a write of any size whole while its buffer
         // has room.
         let full = || {
-            std::thread::sleep(Duration::from_millis(50));
+            horizon_thread::sleep(Duration::from_millis(50));
             served.pending.load(Ordering::Relaxed) > 0
         };
         for i in 0..=u8::MAX {
@@ -980,7 +980,7 @@ mod tests {
             served.send(vec![body(i, 1 << 20)], None);
         }
         served.send(Vec::new(), Some(End::Disconnect));
-        std::thread::sleep(Duration::from_millis(300));
+        horizon_thread::sleep(Duration::from_millis(300));
         assert!(served.seen.try_recv().is_err(), "still writing");
         served.send(Vec::new(), Some(End::Close));
         assert_eq!(served.next(), Seen::Left("Disconnected".into()));

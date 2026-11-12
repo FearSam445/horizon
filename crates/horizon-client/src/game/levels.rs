@@ -835,7 +835,7 @@ impl Game<'_> {
             self.pump_chunks(*next, paused);
             let now = Instant::now();
             if *next > now {
-                std::thread::sleep(*next - now);
+                horizon_thread::sleep(*next - now);
             }
         } else if now - *next > Duration::from_secs(2) {
             let behind = now - *next;
@@ -1358,7 +1358,7 @@ mod tests {
         for _ in 0..2000 {
             game.tick_world(true).unwrap();
             game.update_world();
-            std::thread::sleep(web_time::Duration::from_millis(10));
+            horizon_thread::sleep(web_time::Duration::from_millis(10));
             if game.run_command_quietly("execute if loaded 215 64 8") {
                 loaded = true;
                 break;
@@ -1420,7 +1420,7 @@ mod tests {
             for _ in 0..2000 {
                 game.tick_world(true).unwrap();
                 game.update_world();
-                std::thread::sleep(web_time::Duration::from_millis(10));
+                horizon_thread::sleep(web_time::Duration::from_millis(10));
                 if game.run_command_quietly("execute if loaded 215 64 8") {
                     loaded = true;
                     break;
@@ -1516,7 +1516,7 @@ mod tests {
         for _ in 0..2000 {
             game.tick_world(true).unwrap();
             game.update_world();
-            std::thread::sleep(web_time::Duration::from_millis(10));
+            horizon_thread::sleep(web_time::Duration::from_millis(10));
             if game.run_command_quietly("execute if loaded 215 64 8") {
                 loaded = true;
                 break;

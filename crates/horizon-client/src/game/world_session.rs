@@ -208,7 +208,7 @@ impl Game<'_> {
         while self.pending_save.is_some() {
             self.poll_closing_save()?;
             if self.pending_save.is_some() {
-                std::thread::sleep(Duration::from_millis(1));
+                horizon_thread::sleep(Duration::from_millis(1));
             }
         }
         // A repro recording is finished and bundled before the process may go away.

@@ -583,7 +583,7 @@ mod tests {
     #[test]
     fn saved_cache_is_bounded_and_registry_local_under_concurrency() {
         let registry = registry();
-        std::thread::scope(|scope| {
+        horizon_thread::scope(|scope| {
             for _ in 0..4 {
                 scope.spawn(|| {
                     for i in 0..8300 {

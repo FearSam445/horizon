@@ -6,11 +6,11 @@ mod commands;
 mod launch;
 mod mcp;
 
+use horizon_thread as thread;
 use std::{
     io::{BufRead, BufReader, Write},
     path::{Path, PathBuf},
     process::ExitCode,
-    thread,
 };
 use web_time::{Duration, Instant};
 
@@ -986,11 +986,11 @@ mod tests {
     fn fake_game(
         name: &str,
         reply: &'static str,
-    ) -> (PathBuf, std::thread::JoinHandle<Vec<String>>) {
+    ) -> (PathBuf, horizon_thread::JoinHandle<Vec<String>>) {
         let path = horizon_fs::temp_dir().join(format!("hctl-{name}-{}.sock", std::process::id()));
         let _ = horizon_fs::remove_file(&path);
         let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
-        let handle = std::thread::spawn(move || {
+        let handle = horizon_thread::spawn(move || {
             let (stream, _) = listener.accept().unwrap();
             let mut lines = Vec::new();
             let mut reader = BufReader::new(stream.try_clone().unwrap());

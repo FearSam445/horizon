@@ -24,6 +24,7 @@ use horizon_fs as fs;
 #[allow(unused_imports)]
 use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_system::scrub::Scrubber;
+use horizon_thread as thread;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::time::SystemTime;
@@ -31,7 +32,6 @@ use std::{
     io::{self, BufWriter, Write},
     path::{Path, PathBuf},
     sync::mpsc::{self, Receiver, Sender, TryRecvError},
-    thread,
 };
 use web_time::{Duration, Instant};
 use winit::{
@@ -935,7 +935,7 @@ impl Game<'_> {
         while !self.repro.exports.is_empty() && Instant::now() < deadline {
             self.poll_exports();
             if !self.repro.exports.is_empty() {
-                std::thread::sleep(Duration::from_millis(5));
+                horizon_thread::sleep(Duration::from_millis(5));
             }
         }
         self.poll_exports();

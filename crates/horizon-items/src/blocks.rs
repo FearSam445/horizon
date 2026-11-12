@@ -354,7 +354,7 @@ impl BlockFacts {
         }
         // The validation pass (a third of the load) only reports errors: it
         // reads the file beside the decode, and its error still wins.
-        std::thread::scope(|scope| {
+        horizon_thread::scope(|scope| {
             let validated = scope.spawn(validate);
             let decoded = Self::decode_with_callback(&path, &bytes, registry, behaviours, callback);
             validated

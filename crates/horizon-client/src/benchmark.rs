@@ -8,9 +8,9 @@
 
 #[allow(unused_imports)]
 use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
+use horizon_thread as thread;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Sender};
-use std::thread;
 use web_time::{Duration, Instant};
 
 use horizon_bench::compare::Ab;

@@ -1,8 +1,8 @@
+use horizon_thread::{self as thread, JoinHandle};
 use std::io::{self, Write};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, Receiver, SyncSender, TrySendError};
-use std::thread::{self, JoinHandle};
 
 use flate2::Compression;
 use flate2::write::GzEncoder;

@@ -53,7 +53,7 @@ impl Anticheat {
             // A flood of flags (a lagging player, the load-test bots) wrote to the disk on the
             // tick thread, one line at a time: the lines go to a writer thread instead, in order.
             let (send, lines) = std::sync::mpsc::channel::<String>();
-            let Ok(thread) = std::thread::Builder::new()
+            let Ok(thread) = horizon_thread::Builder::new()
                 .name("anticheat-log".into())
                 .spawn(move || {
                     // The lines waiting are written together, flushed once none is left.
@@ -105,7 +105,7 @@ impl Anticheat {
 /// channel and waits for the thread to write every line handed to it, so none is lost.
 struct LogWriter {
     send: Option<std::sync::mpsc::Sender<String>>,
-    thread: Option<std::thread::JoinHandle<()>>,
+    thread: Option<horizon_thread::JoinHandle<()>>,
 }
 
 impl Drop for LogWriter {
@@ -638,9 +638,9 @@ mod tests {
         let written = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
         let (send, lines) = std::sync::mpsc::channel::<String>();
         let out = std::sync::Arc::clone(&written);
-        let thread = std::thread::spawn(move || {
+        let thread = horizon_thread::spawn(move || {
             for line in lines {
-                std::thread::sleep(web_time::Duration::from_millis(20));
+                horizon_thread::sleep(web_time::Duration::from_millis(20));
                 out.lock().unwrap().push(line);
             }
         });

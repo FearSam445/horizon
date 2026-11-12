@@ -7,6 +7,7 @@ use horizon_client::{
     graphics::ParticleCullingMode,
     world::World,
 };
+use horizon_thread::JoinHandle;
 use std::{
     array,
     cell::RefCell,
@@ -14,7 +15,6 @@ use std::{
         Arc, Weak,
         mpsc::{self, Receiver, SyncSender, TrySendError},
     },
-    thread::JoinHandle,
 };
 
 type ChunkKey = (i32, i32);
@@ -148,7 +148,7 @@ impl ParticleAsyncCuller {
     fn new() -> std::io::Result<Self> {
         let (job_tx, job_rx) = mpsc::sync_channel::<CullJob>(1);
         let (result_tx, result_rx) = mpsc::channel::<CullResults>();
-        let thread = std::thread::Builder::new()
+        let thread = horizon_thread::Builder::new()
             .name("particle-culling".into())
             .spawn(move || {
                 while let Ok(job) = job_rx.recv() {
@@ -835,7 +835,7 @@ mod tests {
                     break;
                 }
                 assert!(Instant::now() < deadline, "worker did not answer");
-                std::thread::sleep(Duration::from_millis(5));
+                horizon_thread::sleep(Duration::from_millis(5));
             }
         }
         assert!(

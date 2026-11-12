@@ -379,7 +379,7 @@ fn write_snapshot(snapshot: Snapshot) -> Result<SavedPlayer, String> {
 struct PlayerWriter {
     send: std::sync::mpsc::Sender<Snapshot>,
     done: std::sync::mpsc::Receiver<Result<SavedPlayer, String>>,
-    thread: std::thread::JoinHandle<()>,
+    thread: horizon_thread::JoinHandle<()>,
 }
 
 /// One FIFO writer for a server's player autosaves. Synchronous logout writes
@@ -403,7 +403,7 @@ impl Autosaves {
         if self.writer.is_none() {
             let (send, receive) = std::sync::mpsc::channel::<Snapshot>();
             let (complete, done) = std::sync::mpsc::channel();
-            match std::thread::Builder::new()
+            match horizon_thread::Builder::new()
                 .name("horizon-player-writer".into())
                 .spawn(move || {
                     for snapshot in receive {
@@ -861,7 +861,7 @@ mod tests {
         saves.writer = Some(PlayerWriter {
             send,
             done,
-            thread: std::thread::spawn(|| {}),
+            thread: horizon_thread::spawn(|| {}),
         });
         saves.pending = 1;
         saves.enqueue(&holding(1, "minecraft:diamond", 5), &dir);
@@ -1057,7 +1057,7 @@ mod tests {
         };
         store(&holding(old, "minecraft:diamond", 5), &mut level, None);
         level.write(&dir).unwrap();
-        std::thread::sleep(web_time::Duration::from_millis(20));
+        horizon_thread::sleep(web_time::Duration::from_millis(20));
         save(&holding(new, "minecraft:emerald", 9), &dir);
 
         let mut read = Level::read(&dir).unwrap();

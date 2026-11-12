@@ -1749,7 +1749,7 @@ impl RealmsClient {
             if retry_after > 0 && attempt + 1 < MAX_RETRIES {
                 attempt += 1;
                 written.store(0, Ordering::Relaxed);
-                std::thread::sleep(Duration::from_secs(retry_after.min(60)));
+                horizon_thread::sleep(Duration::from_secs(retry_after.min(60)));
                 continue;
             }
             // `UploadResult.getSimplifiedErrorMessage`.
@@ -1912,10 +1912,10 @@ mod tests {
     const UUID: u128 = 0x0123_4567_89ab_cdef_0123_4567_89ab_cdef;
 
     /// One HTTP exchange on a local port: the request as the server read it.
-    fn serve_once(answer: &'static str) -> (String, std::thread::JoinHandle<String>) {
+    fn serve_once(answer: &'static str) -> (String, horizon_thread::JoinHandle<String>) {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let base = format!("http://{}", listener.local_addr().unwrap());
-        let handle = std::thread::spawn(move || {
+        let handle = horizon_thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
             let mut seen = Vec::new();
             let mut buf = [0u8; 4096];
@@ -2465,10 +2465,10 @@ mod tests {
     }
 
     /// One HTTP exchange whose whole request (the Content-Length body included) is returned.
-    fn serve_request(answer: &'static str) -> (String, std::thread::JoinHandle<String>) {
+    fn serve_request(answer: &'static str) -> (String, horizon_thread::JoinHandle<String>) {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let base = format!("http://{}", listener.local_addr().unwrap());
-        let handle = std::thread::spawn(move || {
+        let handle = horizon_thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
             let mut seen = Vec::new();
             let mut buf = [0u8; 4096];

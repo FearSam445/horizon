@@ -12,6 +12,7 @@
 use crate::block_entity_render::StaticCacheFrameStats;
 #[allow(unused_imports)]
 use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
+use horizon_thread as thread;
 use horizon_threads::alloc_count::{Counts, ON};
 use std::{
     io::{self, BufRead, BufReader, Read, Write},
@@ -22,7 +23,6 @@ use std::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
         mpsc,
     },
-    thread,
 };
 use web_time::Instant;
 

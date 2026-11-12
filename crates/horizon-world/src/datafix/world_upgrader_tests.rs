@@ -260,7 +260,7 @@ fn the_worker_thread_finishes_and_a_cancel_joins_it() {
     write_chunks(&file, &[(ChunkPos::new(0, 0), entity_chunk(4000, 0, 0))]);
     let mut upgrader = WorldUpgrader::new(&world.0, world_dimensions(&world.0), false, false);
     while !upgrader.is_finished() {
-        std::thread::sleep(web_time::Duration::from_millis(5));
+        horizon_thread::sleep(web_time::Duration::from_millis(5));
     }
     upgrader.cancel();
     assert_eq!(version_of(&file, ChunkPos::new(0, 0)), CURRENT);

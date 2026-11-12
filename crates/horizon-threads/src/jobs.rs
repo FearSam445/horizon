@@ -220,7 +220,7 @@ impl Pool {
         let mut started = 0;
         for i in 0..threads.max(1) {
             let worker = inner.clone();
-            let spawned = std::thread::Builder::new()
+            let spawned = horizon_thread::Builder::new()
                 .name(format!("{name}-{i}"))
                 .spawn(move || {
                     // Ticks and frames come first.
@@ -605,7 +605,7 @@ mod tests {
         });
         let _far = pool.register(far);
         // Two far jobs hold two workers; the third stays free for this one.
-        std::thread::sleep(Duration::from_millis(100));
+        horizon_thread::sleep(Duration::from_millis(100));
         let near = fixed(&[(Rank::new(Class::Near, 0), "near")], tx);
         let near_reg = pool.register(near);
         near_reg.notify();
@@ -666,7 +666,7 @@ mod tests {
         let deadline = Instant::now() + Duration::from_secs(20);
         while counter.done.load(Ordering::Relaxed) < 20_000 {
             assert!(Instant::now() < deadline, "jobs left behind");
-            std::thread::sleep(Duration::from_millis(1));
+            horizon_thread::sleep(Duration::from_millis(1));
         }
     }
 
@@ -693,7 +693,7 @@ mod tests {
                 "woken every 50 ms, the workers never released"
             );
             reg.notify_all();
-            std::thread::sleep(Duration::from_millis(50));
+            horizon_thread::sleep(Duration::from_millis(50));
         }
         assert!(counter.idle.load(Ordering::Relaxed));
     }
@@ -725,7 +725,7 @@ mod tests {
             );
             *lock(&busy.left) += 1;
             busy_reg.notify();
-            std::thread::sleep(Duration::from_millis(50));
+            horizon_thread::sleep(Duration::from_millis(50));
         }
         assert_eq!(quiet.done.load(Ordering::Relaxed), 4);
         assert!(quiet.idle.load(Ordering::Relaxed));
@@ -752,7 +752,7 @@ mod tests {
         let deadline = Instant::now() + release * 20;
         while !counter.all_idle.load(Ordering::Relaxed) {
             assert!(Instant::now() < deadline, "workers never released");
-            std::thread::sleep(Duration::from_millis(20));
+            horizon_thread::sleep(Duration::from_millis(20));
         }
         assert!(counter.idle.load(Ordering::Relaxed));
         assert_eq!(counter.done.load(Ordering::Relaxed), 10);
@@ -785,12 +785,12 @@ mod tests {
                 picked.elapsed() < Duration::from_secs(10),
                 "no worker picked the job up"
             );
-            std::thread::sleep(Duration::from_millis(1));
+            horizon_thread::sleep(Duration::from_millis(1));
         }
         let opener = {
             let gate = gate.clone();
-            std::thread::spawn(move || {
-                std::thread::sleep(Duration::from_millis(200));
+            horizon_thread::spawn(move || {
+                horizon_thread::sleep(Duration::from_millis(200));
                 *gate.0.lock().unwrap() = true;
                 gate.1.notify_all();
             })
@@ -802,7 +802,7 @@ mod tests {
         opener.join().unwrap();
         let ran: Vec<_> = rx.try_iter().collect();
         assert!(ran.contains(&"held"));
-        std::thread::sleep(Duration::from_millis(100));
+        horizon_thread::sleep(Duration::from_millis(100));
         assert!(rx.try_iter().next().is_none());
         // The pool's own references are gone.
         assert_eq!(Arc::strong_count(&held), 1);
@@ -829,7 +829,7 @@ mod tests {
         let deadline = Instant::now() + Duration::from_secs(10);
         while boom.0.load(Ordering::Relaxed) < 2 {
             assert!(Instant::now() < deadline, "the worker died with the panic");
-            std::thread::sleep(Duration::from_millis(5));
+            horizon_thread::sleep(Duration::from_millis(5));
         }
     }
 }

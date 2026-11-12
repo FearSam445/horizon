@@ -778,7 +778,7 @@ impl Game<'_> {
         }
         let dirs = [self.options.resources.clone(), self.ui.vanilla_root.clone()];
         let registry = self.pack.assets.registry;
-        let spawned = std::thread::Builder::new()
+        let spawned = horizon_thread::Builder::new()
             .name("Registries preload".into())
             .spawn(move || {
                 horizon_threads::behind_server();

@@ -99,7 +99,7 @@ impl Game<'_> {
                 let backups = title::world_management::backups_path(&saves);
                 // A big world takes a while to zip: off the game thread, as Make Backup does.
                 let reply = reply.clone();
-                std::thread::spawn(move || {
+                horizon_thread::spawn(move || {
                     let answer = match title::world_management::backup(&saves, &folder) {
                         Ok(bytes) => {
                             json!({ "ok": true, "folder": folder, "backups": backups, "bytes": bytes })

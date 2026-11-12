@@ -236,12 +236,12 @@ mod tests {
         let thread_name = Arc::new(Mutex::new(None));
         let thread_name_clone = thread_name.clone();
         host.spawn_background_job(Box::new(move || {
-            let name = std::thread::current().name().map(|s| s.to_string());
+            let name = horizon_thread::current().name().map(|s| s.to_string());
             *thread_name_clone.lock().unwrap() = name;
         }));
         let start = Instant::now();
         while thread_name.lock().unwrap().is_none() && start.elapsed() < Duration::from_secs(3) {
-            std::thread::sleep(Duration::from_millis(5));
+            horizon_thread::sleep(Duration::from_millis(5));
         }
         let name = thread_name
             .lock()
@@ -282,7 +282,7 @@ mod tests {
         while (host_client.tasks.is_empty() || host_server.tasks.is_empty())
             && start.elapsed() < Duration::from_secs(3)
         {
-            std::thread::sleep(Duration::from_millis(5));
+            horizon_thread::sleep(Duration::from_millis(5));
         }
 
         // Process only client tasks
@@ -317,7 +317,7 @@ mod tests {
 
         let start = Instant::now();
         while host_server.tasks.is_empty() && start.elapsed() < Duration::from_secs(3) {
-            std::thread::sleep(Duration::from_millis(5));
+            horizon_thread::sleep(Duration::from_millis(5));
         }
 
         host_server.process_tasks();
@@ -344,7 +344,7 @@ mod tests {
 
         let start = Instant::now();
         while host.tasks.is_empty() && start.elapsed() < Duration::from_secs(3) {
-            std::thread::sleep(Duration::from_millis(5));
+            horizon_thread::sleep(Duration::from_millis(5));
         }
 
         host.process_tasks();
@@ -395,7 +395,7 @@ mod tests {
 
         let start = Instant::now();
         while reported.lock().unwrap().is_none() && start.elapsed() < Duration::from_secs(3) {
-            std::thread::sleep(Duration::from_millis(5));
+            horizon_thread::sleep(Duration::from_millis(5));
         }
         let res = *reported.lock().unwrap();
         assert_eq!(res, Some((Some("test_mod"), "test_hook")));

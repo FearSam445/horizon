@@ -333,7 +333,7 @@ mod tests {
             }
         };
         let servers = [silent.local_addr().unwrap(), udp.local_addr().unwrap()];
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             let mut buf = [0; 512];
             let (len, from) = udp.recv_from(&mut buf).unwrap();
             let mut truncated = reply(&buf[..len], 0, &[]);

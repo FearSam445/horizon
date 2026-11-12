@@ -1,10 +1,8 @@
 use super::{
     Failure, FriendData, ResultCode, Service, fetch_friends, lock, parse_friends, session,
 };
-use std::{
-    sync::atomic::{AtomicBool, Ordering},
-    thread,
-};
+use horizon_thread as thread;
+use std::sync::atomic::{AtomicBool, Ordering};
 use web_time::{Duration, Instant};
 
 /// `RemoteFriendListUpdateHandler.State`.

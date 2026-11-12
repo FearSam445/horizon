@@ -3653,7 +3653,7 @@ mod item_display_saved_transform_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h132-{:?}", std::thread::current().id())),
+                .join(format!("h132-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -3932,7 +3932,7 @@ mod baby_modifier_mutation_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h235-{:?}", std::thread::current().id())),
+                .join(format!("h235-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -4234,7 +4234,7 @@ mod attribute_instance_save_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h105-{:?}", std::thread::current().id())),
+                .join(format!("h105-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -4442,7 +4442,7 @@ mod mob_inventory_merge_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h138-{:?}", std::thread::current().id())),
+                .join(format!("h138-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -4706,7 +4706,7 @@ mod invalid_passenger_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h161-{:?}", std::thread::current().id())),
+                .join(format!("h161-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -4957,7 +4957,7 @@ mod summon_uuid_conflict_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h160-{:?}", std::thread::current().id())),
+                .join(format!("h160-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -5237,7 +5237,7 @@ mod h262_enderman_absolute_anger_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h262-{:?}", std::thread::current().id())),
+                .join(format!("h262-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -5485,7 +5485,7 @@ mod sulfur_body_attribute_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h192-{:?}", std::thread::current().id())),
+                .join(format!("h192-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -5726,7 +5726,7 @@ mod summoned_knot_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h129-{:?}", std::thread::current().id())),
+                .join(format!("h129-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(

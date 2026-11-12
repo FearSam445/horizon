@@ -351,7 +351,7 @@ fn read_listed(files: &[(String, PathBuf, u64)], readers: usize) -> io::Result<V
         return files.iter().map(read_listed_file).collect();
     }
     let next = AtomicUsize::new(0);
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         let workers: Vec<_> = (0..readers)
             .map(|_| {
                 scope.spawn(|| -> io::Result<Vec<(usize, Vec<u8>)>> {

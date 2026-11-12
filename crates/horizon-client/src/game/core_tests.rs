@@ -457,7 +457,7 @@ fn world_rest_poll_does_not_wait_for_a_blocked_worker() {
     let (release, wait) = std::sync::mpsc::channel();
     let loader = WorldRestLoader {
         progress: Progress::new(),
-        handle: std::thread::spawn(move || {
+        handle: horizon_thread::spawn(move || {
             wait.recv().unwrap();
             Ok(())
         }),
@@ -472,7 +472,7 @@ fn world_rest_poll_waits_for_a_slow_worker() {
     let (release, wait) = std::sync::mpsc::channel();
     let loader = WorldRestLoader {
         progress: Progress::new(),
-        handle: std::thread::spawn(move || {
+        handle: horizon_thread::spawn(move || {
             wait.recv().unwrap();
             Ok(())
         }),
@@ -481,7 +481,7 @@ fn world_rest_poll_waits_for_a_slow_worker() {
     assert!(!loader.ready().unwrap());
     release.send(()).unwrap();
     while !loader.ready().unwrap() {
-        std::thread::sleep(Duration::from_millis(1));
+        horizon_thread::sleep(Duration::from_millis(1));
     }
     loader.finish().unwrap();
 }
@@ -490,7 +490,7 @@ fn world_rest_poll_waits_for_a_slow_worker() {
 fn world_rest_worker_failure_reaches_the_client() {
     let loader = WorldRestLoader {
         progress: Progress::new(),
-        handle: std::thread::spawn(|| Err("missing world table".to_owned())),
+        handle: horizon_thread::spawn(|| Err("missing world table".to_owned())),
     };
     assert_eq!(
         loader.finish().unwrap_err().to_string(),
@@ -502,7 +502,7 @@ fn world_rest_worker_failure_reaches_the_client() {
 fn world_rest_worker_panic_reaches_the_client() {
     let loader = WorldRestLoader {
         progress: Progress::new(),
-        handle: std::thread::spawn(|| panic!("broken loader")),
+        handle: horizon_thread::spawn(|| panic!("broken loader")),
     };
     assert_eq!(
         loader.finish().unwrap_err().to_string(),

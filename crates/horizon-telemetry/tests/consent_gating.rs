@@ -19,7 +19,7 @@ fn mock_server(status: u16) -> (String, Seen) {
     let url = format!("http://{}", listener.local_addr().unwrap());
     let seen: Seen = Arc::default();
     let log = seen.clone();
-    std::thread::spawn(move || {
+    horizon_thread::spawn(move || {
         for stream in listener.incoming() {
             let Ok(mut stream) = stream else { continue };
             let mut reader = BufReader::new(stream.try_clone().unwrap());

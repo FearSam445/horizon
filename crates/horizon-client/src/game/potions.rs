@@ -2642,7 +2642,7 @@ mod mob_absorption_max_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h203-{:?}", std::thread::current().id())),
+                .join(format!("h203-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -2812,7 +2812,7 @@ mod mob_health_boost_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h205-{:?}", std::thread::current().id())),
+                .join(format!("h205-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -3057,7 +3057,7 @@ mod depleted_absorption_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h204-{:?}", std::thread::current().id())),
+                .join(format!("h204-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(

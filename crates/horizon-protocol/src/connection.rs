@@ -342,7 +342,7 @@ impl Connection {
             if let Some(&addr) = addrs.get(started) {
                 let (send, index) = (send.clone(), started);
                 let connect = connect.clone();
-                let spawned = std::thread::Builder::new()
+                let spawned = horizon_thread::Builder::new()
                     .name("horizon-connect".into())
                     .spawn(move || {
                         let _ = send.send((index, connect(addr, timeout)));
@@ -883,7 +883,7 @@ mod tests {
     fn loopback_with_compression_and_encryption() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             let (stream, _) = listener.accept().unwrap();
             let mut c = Connection::from_stream(stream).unwrap();
             let (id, payload) = c.recv().unwrap();
@@ -1026,7 +1026,7 @@ mod tests {
     #[test]
     fn local_pipe_carries_packets_and_closes() {
         let (a, b) = Pipe::pair();
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             let mut c = Connection::local(b);
             c.set_compression(64);
             let (id, payload) = c.recv().unwrap();
@@ -1059,7 +1059,7 @@ mod tests {
             })
             .collect();
         let sent = bodies.clone();
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             let mut c = Connection::local(b);
             c.set_compression(64);
             c.enable_encryption(&[3; 16]);
@@ -1105,7 +1105,7 @@ mod tests {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
         let (sent, both_sent) = std::sync::mpsc::channel();
-        let client = std::thread::spawn(move || {
+        let client = horizon_thread::spawn(move || {
             let mut c = Connection::connect("127.0.0.1", port, Duration::from_secs(5)).unwrap();
             c.send(&[0, 1, 2]).unwrap();
             c.enable_encryption(&[7; 16]);
@@ -1129,7 +1129,7 @@ mod tests {
     fn an_empty_compressed_frame_is_skipped() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             let (stream, _) = listener.accept().unwrap();
             let mut c = Connection::from_stream(stream).unwrap();
             c.set_compression(64);

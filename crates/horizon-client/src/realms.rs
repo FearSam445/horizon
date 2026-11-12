@@ -24,10 +24,10 @@ use client::{
     WorldDownload, WorldTemplate, WorldTemplateList,
 };
 use horizon_client_render::auth::{self, AuthSession};
+use horizon_thread as thread;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::thread;
 use std::time::{SystemTime, UNIX_EPOCH};
 use web_time::{Duration, Instant};
 

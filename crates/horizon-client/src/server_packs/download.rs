@@ -67,7 +67,7 @@ impl Queue {
         vacuum(&dir, MAX_KEPT);
         let (jobs, todo) = channel::<Job>();
         let (finished, done) = channel();
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("download-queue".into())
             .spawn(move || {
                 for (requests, headers, progress) in todo {
@@ -387,11 +387,11 @@ mod tests {
     use std::net::TcpListener;
 
     /// A one-shot HTTP server answering `status` with `body`; the request it got.
-    fn serve(status: &str, body: Vec<u8>) -> (String, std::thread::JoinHandle<String>) {
+    fn serve(status: &str, body: Vec<u8>) -> (String, horizon_thread::JoinHandle<String>) {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/pack.zip", listener.local_addr().unwrap());
         let status = status.to_owned();
-        let handle = std::thread::spawn(move || {
+        let handle = horizon_thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
             let mut request = Vec::new();
             let mut buf = [0u8; 1024];
@@ -498,7 +498,7 @@ mod tests {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let url = format!("http://{}/pack.zip", listener.local_addr().unwrap());
         let (release, hold) = channel::<()>();
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             // Accept, then answer nothing until the test is done.
             let (_stream, _) = listener.accept().unwrap();
             let _ = hold.recv();
@@ -544,7 +544,7 @@ mod tests {
             if let Some(b) = queue.finished().pop() {
                 break b;
             }
-            std::thread::sleep(web_time::Duration::from_millis(10));
+            horizon_thread::sleep(web_time::Duration::from_millis(10));
         };
         server.join().unwrap();
         let file = dir

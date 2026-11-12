@@ -1107,7 +1107,7 @@ mod tests {
             assert!(panic.is_err());
             assert_eq!(super::knockback_attacker(), 7);
             assert_eq!(
-                std::thread::spawn(super::knockback_attacker)
+                horizon_thread::spawn(super::knockback_attacker)
                     .join()
                     .unwrap(),
                 0

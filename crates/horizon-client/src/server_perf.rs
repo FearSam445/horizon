@@ -12,8 +12,8 @@ use horizon_perf_format::{
     CounterReporter, Field, FieldSender, Gauges, HealthRecorder, Interner, SlowRecord, SlowRing,
     SlowSpan, WriterThread, counter_registry,
 };
+use horizon_thread::{self as thread, JoinHandle};
 use std::path::{Path, PathBuf};
-use std::thread::{self, JoinHandle};
 use std::time::UNIX_EPOCH;
 use web_time::Instant;
 

@@ -1441,13 +1441,13 @@ fn compile(
     cancel: &std::sync::atomic::AtomicBool,
 ) -> Option<(String, String)> {
     use std::sync::atomic::{AtomicUsize, Ordering};
-    let threads = std::thread::available_parallelism()
+    let threads = horizon_thread::available_parallelism()
         .map_or(1, |n| n.get())
         .clamp(1, 8)
         .min(jobs.len().max(1));
     let next = AtomicUsize::new(0);
     let refused = std::sync::Mutex::new(None);
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         for _ in 0..threads {
             scope.spawn(|| {
                 while !cancel.load(Ordering::Relaxed)

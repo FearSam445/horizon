@@ -332,7 +332,7 @@ fn threads() -> u16 {
     } else {
         0
     };
-    processors.max(std::thread::available_parallelism().map_or(0, |n| n.get() as u16))
+    processors.max(horizon_thread::available_parallelism().map_or(0, |n| n.get() as u16))
 }
 
 /// Physical cores.

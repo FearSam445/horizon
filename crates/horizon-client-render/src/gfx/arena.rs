@@ -729,7 +729,7 @@ pub fn free_later<T: Send + 'static>(items: Vec<T>) {
     if items.is_empty() {
         return;
     }
-    let _ = std::thread::Builder::new()
+    let _ = horizon_thread::Builder::new()
         .name("Buffer freeing".into())
         .spawn(move || drop(items));
 }

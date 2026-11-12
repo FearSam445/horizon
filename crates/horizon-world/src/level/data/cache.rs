@@ -271,7 +271,7 @@ fn hash_contents(bytes: &[u8]) -> [u8; 32] {
     }
     let workers = pieces
         .len()
-        .min(std::thread::available_parallelism().map_or(1, |n| n.get()));
+        .min(horizon_thread::available_parallelism().map_or(1, |n| n.get()));
     if workers <= 1 {
         let mut hasher = Sha256::new();
         for piece in pieces {
@@ -280,7 +280,7 @@ fn hash_contents(bytes: &[u8]) -> [u8; 32] {
         return hasher.finalize().into();
     }
     let span = pieces.len().div_ceil(workers);
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         // The last span hashes here while the workers run.
         let (rest, last) = pieces.split_at(pieces.len() - span);
         let tasks: Vec<_> = rest

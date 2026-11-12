@@ -589,7 +589,7 @@ pub(super) fn stage_pack(
     let mod_image = crate::game::mods::built_with_native_mods();
     // The sound events, the GUI sprites' metadata and the language are read here too, not in
     // the frame that applies the reload (about 20 ms of it).
-    let (render, atlas, panorama, (sounds, ui_metadata, language)) = std::thread::scope(|s| {
+    let (render, atlas, panorama, (sounds, ui_metadata, language)) = horizon_thread::scope(|s| {
         let atlas = s.spawn(|| {
             HudAtlas::build_over_with_image(&root, vanilla_root, mod_image)
                 .map_err(|e| e.to_string())
@@ -692,7 +692,7 @@ type StageResult = std::result::Result<StagedPack, String>;
 pub(super) struct PackReload {
     pub(super) progress: super::Progress,
     kind: ReloadKind,
-    handle: Option<std::thread::JoinHandle<StageResult>>,
+    handle: Option<horizon_thread::JoinHandle<StageResult>>,
     /// When the overlay went up. `LoadingOverlay.fadeInStart`, set on the
     /// first frame it draws.
     started: Instant,
@@ -720,7 +720,7 @@ impl PackReload {
     ) -> std::io::Result<Self> {
         let progress = super::Progress::with(&RELOAD_LINES);
         let worker = progress.clone();
-        let handle = std::thread::Builder::new()
+        let handle = horizon_thread::Builder::new()
             .name("pack-reload".into())
             .spawn(move || stage(&worker))?;
         Ok(Self {
@@ -760,7 +760,7 @@ mod tests {
             if let Some(done) = reload.finished() {
                 return done;
             }
-            std::thread::sleep(Duration::from_millis(10));
+            horizon_thread::sleep(Duration::from_millis(10));
         }
         panic!("the reload worker never finished");
     }
@@ -775,7 +775,7 @@ mod tests {
             blocked.recv().unwrap();
             progress.set(2);
             thread
-                .send(std::thread::current().name().map(str::to_owned))
+                .send(horizon_thread::current().name().map(str::to_owned))
                 .unwrap();
             Err("staged".into())
         })
@@ -823,7 +823,7 @@ mod tests {
             if held.handle.as_ref().is_some_and(|h| h.is_finished()) {
                 break;
             }
-            std::thread::sleep(Duration::from_millis(10));
+            horizon_thread::sleep(Duration::from_millis(10));
         }
         assert!(held.handle.as_ref().is_some_and(|h| h.is_finished()));
         assert!(held.finished().is_none(), "the overlay is still up");

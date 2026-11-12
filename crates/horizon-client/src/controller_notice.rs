@@ -203,7 +203,7 @@ mod tests {
     fn a_notice_raised_while_nothing_draws_is_gone_when_its_time_has_passed() {
         let mut slot = NoticeSlot::default();
         slot.raise(notice(NoticeId::Connection, Priority::Info, "old"));
-        std::thread::sleep(Duration::from_millis(2));
+        horizon_thread::sleep(Duration::from_millis(2));
         assert!(!slot.update(Duration::ZERO));
         assert_eq!(slot.showing(), None);
     }
@@ -213,7 +213,7 @@ mod tests {
         let mut slot = NoticeSlot::default();
         slot.raise(notice(NoticeId::Connection, Priority::Info, "new"));
         assert!(slot.update(Duration::from_secs(60)));
-        std::thread::sleep(Duration::from_millis(2));
+        horizon_thread::sleep(Duration::from_millis(2));
         // Past its time it slides out rather than vanishing.
         assert!(slot.update(Duration::ZERO));
         assert!(slot.showing().is_some());

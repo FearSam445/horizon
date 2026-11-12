@@ -56,7 +56,7 @@ mod typed_state_range_read_tests {
                 web_time::Instant::now() < deadline,
                 "server column did not finish loading"
             );
-            std::thread::sleep(web_time::Duration::from_millis(10));
+            horizon_thread::sleep(web_time::Duration::from_millis(10));
         }
         game.spawn_loaded_entities();
         game.update_chunk_tickets();
@@ -204,7 +204,7 @@ mod typed_state_range_read_tests {
                 web_time::Instant::now() < deadline,
                 "server column did not finish loading"
             );
-            std::thread::sleep(web_time::Duration::from_millis(10));
+            horizon_thread::sleep(web_time::Duration::from_millis(10));
         }
         game.spawn_loaded_entities();
         game.update_chunk_tickets();

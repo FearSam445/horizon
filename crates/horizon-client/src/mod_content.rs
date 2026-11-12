@@ -2456,7 +2456,7 @@ impl Overlay<'_> {
         };
         let next = std::sync::atomic::AtomicUsize::new(0);
         let threads = horizon_threads::worker_count().clamp(1, COPY_THREADS);
-        std::thread::scope(|scope| {
+        horizon_thread::scope(|scope| {
             let workers: Vec<_> = (0..threads)
                 .map(|_| {
                     scope.spawn(|| -> std::result::Result<(), String> {
@@ -2796,7 +2796,7 @@ pub fn build(base: &Path, mods: &[ContentMod], out: &Path) -> Result<Vec<String>
     // copied: they need only the plan, and write the folders made real here first, which
     // no mod file goes to (those are under assets/, data/ and worldgen/structure/).
     let jobs = table_jobs(base, &overlay)?;
-    std::thread::scope(|scope| -> Result<()> {
+    horizon_thread::scope(|scope| -> Result<()> {
         let tables = scope.spawn(|| {
             let _step = crate::spans::startup::step("mods.tables");
             tables(base, &plan, &overlay, &jobs).map_err(|e| e.to_string())

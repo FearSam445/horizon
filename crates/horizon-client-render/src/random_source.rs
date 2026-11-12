@@ -260,11 +260,11 @@ mod tests {
         use horizon_core::random::OrderedDraws;
         use std::sync::{Arc, mpsc};
         let (sent, finished) = mpsc::channel();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let (expected, tape) =
                 record_seeds(|| (0..60).map(|_| unique_seed()).collect::<Vec<_>>());
             let draws = OrderedDraws::new(&LegacyRandom::new(7), 3);
-            let mut actual = std::thread::scope(|s| {
+            let mut actual = horizon_thread::scope(|s| {
                 let handles: Vec<_> = (0..3)
                     .rev()
                     .map(|lane| {
@@ -302,7 +302,7 @@ mod tests {
 
             let draws = OrderedDraws::new(&LegacyRandom::new(7), 2);
             let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                std::thread::scope(|s| {
+                horizon_thread::scope(|s| {
                     let earlier = Arc::clone(&draws);
                     s.spawn(move || {
                         let mut random = earlier.lane(0);

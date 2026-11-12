@@ -1437,7 +1437,7 @@ mod tests {
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-{name}-{}-{:?}",
             std::process::id(),
-            std::thread::current().id()
+            horizon_thread::current().id()
         ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();

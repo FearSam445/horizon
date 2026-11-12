@@ -13,6 +13,7 @@ mod kept;
 mod mesh;
 pub mod packed;
 mod samples;
+use horizon_thread as thread;
 use horizon_world::registry::BlockStateId;
 use std::{
     collections::VecDeque,
@@ -21,7 +22,6 @@ use std::{
         atomic::{AtomicBool, Ordering},
         mpsc,
     },
-    thread,
 };
 
 const CELLS: usize = 16;
@@ -4636,7 +4636,7 @@ mod tests {
                     "retired before replacement meshes"
                 );
                 assert!(web_time::Instant::now() < deadline, "mesh worker stalled");
-                std::thread::sleep(web_time::Duration::from_millis(1));
+                horizon_thread::sleep(web_time::Duration::from_millis(1));
             }
         };
         let uploaded = await_meshes(&mut lod, 1);
@@ -4680,7 +4680,7 @@ mod tests {
                 web_time::Instant::now() < deadline,
                 "covered normal chunk remained an active LOD mask"
             );
-            std::thread::sleep(web_time::Duration::from_millis(1));
+            horizon_thread::sleep(web_time::Duration::from_millis(1));
         }
         assert_eq!(lod.progress(), (1, 1));
 
@@ -5775,7 +5775,7 @@ mod tests {
                         .count(),
                     lod.retry.len(),
                 );
-                std::thread::sleep(web_time::Duration::from_millis(2));
+                horizon_thread::sleep(web_time::Duration::from_millis(2));
             }
         }
         /// The chunks of `chunks` the active tiles don't draw as observed:

@@ -7,6 +7,8 @@ rust-version.workspace = true
 description = "Horizon's Minecraft Java Edition 26.3 network protocol (version 777)"
 
 [dependencies]
+# std::thread, inline in the browser build's one thread (web/).
+horizon-thread = { path = "../../web/thread" }
 # std::fs, in memory in the browser build (web/).
 horizon-fs = { path = "../../web/fs" }
 # std::time, with a clock in the browser build (web/).

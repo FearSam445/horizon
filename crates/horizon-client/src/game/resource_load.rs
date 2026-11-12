@@ -78,11 +78,11 @@ pub(super) fn launch_world(options: &Options) -> Option<&str> {
 /// to say which loader held it, and 13 of the trace's 17 lanes were
 /// indistinguishable.
 pub(super) fn named_scope<'scope, T: Send + 'scope>(
-    scope: &'scope std::thread::Scope<'scope, '_>,
+    scope: &'scope horizon_thread::Scope<'scope, '_>,
     name: &str,
     f: impl FnOnce() -> T + Send + 'scope,
-) -> std::thread::ScopedJoinHandle<'scope, T> {
-    std::thread::Builder::new()
+) -> horizon_thread::ScopedJoinHandle<'scope, T> {
+    horizon_thread::Builder::new()
         // Linux keeps 15 bytes of a thread name: a short prefix keeps them apart
         // ("horizon-load-core" and "horizon-load-collision" would both read
         // "horizon-load-co").
@@ -96,13 +96,13 @@ pub(super) fn named_scope<'scope, T: Send + 'scope>(
 /// A step of the resource load: on its own scoped thread, or, when the
 /// settings allow a single worker, run where it is joined.
 pub(super) enum Step<'scope, T> {
-    Thread(std::thread::ScopedJoinHandle<'scope, T>),
+    Thread(horizon_thread::ScopedJoinHandle<'scope, T>),
     Later(Box<dyn FnOnce() -> T + Send + 'scope>),
 }
 impl<'scope, T: Send + 'scope> Step<'scope, T> {
     /// `name` names the thread when one is spawned ([`named_scope`]).
     pub(super) fn spawn(
-        scope: &'scope std::thread::Scope<'scope, '_>,
+        scope: &'scope horizon_thread::Scope<'scope, '_>,
         parallel: bool,
         name: &str,
         f: impl FnOnce() -> T + Send + 'scope,
@@ -163,7 +163,7 @@ pub(super) fn load_core(
     // read and the block facts; on a cold cache that read was most of a
     // second on the critical path, and warm it is still ~30 ms.
     // A server draws nothing and parses no models, so it skips this.
-    let (assets, parsed_models, entity_models) = std::thread::scope(|scope| {
+    let (assets, parsed_models, entity_models) = horizon_thread::scope(|scope| {
         let models = (parallel && !headless).then(|| {
             scope.spawn(|| {
                 let _step = startup::step("core.models_parse");
@@ -189,7 +189,7 @@ pub(super) fn load_core(
     progress.set(1);
     let registry = assets.registry;
     let entity_models_for_render = entity_models.clone();
-    let (render, gameplay, visibility, biomes, environment, collision) = std::thread::scope(
+    let (render, gameplay, visibility, biomes, environment, collision) = horizon_thread::scope(
         |scope| {
             let assets = &assets;
             let render = Step::spawn(scope, parallel, "render", move || {
@@ -315,7 +315,7 @@ pub(super) fn gameplay_tables(
     );
     drop(facts_step);
     progress.set(2);
-    let (light, motion) = std::thread::scope(|scope| {
+    let (light, motion) = horizon_thread::scope(|scope| {
         let light = Step::spawn(scope, parallel, "light", || {
             startup::time("core.light", || {
                 LightTables::load(root, assets.registry, &facts)
@@ -390,7 +390,7 @@ pub(super) fn load_resources(
         }
     };
     let (core, loaded_gui) = loop {
-        let (ui, core) = std::thread::scope(|scope| {
+        let (ui, core) = horizon_thread::scope(|scope| {
             let core = Step::spawn(scope, parallel, "core", || {
                 // A failed pack starts core again from the game's own
                 // resources, which the world's preload must read: with packs
@@ -505,7 +505,7 @@ pub(super) fn load_resources(
         let entity_models = entity_models.clone();
         let rest_progress = progress.clone();
         let progress = progress.clone();
-        let handle = std::thread::Builder::new()
+        let handle = horizon_thread::Builder::new()
             .name("world-rest-loader".into())
             .spawn(move || {
                 let _step = startup::step("rest");
@@ -565,7 +565,7 @@ pub(super) fn load_resources(
     // waits for the tail, so no tail worker outlives its pack-loader generation.
     let prepared_at = Instant::now();
     let (game_cpu, renderer_cpu) = if menu {
-        let (game_cpu, renderer_cpu) = std::thread::scope(|scope| {
+        let (game_cpu, renderer_cpu) = horizon_thread::scope(|scope| {
             let textures = Step::spawn(scope, parallel, "textures", || {
                 startup::time("handoff.renderer_textures", || {
                     prepare_renderer_textures(&pack)
@@ -615,7 +615,7 @@ pub(super) fn write_prepared_files(root: PathBuf) {
     if prepared_files::open(&root).is_some() || !root.join("horizon-resources.json").fs_is_file() {
         return;
     }
-    let spawned = std::thread::Builder::new()
+    let spawned = horizon_thread::Builder::new()
         .name("Prepared data file".into())
         .spawn(move || {
             horizon_threads::idle_current();

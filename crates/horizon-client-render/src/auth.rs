@@ -291,7 +291,7 @@ fn with_one_retry(
 ) -> Result<(), JoinError> {
     match join() {
         Err(JoinError::Unavailable) => {
-            std::thread::sleep(pause);
+            horizon_thread::sleep(pause);
             join()
         }
         result => result,
@@ -496,7 +496,7 @@ pub fn prepare_chat_keys_for(session: Arc<AuthSession>, now: bool) {
     }
     keys.fetching = true;
     drop(accounts);
-    let spawned = std::thread::Builder::new()
+    let spawned = horizon_thread::Builder::new()
         .name("Profile key fetch".into())
         .spawn(move || {
             let result = fetch_chat_keys(&session);

@@ -37,13 +37,13 @@ use horizon_client::{
     vanillagen::VanillaTerrain,
     world::World,
 };
+use horizon_thread as thread;
 use horizon_world::registry::BlockStateId;
 use std::{
     hash::{DefaultHasher, Hash, Hasher},
     path::PathBuf,
     process::Command,
     sync::Arc,
-    thread,
 };
 use web_time::{Duration, Instant};
 

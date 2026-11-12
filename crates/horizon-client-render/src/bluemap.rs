@@ -782,7 +782,7 @@ impl BlueMap {
     /// Downloads what lookups want, on a thread that ends with the map.
     pub fn start(&self) {
         let inner = Arc::downgrade(&self.inner);
-        let spawned = std::thread::Builder::new()
+        let spawned = horizon_thread::Builder::new()
             .name("BlueMap".into())
             .spawn(move || fetch(inner));
         if let Err(e) = spawned {
@@ -1200,7 +1200,7 @@ fn fetch(inner: Weak<Inner>) {
         let pause = worker.step(&inner);
         drop(inner);
         if !pause.is_zero() {
-            std::thread::sleep(pause);
+            horizon_thread::sleep(pause);
         }
     }
 }

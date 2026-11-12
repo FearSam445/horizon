@@ -186,7 +186,7 @@ mod tests {
         set_sampling(true);
         for _ in 0..3 {
             let t = start().expect("sampled");
-            std::thread::sleep(web_time::Duration::from_millis(1));
+            horizon_thread::sleep(web_time::Duration::from_millis(1));
             add("minecraft:overworld", zombie, t);
         }
         add("minecraft:overworld", cow, Instant::now());

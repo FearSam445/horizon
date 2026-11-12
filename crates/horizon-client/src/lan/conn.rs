@@ -1640,7 +1640,7 @@ fn wait_alive<T>(
     c: &mut Connection,
     mut answer: impl FnMut(Result<cfg::Serverbound, String>) -> Option<Result<T, String>>,
 ) -> Result<T, String> {
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         let (stop, stopped) = channel::<()>();
         let writer = &mut c.writer;
         scope.spawn(move || {
@@ -2426,7 +2426,7 @@ mod tests {
         let frames = SharedFrames::new(usize::MAX);
         let body: Vec<u8> = (0..400_000u32).map(|i| (i * 7 % 251) as u8).collect();
         let start = std::sync::Barrier::new(8);
-        let made: Vec<Arc<[u8]>> = std::thread::scope(|scope| {
+        let made: Vec<Arc<[u8]>> = horizon_thread::scope(|scope| {
             let threads: Vec<_> = (0..8)
                 .map(|_| {
                     scope.spawn(|| {

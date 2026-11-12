@@ -26,7 +26,7 @@ fn main() {
     };
     // Debug Game construction exceeds the Windows main thread's default stack.
     // This worker only loads the isolated component fixture; it has no window.
-    std::thread::Builder::new()
+    horizon_thread::Builder::new()
         .name("wind-burst-fixture".into())
         .stack_size(64 * 1024 * 1024)
         .spawn(move || horizon_client::entry::main_with(mods))

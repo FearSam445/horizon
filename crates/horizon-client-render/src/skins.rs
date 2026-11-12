@@ -395,7 +395,7 @@ impl Resolver {
             return Resolve::Done(None);
         }
         let (key, send) = (key.clone(), self.send.clone());
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let resolved = crate::auth::discovery()
                 .ok()
                 .and_then(|doc| resolve_profile(&key, &doc));
@@ -1147,7 +1147,7 @@ impl Downloader {
         let digest: String = skin_location(&key.1)["skins/".len()..].to_owned();
         let (url, send, root) = (url.to_owned(), self.send.clone(), self.root.clone());
         let fetch = self.fetch;
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let mut answer = Answer {
                 send,
                 key: Some(key),
@@ -1645,7 +1645,7 @@ mod tests {
         use std::io::{BufRead, BufReader, Write};
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let base = format!("http://{}", listener.local_addr().unwrap());
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let reply = |status: &str, body: &str| {
                 format!(
                     "HTTP/1.1 {status}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
@@ -1822,7 +1822,7 @@ mod tests {
         use std::io::{BufRead, BufReader, Write};
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let base = format!("http://{}", listener.local_addr().unwrap());
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             for stream in listener.incoming().take(2) {
                 let mut stream = stream.unwrap();
                 let mut line = String::new();
@@ -1988,7 +1988,7 @@ mod tests {
             if state == want || web_time::Instant::now() > deadline {
                 return state;
             }
-            std::thread::sleep(web_time::Duration::from_millis(5));
+            horizon_thread::sleep(web_time::Duration::from_millis(5));
         }
     }
 
@@ -2003,7 +2003,7 @@ mod tests {
         let body = png([1, 2, 3, 4]);
         let served = std::sync::Arc::new(AtomicUsize::new(0));
         let count = served.clone();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             for (i, stream) in listener.incoming().take(2).enumerate() {
                 let mut stream = stream.unwrap();
                 let mut line = String::new();
@@ -2078,7 +2078,7 @@ mod download_bound_tests {
             if state != Download::Pending || web_time::Instant::now() > deadline {
                 return state;
             }
-            std::thread::sleep(web_time::Duration::from_millis(2));
+            horizon_thread::sleep(web_time::Duration::from_millis(2));
         }
     }
 
@@ -2089,14 +2089,14 @@ mod download_bound_tests {
     fn slow_failure(_: &str) -> Option<Vec<u8>> {
         let now = RUNNING.fetch_add(1, Ordering::SeqCst) + 1;
         PEAK.fetch_max(now, Ordering::SeqCst);
-        std::thread::sleep(web_time::Duration::from_millis(20));
+        horizon_thread::sleep(web_time::Duration::from_millis(20));
         RUNNING.fetch_sub(1, Ordering::SeqCst);
         None
     }
 
     /// The same, not counted: tests run side by side, and the count is another test's.
     fn sleepy_failure(_: &str) -> Option<Vec<u8>> {
-        std::thread::sleep(web_time::Duration::from_millis(20));
+        horizon_thread::sleep(web_time::Duration::from_millis(20));
         None
     }
 
@@ -2130,7 +2130,7 @@ mod download_bound_tests {
                 "{} still pending",
                 states.len()
             );
-            std::thread::sleep(web_time::Duration::from_millis(2));
+            horizon_thread::sleep(web_time::Duration::from_millis(2));
         }
         assert!(
             PEAK.load(Ordering::SeqCst) <= 4,
@@ -2194,7 +2194,7 @@ mod download_bound_tests {
 
     /// A fetch long enough for a test to ask between its start and its end.
     fn slowish_failure(_: &str) -> Option<Vec<u8>> {
-        std::thread::sleep(web_time::Duration::from_millis(150));
+        horizon_thread::sleep(web_time::Duration::from_millis(150));
         None
     }
 

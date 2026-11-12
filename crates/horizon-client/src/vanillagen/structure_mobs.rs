@@ -68,9 +68,9 @@ fn fill_behind<T: Send + Sync + 'static>(
     cell: &Arc<OnceLock<T>>,
     name: &str,
     load: impl FnOnce() -> T + Send + 'static,
-) -> Option<std::thread::JoinHandle<()>> {
+) -> Option<horizon_thread::JoinHandle<()>> {
     let cell = Arc::downgrade(cell);
-    let spawned = std::thread::Builder::new()
+    let spawned = horizon_thread::Builder::new()
         .name(name.into())
         .spawn(move || {
             // The world closed before the thread ran: nothing to load for.
@@ -598,7 +598,7 @@ mod tests {
         let (done_tx, done) = mpsc::channel();
         let waiter = {
             let (cell, loads) = (cell.clone(), loads.clone());
-            std::thread::spawn(move || {
+            horizon_thread::spawn(move || {
                 let got = *cell.get_or_init(|| {
                     loads.fetch_add(1, Ordering::SeqCst);
                     0
@@ -639,7 +639,7 @@ mod tests {
             if finalizer.data.get().is_some() {
                 break;
             }
-            std::thread::sleep(web_time::Duration::from_millis(10));
+            horizon_thread::sleep(web_time::Duration::from_millis(10));
         }
         assert!(finalizer.data.get().is_some(), "the thread filled nothing");
         assert!(finalizer.data().is_none());

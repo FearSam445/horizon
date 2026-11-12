@@ -112,7 +112,7 @@ impl BlockBehavior {
         };
         // The support table reads on its own thread while the collision and
         // property tables (which need the collisions) read on this one.
-        let (collisions, properties, support) = std::thread::scope(|scope| {
+        let (collisions, properties, support) = horizon_thread::scope(|scope| {
             let support = scope.spawn(|| -> Result<_, GeneratorError> {
                 Ok(BlockSupportRegistry::from_table(
                     read("cached-support.nbt")?.table("support")?,

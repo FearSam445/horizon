@@ -83,7 +83,7 @@ pub fn delete(saves: &Path, folder: &str) -> crate::Result<()> {
             Err(e) if attempt >= 5 => return Err(e.into()),
             Err(e) => {
                 log::warn!("Failed to delete {}: {e}", world.display());
-                std::thread::sleep(web_time::Duration::from_millis(500));
+                horizon_thread::sleep(web_time::Duration::from_millis(500));
             }
         }
     }
@@ -133,7 +133,7 @@ pub(super) fn open_folder(path: &Path) -> crate::Result<()> {
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .spawn()?;
-    std::thread::spawn(move || {
+    horizon_thread::spawn(move || {
         let _ = child.wait();
     });
     Ok(())

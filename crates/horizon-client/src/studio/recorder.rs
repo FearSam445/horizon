@@ -9,6 +9,7 @@ pub use crate::net::RecorderStatus;
 #[allow(unused_imports)]
 use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::{buf::Reader, crypto::generate_secret, packets::play};
+use horizon_thread::{self as thread, JoinHandle};
 use std::time::UNIX_EPOCH;
 use std::{
     io,
@@ -18,7 +19,6 @@ use std::{
         atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc::{Receiver, SyncSender, TrySendError, sync_channel},
     },
-    thread::{self, JoinHandle},
 };
 use web_time::Instant;
 

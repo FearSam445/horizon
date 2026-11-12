@@ -139,7 +139,7 @@ impl Loading {
             .map(|(hwnd, fonts)| {
                 let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
                 let repaint_stop = stop.clone();
-                std::thread::spawn(move || {
+                horizon_thread::spawn(move || {
                     while !repaint_stop.load(std::sync::atomic::Ordering::Relaxed) {
                         horizon_threads::boot_paint::paint(
                             hwnd,
@@ -147,7 +147,7 @@ impl Loading {
                             fonts.mono,
                             &horizon_client::logging::recent_lines(),
                         );
-                        std::thread::sleep(web_time::Duration::from_millis(300));
+                        horizon_thread::sleep(web_time::Duration::from_millis(300));
                     }
                 });
                 stop

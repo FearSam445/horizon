@@ -1463,7 +1463,7 @@ mod h255_mob_piston_ground_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h255-{:?}", std::thread::current().id())),
+                .join(format!("h255-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = role;
         let mut game = Game::new(

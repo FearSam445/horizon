@@ -819,7 +819,7 @@ mod tests {
         let mut machine = ModBlockEntity::default();
         let expected = Compound::from([("effects".into(), Tag::Int(23))]);
         machine.set_client_update_fields(expected.clone());
-        let received = std::thread::scope(|scope| {
+        let received = horizon_thread::scope(|scope| {
             let handles = (0..16)
                 .map(|_| scope.spawn(|| machine.take_client_update_fields()))
                 .collect::<Vec<_>>();
@@ -840,7 +840,7 @@ mod tests {
         let mut machine = ModBlockEntity::default();
         let expected = Compound::from([("effects".into(), Tag::Int(23))]);
         machine.set_client_update_fields(expected.clone());
-        std::thread::scope(|scope| {
+        horizon_thread::scope(|scope| {
             assert!(
                 scope
                     .spawn(|| {

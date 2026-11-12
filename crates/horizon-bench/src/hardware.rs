@@ -71,7 +71,9 @@ impl Hardware {
             os_version: os_version(),
             arch: std::env::consts::ARCH.to_owned(),
             cpu: horizon_system::cpu(),
-            cpu_threads: std::thread::available_parallelism().ok().map(|n| n.get()),
+            cpu_threads: horizon_thread::available_parallelism()
+                .ok()
+                .map(|n| n.get()),
             cpu_cores: probes.cores,
             cpu_base_mhz: probes.base,
             cpu_boost_mhz: probes.boost,

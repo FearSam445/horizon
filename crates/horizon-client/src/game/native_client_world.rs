@@ -244,7 +244,7 @@ mod tests {
         let chunk = world.chunks.get_mut(&(1, 0)).unwrap();
         Arc::make_mut(chunk).set_biome_cell(0, 0, 0, BIOME);
         let snapshot = NativeClientChunks::of(&world, [1, 0], [-1, 0]).unwrap();
-        let read = std::thread::spawn(move || {
+        let read = horizon_thread::spawn(move || {
             (
                 snapshot.block([3, 70, 5]),
                 snapshot.block([3, 71, 5]),

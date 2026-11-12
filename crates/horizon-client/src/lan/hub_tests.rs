@@ -595,7 +595,7 @@ fn advancement_data() -> std::path::PathBuf {
     let root = horizon_fs::temp_dir().join(format!(
         "horizon-advancement-tab-{}-{:?}",
         std::process::id(),
-        std::thread::current().id()
+        horizon_thread::current().id()
     ));
     let folder = root.join("data").join("minecraft").join("advancement");
     horizon_fs::create_dir_all(&folder).unwrap();
@@ -1105,7 +1105,7 @@ fn the_owner_is_listed_with_the_accounts_skin_once_fetched() {
             web_time::Instant::now() < deadline,
             "the fetch never landed"
         );
-        std::thread::yield_now();
+        horizon_thread::yield_now();
     }
     assert_eq!(
         listed_properties(&[], true, Some(&profile)),
@@ -1124,7 +1124,7 @@ fn the_owner_is_listed_with_the_accounts_skin_once_fetched() {
     while failed.properties.get().is_none() {
         let _ = failed.properties();
         assert!(web_time::Instant::now() < deadline);
-        std::thread::yield_now();
+        horizon_thread::yield_now();
     }
     assert!(listed_properties(&[], true, Some(&failed)).is_empty());
 }

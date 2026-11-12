@@ -1896,7 +1896,7 @@ mod tests {
     /// need more than the 2 MiB test thread in a Windows debug build, where those tests
     /// overflowed it (4 MiB is enough).
     fn on_big_stack(test: impl FnOnce() + Send + 'static) {
-        let thread = std::thread::Builder::new()
+        let thread = horizon_thread::Builder::new()
             .stack_size(8 << 20)
             .spawn(test)
             .unwrap();

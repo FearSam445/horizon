@@ -155,7 +155,7 @@ fn missing_far_column_retries_after_a_change_without_player_movement() {
             break;
         }
         assert!(Instant::now() < deadline);
-        std::thread::yield_now();
+        horizon_thread::yield_now();
     }
     assert_eq!(hub.guests[0].far_queue, [(12, 0)]);
     assert!(!hub.guests[0].sent_chunks.contains(&(12, 0)));
@@ -164,7 +164,7 @@ fn missing_far_column_retries_after_a_change_without_player_movement() {
     while !hub.guests[0].sent_chunks.contains(&(12, 0)) {
         send_chunks(&mut hub, &mut world);
         assert!(Instant::now() < deadline);
-        std::thread::yield_now();
+        horizon_thread::yield_now();
     }
     assert_eq!(hub.guests[0].center, Some((0, 0)));
     assert!(hub.guests[0].far_queue.is_empty());

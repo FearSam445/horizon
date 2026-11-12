@@ -624,10 +624,10 @@ fn remesh(
         .collect();
     columns.sort_unstable();
     columns.dedup();
-    let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
+    let threads = horizon_thread::available_parallelism().map_or(4, |n| n.get());
     let region_dir = save.join("dimensions/minecraft/overworld/region");
     let next = AtomicUsize::new(0);
-    let chunks: FxHashMap<(i32, i32), Chunk> = std::thread::scope(|scope| {
+    let chunks: FxHashMap<(i32, i32), Chunk> = horizon_thread::scope(|scope| {
         let workers: Vec<_> = (0..threads)
             .map(|_| {
                 scope.spawn(|| {
@@ -678,7 +678,7 @@ fn remesh(
         })
         .collect();
     let next = AtomicUsize::new(0);
-    let meshes = std::thread::scope(|scope| {
+    let meshes = horizon_thread::scope(|scope| {
         let workers: Vec<_> = (0..threads)
             .map(|_| {
                 scope.spawn(|| {

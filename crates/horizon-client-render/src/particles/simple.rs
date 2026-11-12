@@ -134,7 +134,7 @@ impl ParticleEngine {
         let sets = &self.set_sprites;
         let per = particles.len().div_ceil(self.parallel_threads);
         let mut handled = vec![Simple::No; particles.len()];
-        std::thread::scope(|scope| {
+        horizon_thread::scope(|scope| {
             let run = |part: &mut [Particle], done: &mut [Simple], level: &ParticleLevel| {
                 for (p, done) in part.iter_mut().zip(done) {
                     *done = tick_simple(sets, p, level);

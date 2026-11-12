@@ -153,7 +153,7 @@ pub(super) struct AdvState {
     pub(super) announced: Vec<Text>,
     /// The tree being read on another thread since the world opened
     /// (`prefetch_advancement_tree`), taken by the first `advancement_tree`.
-    pub(super) pending_tree: Option<std::thread::JoinHandle<Arc<Tree>>>,
+    pub(super) pending_tree: Option<horizon_thread::JoinHandle<Arc<Tree>>>,
     /// `inventory_changed`'s criteria by item, built for `tree`.
     inventory_index: Option<(Arc<Tree>, Arc<adv::InventoryIndex>)>,
 }
@@ -419,7 +419,7 @@ impl Game<'_> {
                 &self.level.enabled_features,
             ),
         };
-        self.adv.pending_tree = std::thread::Builder::new()
+        self.adv.pending_tree = horizon_thread::Builder::new()
             .name("horizon-advancements".into())
             .spawn(move || Tree::shared(&data, &horizon_world::loot::PackOverlay { files: &files }))
             .ok();

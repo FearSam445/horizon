@@ -575,7 +575,7 @@ mod tests {
             let start = stamp(0);
             // A second at most: no clock is that coarse, and a test never hangs on one.
             for n in 1..1000 {
-                std::thread::sleep(web_time::Duration::from_millis(1));
+                horizon_thread::sleep(web_time::Duration::from_millis(1));
                 if stamp(n) != start {
                     break;
                 }
@@ -1097,7 +1097,7 @@ mod tests {
         held.lock().unwrap();
         let (started, starts) = mpsc::channel();
         let (done, finishes) = mpsc::channel();
-        std::thread::scope(|scope| {
+        horizon_thread::scope(|scope| {
             for pack in [&a, &b] {
                 let started = started.clone();
                 let done = done.clone();

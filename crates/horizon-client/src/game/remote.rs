@@ -1135,7 +1135,7 @@ impl Game<'_> {
         // server included: its guests' chat keys are checked against them.
         let services_keys = Arc::new(std::sync::Mutex::new(ServicesKeys::Pending));
         let slot = services_keys.clone();
-        let _ = std::thread::Builder::new()
+        let _ = horizon_thread::Builder::new()
             .name("Services keys".into())
             .spawn(move || {
                 use horizon_server_files::profiles;
@@ -5509,7 +5509,7 @@ impl Game<'_> {
                     return;
                 };
                 let (send, recv) = std::sync::mpsc::channel();
-                std::thread::Builder::new()
+                horizon_thread::Builder::new()
                     .name("Own profile".into())
                     .spawn(move || {
                         let _ = send.send(horizon_client::auth::own_textures(auth.as_ref()));

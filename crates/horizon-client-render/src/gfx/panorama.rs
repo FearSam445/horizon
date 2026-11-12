@@ -101,7 +101,7 @@ impl Faces {
 /// The faces' files decoded, side by side, into one array of six layers of
 /// equal squares.
 fn decode_faces(files: &[Vec<u8>]) -> Result<(u32, Vec<u8>)> {
-    let decoded: Vec<_> = std::thread::scope(|scope| {
+    let decoded: Vec<_> = horizon_thread::scope(|scope| {
         let threads: Vec<_> = files
             .iter()
             .map(|file| scope.spawn(|| decode_bytes(file).map_err(|e| e.to_string())))

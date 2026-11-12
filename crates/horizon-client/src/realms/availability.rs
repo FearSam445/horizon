@@ -166,7 +166,7 @@ impl AvailabilityCache {
         let pending = Pending::default();
         let service = service();
         let out = pending.clone();
-        let started = std::thread::Builder::new()
+        let started = horizon_thread::Builder::new()
             .name("Realms".into())
             .spawn(move || {
                 // A panicking service answers too (the module docs), with its panic's text.
@@ -264,7 +264,7 @@ mod tests {
                 return answer;
             }
             assert!(Instant::now() < deadline, "the check never answered");
-            std::thread::sleep(Duration::from_millis(1));
+            horizon_thread::sleep(Duration::from_millis(1));
         }
     }
 

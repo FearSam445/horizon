@@ -12,7 +12,7 @@ pub fn par_map<T: Sync, R: Send>(items: &[T], f: impl Fn(&T) -> R + Sync) -> Vec
         return items.iter().map(f).collect();
     }
     let next = AtomicUsize::new(0);
-    let mut out: Vec<(usize, R)> = std::thread::scope(|scope| {
+    let mut out: Vec<(usize, R)> = horizon_thread::scope(|scope| {
         let workers: Vec<_> = (0..threads)
             .map(|_| {
                 scope.spawn(|| {

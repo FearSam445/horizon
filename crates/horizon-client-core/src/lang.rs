@@ -799,7 +799,7 @@ mod tests {
                     get("horizon.no_such_key"),
                     get_or("horizon.no_fallback", "English"),
                     // Another thread keeps the process-wide language.
-                    std::thread::spawn(code).join().unwrap(),
+                    horizon_thread::spawn(code).join().unwrap(),
                 )
             });
         assert_eq!(german, "Schließen");

@@ -67,7 +67,7 @@ fn worker_prepares_owned_models_and_inventory_before_handoff() {
     )
     .unwrap();
     let worker_root = root.clone();
-    let prepared = std::thread::spawn(move || {
+    let prepared = horizon_thread::spawn(move || {
         GameCpuResources::load(&worker_root, None).map_err(|error| error.to_string())
     })
     .join()

@@ -2557,7 +2557,7 @@ pub(crate) mod tests {
         let region: [[Option<&Chunk>; 3]; 3] =
             std::array::from_fn(|dz| std::array::from_fn(|dx| Some(&chunks[dz * 3 + dx])));
         let want = old_light_chunk(&region, &t, true);
-        std::thread::scope(|s| {
+        horizon_thread::scope(|s| {
             for _ in 0..kept_scratch() + 2 {
                 s.spawn(|| {
                     for _ in 0..3 {

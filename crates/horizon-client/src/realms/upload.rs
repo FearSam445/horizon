@@ -132,7 +132,7 @@ fn request_upload_info(
             // `requestUploadInfo` returned null: the next try may answer.
             Ok(None) => {}
             Err(RealmsError::Retry(seconds)) => {
-                std::thread::sleep(Duration::from_secs(seconds.min(60)));
+                horizon_thread::sleep(Duration::from_secs(seconds.min(60)));
             }
             Err(e) => return Err(UploadError::Failed(e.text())),
         }

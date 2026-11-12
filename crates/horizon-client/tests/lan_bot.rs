@@ -29,8 +29,9 @@ use horizon_protocol::{
         status,
     },
 };
+use horizon_thread as thread;
 use horizon_world::registry::BlockStateId;
-use std::{path::Path, sync::Arc, thread};
+use std::{path::Path, sync::Arc};
 use web_time::{Duration, Instant};
 
 fn resources() -> Option<std::path::PathBuf> {

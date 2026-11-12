@@ -350,7 +350,7 @@ fn main() -> Result<(), Error> {
     let timings = Mutex::new(Vec::new());
     let cpu = cpu_seconds();
     let start = Instant::now();
-    std::thread::scope(|scope| -> Result<(), Error> {
+    horizon_thread::scope(|scope| -> Result<(), Error> {
         let handles = (0..threads)
             .map(|_| {
                 scope.spawn(|| -> Result<(), Error> {
@@ -439,7 +439,7 @@ fn main() -> Result<(), Error> {
             decorated += regions.len();
             let queue = Mutex::new(regions);
             let done = Mutex::new(Vec::new());
-            std::thread::scope(|scope| -> Result<(), Error> {
+            horizon_thread::scope(|scope| -> Result<(), Error> {
                 let handles = (0..threads)
                     .map(|_| {
                         scope.spawn(|| -> Result<(), Error> {

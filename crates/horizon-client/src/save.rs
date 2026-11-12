@@ -2288,10 +2288,14 @@ fn share_out<R: Send>(
             out.push((i, job(i)));
         }
     };
-    let mut done: Vec<(usize, R)> = std::thread::scope(|scope| {
+    let mut done: Vec<(usize, R)> = horizon_thread::scope(|scope| {
         let threads: Vec<_> = (1..helpers)
             .filter(|_| start())
-            .filter_map(|_| std::thread::Builder::new().spawn_scoped(scope, work).ok())
+            .filter_map(|_| {
+                horizon_thread::Builder::new()
+                    .spawn_scoped(scope, work)
+                    .ok()
+            })
             .collect();
         let mut done = work();
         for t in threads {
@@ -2507,7 +2511,7 @@ impl Folder {
 /// submission order.
 struct Writer {
     send: mpsc::Sender<WriteBatch>,
-    thread: std::thread::JoinHandle<()>,
+    thread: horizon_thread::JoinHandle<()>,
 }
 
 /// Writes still queued or running, with a condition to wait for none.
@@ -3046,7 +3050,7 @@ impl SaveDir {
         );
         let pending = self.pending.clone();
         let outstanding = self.outstanding.clone();
-        let thread = std::thread::Builder::new()
+        let thread = horizon_thread::Builder::new()
             .name("horizon-region-writer".into())
             .spawn(move || {
                 for (kind, batch) in receive {

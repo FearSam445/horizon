@@ -97,7 +97,7 @@ impl Flite {
         let batch = Arc::new(AtomicI32::new(0));
         let (pieces, queue) = mpsc::channel();
         let current = Arc::clone(&batch);
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("Narrator #0".into())
             .spawn(move || play(&library, &voice, &current, &queue))
             .map_err(|e| format!("Failed to start the narrator's player: {e}"))?;

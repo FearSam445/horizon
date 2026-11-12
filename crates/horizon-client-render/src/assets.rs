@@ -175,7 +175,7 @@ impl SpritePixels {
             }
         };
         let fallback = job.clone();
-        if std::thread::Builder::new()
+        if horizon_thread::Builder::new()
             .name("Sprite packing".into())
             .spawn(job)
             .is_err()
@@ -566,7 +566,7 @@ mod tests {
         let started = web_time::Instant::now();
         while stored.0.raw.lock().unwrap().is_some() {
             assert!(started.elapsed().as_secs() < 10, "packing never finished");
-            std::thread::yield_now();
+            horizon_thread::yield_now();
         }
         assert!(
             stored

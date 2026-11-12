@@ -217,7 +217,7 @@ mod tests {
     fn a_server_answers_its_player_count() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             let (mut socket, _) = listener.accept().unwrap();
             let expected = request("127.0.0.1", port);
             let mut got = vec![0; expected.len()];

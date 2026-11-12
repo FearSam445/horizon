@@ -138,7 +138,7 @@ impl Jobs {
 }
 
 fn spawn(name: &str, work: impl FnOnce() + Send + 'static) {
-    if let Err(e) = std::thread::Builder::new().name(name.into()).spawn(work) {
+    if let Err(e) = horizon_thread::Builder::new().name(name.into()).spawn(work) {
         log::warn!("Horizon: {name} did not start: {e}");
     }
 }

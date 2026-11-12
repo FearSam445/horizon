@@ -264,7 +264,7 @@ fn the_thread_answers_a_frame() {
     let deadline = Instant::now() + Duration::from_secs(10);
     while c.frame().worn(9).is_none() {
         assert!(Instant::now() < deadline, "no answer");
-        std::thread::sleep(Duration::from_millis(5));
+        horizon_thread::sleep(Duration::from_millis(5));
     }
     assert_eq!(ids(c.frame().worn(9)), ["hat"]);
 }

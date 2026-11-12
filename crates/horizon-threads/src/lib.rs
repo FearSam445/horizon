@@ -45,7 +45,7 @@ pub fn worker_count() -> usize {
     static COUNT: OnceLock<usize> = OnceLock::new();
     *COUNT.get_or_init(|| {
         parse_worker_count(std::env::var("HORIZON_WORKER_THREADS").ok())
-            .unwrap_or_else(|| std::thread::available_parallelism().map_or(1, |n| n.get()))
+            .unwrap_or_else(|| horizon_thread::available_parallelism().map_or(1, |n| n.get()))
     })
 }
 
@@ -96,10 +96,14 @@ pub fn par_chunks_mut_with<T: Send>(
             f(slice);
         }
     };
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         let helpers = worker_count().saturating_sub(1).clamp(1, count - 1);
         let threads: Vec<_> = (0..helpers)
-            .filter_map(|_| std::thread::Builder::new().spawn_scoped(scope, work).ok())
+            .filter_map(|_| {
+                horizon_thread::Builder::new()
+                    .spawn_scoped(scope, work)
+                    .ok()
+            })
             .collect();
         work();
         for t in threads {
@@ -249,7 +253,7 @@ fn parse_worker_count(value: Option<String>) -> Option<usize> {
 /// unprivileged thread lower its priority but not raise it (and the JVM
 /// leaves it there too). Whether the OS took it.
 pub fn favour_current() -> bool {
-    if std::thread::available_parallelism().map_or(1, |n| n.get()) <= 4 {
+    if horizon_thread::available_parallelism().map_or(1, |n| n.get()) <= 4 {
         return false;
     }
     favour()
@@ -296,7 +300,7 @@ pub fn thread_cpu() -> Option<web_time::Duration> {
         // SAFETY: RDTSC has no preconditions on x86_64.
         let tsc = || unsafe { core::arch::x86_64::_rdtsc() };
         let (wall, start) = (Instant::now(), tsc());
-        std::thread::sleep(Duration::from_millis(20));
+        horizon_thread::sleep(Duration::from_millis(20));
         (tsc() - start) as f64 / wall.elapsed().as_nanos() as f64
     });
     let mut cycles = 0;
@@ -745,7 +749,7 @@ mod tests {
         if std::env::var_os("HORIZON_WORKER_THREADS").is_some() {
             return;
         }
-        let machine = std::thread::available_parallelism().map_or(1, |n| n.get());
+        let machine = horizon_thread::available_parallelism().map_or(1, |n| n.get());
         assert_eq!(super::worker_count(), machine);
     }
 
@@ -820,10 +824,10 @@ mod tests {
     /// The hint holds on the platforms that take it.
     #[test]
     fn favouring_a_thread_takes_where_the_os_allows_it() {
-        let took = std::thread::spawn(super::favour).join().unwrap();
+        let took = horizon_thread::spawn(super::favour).join().unwrap();
         assert_eq!(took, cfg!(any(target_vendor = "apple", windows)));
         #[cfg(target_vendor = "apple")]
-        std::thread::spawn(|| {
+        horizon_thread::spawn(|| {
             assert!(super::favour());
             let mut class = libc::qos_class_t::QOS_CLASS_UNSPECIFIED;
             let mut relative = 0;
@@ -845,10 +849,10 @@ mod tests {
     /// then, on Linux and Android, 10 nice levels below the process or in the idle class.
     #[test]
     fn helpers_go_behind_only_when_asked() {
-        assert!(!std::thread::spawn(super::behind_server).join().unwrap());
+        assert!(!horizon_thread::spawn(super::behind_server).join().unwrap());
         super::put_helpers_behind();
         #[cfg(any(target_os = "linux", target_os = "android"))]
-        std::thread::spawn(|| {
+        horizon_thread::spawn(|| {
             // SAFETY: reads the calling thread's own nice value.
             let before = unsafe { libc::getpriority(libc::PRIO_PROCESS as _, 0) };
             assert!(super::behind_server());
@@ -868,19 +872,19 @@ mod tests {
         .join()
         .unwrap();
         #[cfg(not(any(target_os = "linux", target_os = "android")))]
-        assert!(!std::thread::spawn(super::behind_server).join().unwrap());
+        assert!(!horizon_thread::spawn(super::behind_server).join().unwrap());
     }
 
     /// The idle hint holds on the three platforms.
     #[test]
     fn idling_a_thread_takes() {
-        let took = std::thread::spawn(super::idle_current).join().unwrap();
+        let took = horizon_thread::spawn(super::idle_current).join().unwrap();
         assert_eq!(
             took,
             cfg!(any(target_os = "linux", target_vendor = "apple", windows))
         );
         #[cfg(target_os = "linux")]
-        std::thread::spawn(|| {
+        horizon_thread::spawn(|| {
             assert!(super::idle_current());
             // SAFETY: reads the calling thread's own policy.
             assert_eq!(unsafe { libc::sched_getscheduler(0) }, libc::SCHED_IDLE);

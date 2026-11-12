@@ -388,7 +388,7 @@ pub(super) fn spawn_loader(
     let dev_mods = options.dev_mods.clone();
     let world = launch_world(options).map(str::to_owned);
     let progress = progress.clone();
-    let handle = std::thread::Builder::new()
+    let handle = horizon_thread::Builder::new()
         .name("resource-loader".into())
         .spawn(move || {
             let (root, pack_error) = startup_resource_root(&vanilla_root, &settings, &dev_mods);
@@ -1571,7 +1571,7 @@ mod tests {
         let (release, wait) = std::sync::mpsc::channel();
         let (published, published_rx) = std::sync::mpsc::channel();
         let worker_root = root.clone();
-        let worker = std::thread::spawn(move || {
+        let worker = horizon_thread::spawn(move || {
             sender
                 .send(LoaderMsg::Ui(gui(&worker_root), worker_root))
                 .unwrap();
@@ -1639,7 +1639,7 @@ mod tests {
     #[test]
     fn a_failed_generation_keeps_its_error_after_the_loader_ends() {
         let (sender, receiver) = std::sync::mpsc::channel();
-        let worker = std::thread::spawn(move || {
+        let worker = horizon_thread::spawn(move || {
             sender
                 .send(LoaderMsg::Done(Err("missing facts.json".into())))
                 .unwrap();
@@ -1653,7 +1653,7 @@ mod tests {
         // once more before it exits, with the loader gone.
         assert!(matches!(loading.loaded.take(), Some(Err(e)) if e == "missing facts.json"));
         while !loading.handle.as_ref().is_none_or(JoinHandle::is_finished) {
-            std::thread::yield_now();
+            horizon_thread::yield_now();
         }
         loading.poll_menu_resources().unwrap();
         assert!(loading.loaded.is_none());
@@ -1662,12 +1662,12 @@ mod tests {
     #[test]
     fn a_panicking_loader_reports_its_panic() {
         let (sender, receiver) = std::sync::mpsc::channel::<LoaderMsg>();
-        let worker = std::thread::spawn(move || {
+        let worker = horizon_thread::spawn(move || {
             let _sender = sender;
             panic!("atlas has no fonts");
         });
         while !worker.is_finished() {
-            std::thread::yield_now();
+            horizon_thread::yield_now();
         }
         let mut loading = loading(receiver);
         loading.handle = Some(worker);

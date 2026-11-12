@@ -494,9 +494,9 @@ fn cit_sprites(
         );
     }
     // Decoded on the threads `pack` decodes the rest on: a big pack names thousands.
-    let threads = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let threads = horizon_thread::available_parallelism().map_or(1, |n| n.get());
     let chunk = ids.len().div_ceil(threads).max(1);
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         let workers: Vec<_> = ids
             .chunks(chunk)
             .map(|ids| scope.spawn(|| ids.iter().filter_map(|id| cit_sprite(root, id)).collect()))
@@ -829,7 +829,7 @@ impl HudAtlas {
         let raw = Arc::new(std::mem::take(&mut self.pixels));
         let slot = Arc::new(OnceLock::new());
         let (job_raw, job_slot) = (raw.clone(), slot.clone());
-        let spawned = std::thread::Builder::new()
+        let spawned = horizon_thread::Builder::new()
             .name("Atlas packing".into())
             .spawn(move || {
                 let _ = job_slot.set(lz4_flex::compress_prepend_size(&job_raw));
@@ -1343,9 +1343,9 @@ impl HudAtlas {
                 maps,
             ))
         };
-        let threads = std::thread::available_parallelism().map_or(2, |n| n.get());
+        let threads = horizon_thread::available_parallelism().map_or(2, |n| n.get());
         let chunk = files.len().div_ceil(threads).max(1);
-        let decoded: Vec<_> = std::thread::scope(|scope| {
+        let decoded: Vec<_> = horizon_thread::scope(|scope| {
             let handles: Vec<_> = files
                 .chunks(chunk)
                 .map(|part| {

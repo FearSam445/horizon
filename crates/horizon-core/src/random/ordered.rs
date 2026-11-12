@@ -66,7 +66,7 @@ impl OrderedDraws {
             if spins < 64 {
                 std::hint::spin_loop();
             } else {
-                std::thread::yield_now();
+                horizon_thread::yield_now();
             }
         }
     }
@@ -85,7 +85,7 @@ impl OrderedDraws {
             if spins < 64 {
                 std::hint::spin_loop();
             } else {
-                std::thread::yield_now();
+                horizon_thread::yield_now();
             }
         }
     }
@@ -169,7 +169,7 @@ mod tests {
     /// The timeout lives outside the scoped joins: a broken gate must fail, not hang the test suite.
     fn bounded<T: Send + 'static>(run: impl FnOnce() -> T + Send + 'static) -> T {
         let (sent, finished) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(run));
             let _ = sent.send(result);
         });
@@ -209,7 +209,7 @@ mod tests {
 
         let (got, mut final_random) = bounded(move || {
             let shared = OrderedDraws::new(&initial, 3);
-            let mut got: Vec<_> = std::thread::scope(|s| {
+            let mut got: Vec<_> = horizon_thread::scope(|s| {
                 let handles: Vec<_> = (0..3)
                     .map(|lane| {
                         let shared = Arc::clone(&shared);
@@ -282,7 +282,7 @@ mod tests {
     fn a_reseeded_lane_keeps_its_panic_guard_and_published_stream() {
         bounded(|| {
             let shared = OrderedDraws::new(&LegacyRandom::new(42), 2);
-            std::thread::scope(|s| {
+            horizon_thread::scope(|s| {
                 let panicking = Arc::clone(&shared);
                 let handle = s.spawn(move || {
                     let mut random = panicking.lane(0);
@@ -326,7 +326,7 @@ mod tests {
             })
             .collect();
         let shared = OrderedDraws::new(&LegacyRandom::new(42), 3);
-        let got: Vec<(usize, Vec<i32>)> = std::thread::scope(|s| {
+        let got: Vec<(usize, Vec<i32>)> = horizon_thread::scope(|s| {
             let handles: Vec<_> = (0..3)
                 .map(|lane| {
                     let shared = Arc::clone(&shared);
@@ -365,10 +365,10 @@ mod tests {
     #[test]
     fn a_panicking_lane_lets_the_others_finish() {
         let (sent, finished) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let shared = OrderedDraws::new(&LegacyRandom::new(7), 2);
             let caught = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                std::thread::scope(|s| {
+                horizon_thread::scope(|s| {
                     let panicking = Arc::clone(&shared);
                     s.spawn(move || {
                         let mut random = panicking.lane(0);

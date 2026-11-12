@@ -338,13 +338,13 @@ pub(crate) fn quantize_parameter_report(json: &str) -> Result<String, GeneratorE
 /// `load` on a thread of its own ("Worldgen loader").
 fn loading<T: Send + 'static>(
     load: impl FnOnce() -> T + Send + 'static,
-) -> io::Result<std::thread::JoinHandle<T>> {
-    std::thread::Builder::new()
+) -> io::Result<horizon_thread::JoinHandle<T>> {
+    horizon_thread::Builder::new()
         .name("Worldgen loader".into())
         .spawn(load)
 }
 /// A loading thread's result; its panic goes on in this thread.
-fn joined<T>(thread: std::thread::JoinHandle<T>) -> T {
+fn joined<T>(thread: horizon_thread::JoinHandle<T>) -> T {
     thread
         .join()
         .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
@@ -4955,7 +4955,7 @@ mod tests {
         };
         let barrier = std::sync::Barrier::new(6);
         let pos = ChunkPos::new(11, -11); // ancient city for this seed
-        let results = std::thread::scope(|scope| {
+        let results = horizon_thread::scope(|scope| {
             let handles: Vec<_> = (0..6)
                 .map(|_| {
                     scope.spawn(|| {

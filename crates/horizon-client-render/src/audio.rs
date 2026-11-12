@@ -767,7 +767,7 @@ impl Backend for MixerBackend {
         if sound.stream {
             // A streamed sound loops by restarting its stream.
             let mixer = self.mixer.clone();
-            std::thread::spawn(move || {
+            horizon_thread::spawn(move || {
                 let samples = decode(&file).map(|(s, r, c)| (Arc::new(s), r, c));
                 attach(&mixer, channel, samples, looping);
             });
@@ -782,7 +782,7 @@ impl Backend for MixerBackend {
         let decoder = self.decoder.get_or_insert_with(|| {
             let (send, receive) = std::sync::mpsc::channel::<Decode>();
             let (mixer, cache) = (self.mixer.clone(), self.cache.clone());
-            std::thread::Builder::new()
+            horizon_thread::Builder::new()
                 .name("sound decoder".into())
                 .spawn(move || {
                     for job in receive {
@@ -1734,7 +1734,7 @@ impl Audio {
         let pending = PendingProbe::default();
         let out = Arc::clone(&pending);
         let seen = (self.default_seen.clone(), self.cards_seen.clone());
-        let started = std::thread::Builder::new()
+        let started = horizon_thread::Builder::new()
             .name("audio-devices".into())
             .spawn(move || {
                 let probe = probe_devices(seen.0, seen.1);

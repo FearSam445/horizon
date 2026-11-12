@@ -182,7 +182,7 @@ mod tests {
     #[test]
     fn blocks_count_on_the_thread_that_allocated_or_freed_them() {
         let before = process();
-        let (mine, blocks) = std::thread::spawn(|| {
+        let (mine, blocks) = horizon_thread::spawn(|| {
             let start = here();
             let blocks: Vec<usize> = (0..100)
                 // SAFETY: a nonzero layout.
@@ -192,7 +192,7 @@ mod tests {
         })
         .join()
         .unwrap();
-        let freed = std::thread::spawn(move || {
+        let freed = horizon_thread::spawn(move || {
             let start = here();
             for block in blocks {
                 // SAFETY: each block came from `alloc` with this layout.
@@ -262,7 +262,7 @@ mod tests {
     #[test]
     fn a_finished_threads_counts_stay_in_the_total() {
         let before = process();
-        std::thread::spawn(|| {
+        horizon_thread::spawn(|| {
             // SAFETY: a nonzero layout, freed with the same one.
             unsafe {
                 let block = CountingAllocator.alloc(layout(7777));

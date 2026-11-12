@@ -1875,7 +1875,7 @@ mod mob_equipment_command_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h025-{:?}", std::thread::current().id())),
+                .join(format!("h025-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -2256,7 +2256,7 @@ mod mob_equipment_stack_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h023-{:?}", std::thread::current().id())),
+                .join(format!("h023-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(

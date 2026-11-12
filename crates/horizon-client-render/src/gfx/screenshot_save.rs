@@ -83,7 +83,7 @@ impl Saves {
         }
         let done = self.sender.clone();
         let path = shot.path.clone();
-        let spawned = std::thread::Builder::new()
+        let spawned = horizon_thread::Builder::new()
             .name("Screenshot writer".into())
             .spawn(move || {
                 let count = 1 + usize::from(shot.hdr.is_some());
@@ -305,7 +305,7 @@ mod tests {
                 break saved;
             }
             assert!(web_time::Instant::now() < deadline, "never written");
-            std::thread::sleep(Duration::from_millis(5));
+            horizon_thread::sleep(Duration::from_millis(5));
         };
         assert_eq!(saved.path, path);
         assert_eq!(saved.result, Ok([w, h]));

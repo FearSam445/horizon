@@ -60,7 +60,7 @@ impl Thread {
     pub(crate) fn spawn(silent: bool) -> Thread {
         let (commands, receive) = mpsc::channel();
         let (opened, ready) = mpsc::channel();
-        let spawned = std::thread::Builder::new()
+        let spawned = horizon_thread::Builder::new()
             .name("Narrator".into())
             .spawn(move || run(silent, &opened, &receive));
         if let Err(e) = spawned {

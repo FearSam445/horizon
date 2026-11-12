@@ -5465,7 +5465,7 @@ mod fill_note_instrument_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h164-{:?}", std::thread::current().id())),
+                .join(format!("h164-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(

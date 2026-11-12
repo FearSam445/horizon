@@ -17,6 +17,7 @@ use horizon_protocol::{
     servers::parse_address,
     text::{Language, plain, translatable},
 };
+use horizon_thread::JoinHandle;
 use horizon_world::nbt::{JavaString, Tag};
 use std::{
     collections::HashMap,
@@ -26,7 +27,6 @@ use std::{
         atomic::{AtomicBool, AtomicU32, Ordering},
         mpsc::{Receiver, Sender, channel},
     },
-    thread::JoinHandle,
 };
 use web_time::Duration;
 
@@ -298,7 +298,7 @@ impl Session {
         let recorder = Arc::new(Mutex::new(None));
         let thread_recorder = recorder.clone();
         let (address_owned, name_owned) = (address.to_owned(), name.to_owned());
-        let thread = std::thread::Builder::new()
+        let thread = horizon_thread::Builder::new()
             .name("horizon-net".into())
             .spawn(move || {
                 horizon_threads::favour_current();
@@ -1755,12 +1755,12 @@ mod tests {
         // or a network gone without a reset.
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
-        let held = std::thread::spawn(move || listener.accept().map(|(stream, _)| stream));
+        let held = horizon_thread::spawn(move || listener.accept().map(|(stream, _)| stream));
         let (c, _, _) = connect_tcp("127.0.0.1", port, true, Duration::from_millis(300)).unwrap();
         let _server = held.join().unwrap().unwrap();
         let (mut reader, writer) = c.split();
         let (done, result) = channel();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let (send, _events) = channel();
             let _ = done.send(receive_play(
                 &mut reader,
@@ -1812,7 +1812,7 @@ mod tests {
         let (client, server) = horizon_protocol::connection::Pipe::pair();
         let (mut reader, writer) = Connection::local(client).split();
         let writer = Mutex::new(Some(writer));
-        let thread = std::thread::spawn(move || {
+        let thread = horizon_thread::spawn(move || {
             let (send, _events) = channel();
             configure(
                 &mut reader,
@@ -1876,7 +1876,7 @@ mod tests {
             let (_send, events) = channel();
             let (release, stalled) = channel();
             let (finished, completed) = channel();
-            let thread = std::thread::spawn(move || {
+            let thread = horizon_thread::spawn(move || {
                 let _ = stalled.recv_timeout(web_time::Duration::from_secs(3));
                 let _ = finished.send(());
             });
@@ -1932,7 +1932,7 @@ mod tests {
         let writer = Arc::new(Mutex::new(Some(writer)));
         let (send, events) = channel();
         let thread_writer = writer.clone();
-        let thread = std::thread::spawn(move || {
+        let thread = horizon_thread::spawn(move || {
             receive_play(
                 &mut reader,
                 &thread_writer,
@@ -2003,7 +2003,7 @@ mod tests {
             session.configuring.clone(),
             session.recorder.clone(),
         );
-        let thread = std::thread::spawn(move || {
+        let thread = horizon_thread::spawn(move || {
             receive_play(
                 &mut reader,
                 &thread_writer,
@@ -2052,7 +2052,7 @@ mod tests {
         let (send, events) = channel();
         let cookies = Cookies::default();
         let (thread_writer, thread_cookies) = (writer.clone(), cookies.clone());
-        let thread = std::thread::spawn(move || {
+        let thread = horizon_thread::spawn(move || {
             receive_play(
                 &mut reader,
                 &thread_writer,
@@ -2135,7 +2135,7 @@ mod tests {
         for lan in [true, false] {
             let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
             let port = listener.local_addr().unwrap().port();
-            let worker = std::thread::spawn(move || {
+            let worker = horizon_thread::spawn(move || {
                 let (stream, _) = listener.accept().unwrap();
                 // Generous: a debug build's key generation on a busy CI runner takes seconds. A pass
                 // never waits for these.
@@ -2291,7 +2291,7 @@ mod tests {
             session.configuring.clone(),
             session.recorder.clone(),
         );
-        let thread = std::thread::spawn(move || {
+        let thread = horizon_thread::spawn(move || {
             receive_play(
                 &mut reader,
                 &thread_writer,

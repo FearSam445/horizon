@@ -26,7 +26,7 @@ fn with_game(test: impl FnOnce(&mut Game<'_>)) {
     options.resources = root.clone();
     options.game_dir = Some(
         std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-            .join(format!("h114-{:?}", std::thread::current().id())),
+            .join(format!("h114-{:?}", horizon_thread::current().id())),
     );
     options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
     let mut game = Game::new(

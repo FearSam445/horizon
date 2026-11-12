@@ -115,7 +115,7 @@ fn a_block_freed_on_another_thread_leaves_the_live_set() {
     let before = s.snapshot().unwrap();
     assert_eq!(before.live_samples, 1);
     assert!(near(before.bytes(State::Live), 4 << 20, 0.01));
-    std::thread::spawn(move || {
+    horizon_thread::spawn(move || {
         // SAFETY: allocated by this allocator with this layout.
         unsafe { SamplingAllocator.dealloc(block as *mut u8, layout(4 << 20)) }
     })
@@ -186,7 +186,7 @@ fn thread_of(agg: &Aggregate, node: u32) -> Option<String> {
 fn live_samples_carry_the_thread_that_allocated_them() {
     let _serial = serial();
     let s = session(4);
-    let block = std::thread::Builder::new()
+    let block = horizon_thread::Builder::new()
         .name("heap-owner".into())
         // SAFETY: a nonzero layout; a 4 MiB block is sampled at a 4 KiB interval all but surely.
         .spawn(|| unsafe { SamplingAllocator.alloc(layout(4 << 20)) } as usize)
@@ -213,7 +213,7 @@ fn an_ignored_thread_is_never_sampled_but_its_frees_still_count() {
     let s = session(4);
     // SAFETY: a nonzero layout, sampled all but surely at this interval.
     let theirs = unsafe { SamplingAllocator.alloc(layout(4 << 20)) } as usize;
-    let mine = std::thread::spawn(move || {
+    let mine = horizon_thread::spawn(move || {
         ignore_this_thread();
         // SAFETY: nonzero layouts; `theirs` was allocated by this allocator with this layout.
         unsafe {

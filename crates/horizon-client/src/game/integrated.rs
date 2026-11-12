@@ -25,6 +25,7 @@ use horizon_client::{
 };
 use horizon_protocol::connection::Pipe;
 use horizon_protocol::{crypto::offline_uuid, text::translatable};
+use horizon_thread::JoinHandle;
 use std::{
     net::TcpListener,
     sync::{
@@ -32,7 +33,6 @@ use std::{
         atomic::{AtomicBool, AtomicI32, AtomicU16, AtomicU32, Ordering},
         mpsc::{Receiver, RecvTimeoutError, Sender, channel, sync_channel},
     },
-    thread::JoinHandle,
 };
 use web_time::{Duration, Instant};
 
@@ -490,7 +490,7 @@ impl Game<'_> {
         let (ready_tx, ready) = channel();
         let (tasks, server_tasks) = channel();
         let server_flags = flags.clone();
-        let thread = std::thread::Builder::new()
+        let thread = horizon_thread::Builder::new()
             .name("Server thread".into())
             .spawn(move || {
                 // MinecraftServer.spin's Thread.setPriority(8).
@@ -529,7 +529,7 @@ impl Game<'_> {
             while self.integrated_starting.is_some() {
                 self.poll_integrated_start()?;
                 if self.integrated_starting.is_some() {
-                    std::thread::sleep(Duration::from_millis(5));
+                    horizon_thread::sleep(Duration::from_millis(5));
                 }
             }
         }
@@ -996,7 +996,7 @@ impl Game<'_> {
             let has_remote_guests = host.hub.guests.iter().any(|g| g.conn != 0);
             self.lan = Some(host);
             if has_remote_guests {
-                std::thread::sleep(Duration::from_millis(50));
+                horizon_thread::sleep(Duration::from_millis(50));
             }
         }
         // ServerPlayer.disconnect: nobody is left in a bed.
@@ -1369,7 +1369,7 @@ impl Game<'_> {
         let mut options = self.options.clone();
         options.execution_role = ExecutionRole::IntegratedServer;
         options.dedicated = Some(Vec::new());
-        let result = std::thread::Builder::new()
+        let result = horizon_thread::Builder::new()
             .name("Server thread".into())
             .spawn(move || {
                 let run = || -> Result<()> {
@@ -1519,7 +1519,7 @@ mod tests {
         let (tasks, _) = channel();
         let server = Integrated {
             flags: flags.clone(),
-            thread: Some(std::thread::spawn(move || wait.recv().unwrap())),
+            thread: Some(horizon_thread::spawn(move || wait.recv().unwrap())),
             tasks,
             world_name: String::new(),
         };
@@ -1537,7 +1537,7 @@ mod tests {
         let (tasks, _) = channel();
         let server = Integrated {
             flags,
-            thread: Some(std::thread::spawn(move || {
+            thread: Some(horizon_thread::spawn(move || {
                 *saving.failure.lock().unwrap() = Some("disk write failed".into());
             })),
             tasks,

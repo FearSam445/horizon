@@ -99,7 +99,7 @@ impl Far {
         let asked = Arc::new(Mutex::new(asked));
         for n in 0..READERS {
             let (asked, read, read_one) = (asked.clone(), read.clone(), read_one.clone());
-            let _ = std::thread::Builder::new()
+            let _ = horizon_thread::Builder::new()
                 .name(format!("Far chunk reader #{n}"))
                 .spawn(move || {
                     loop {
@@ -380,7 +380,7 @@ mod tests {
         for _ in 0..1000 {
             far.poll();
             match far.saved(x, z) {
-                Saved::Waiting => std::thread::sleep(Duration::from_millis(1)),
+                Saved::Waiting => horizon_thread::sleep(Duration::from_millis(1)),
                 done => return done,
             }
         }
@@ -434,7 +434,7 @@ mod tests {
             if far.asked.is_empty() {
                 break;
             }
-            std::thread::sleep(Duration::from_millis(1));
+            horizon_thread::sleep(Duration::from_millis(1));
         }
         assert!(far.levels[0].bodies.is_empty());
         assert!(matches!(read(&mut far, 6, 0), Saved::Body(_)));

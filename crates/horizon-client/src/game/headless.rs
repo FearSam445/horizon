@@ -60,7 +60,7 @@ impl Game<'_> {
                 .next_step(started)
                 .checked_duration_since(Instant::now())
             {
-                std::thread::sleep(wait);
+                horizon_thread::sleep(wait);
             }
         }
         self.shut_down();

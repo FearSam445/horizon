@@ -17,8 +17,9 @@ use horizon_client::{
     world::World,
 };
 use horizon_core::biome::BiomeZoom;
+use horizon_thread as thread;
 use horizon_world::registry::BlockStateId;
-use std::{collections::HashMap, path::Path, sync::Arc, thread};
+use std::{collections::HashMap, path::Path, sync::Arc};
 use web_time::{Duration, Instant};
 
 fn resources() -> Option<std::path::PathBuf> {

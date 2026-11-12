@@ -187,7 +187,7 @@ impl LimiterClock for SystemClock {
             end,
             || self.nanos(),
             |step| {
-                std::thread::sleep(web_time::Duration::from_nanos(step as u64));
+                horizon_thread::sleep(web_time::Duration::from_nanos(step as u64));
             },
         );
     }
@@ -227,7 +227,7 @@ impl LimiterClock for SleepingClock {
         self.0.park(nanos);
     }
     fn spin(&mut self) {
-        std::thread::sleep(web_time::Duration::from_micros(50));
+        horizon_thread::sleep(web_time::Duration::from_micros(50));
     }
 }
 

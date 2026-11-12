@@ -240,7 +240,7 @@ impl ChunkDecoder {
             let queue = Arc::clone(&queue);
             let finished = finished.clone();
             let alive = Arc::clone(&workers_alive);
-            let builder = std::thread::Builder::new()
+            let builder = horizon_thread::Builder::new()
                 .name(format!("Chunk decoder {i}"))
                 .spawn(move || {
                     horizon_threads::favour_current();
@@ -546,7 +546,7 @@ mod tests {
             let (packet, column) = loop {
                 match decoder.next() {
                     Next::Ready(decoded) => break decoded,
-                    Next::Decoding => std::thread::yield_now(),
+                    Next::Decoding => horizon_thread::yield_now(),
                     Next::Lost => panic!("the decoder stopped"),
                 }
             };
@@ -579,7 +579,7 @@ mod tests {
             let (packet, column) = loop {
                 match decoder.next() {
                     Next::Ready(decoded) => break decoded,
-                    Next::Decoding => std::thread::yield_now(),
+                    Next::Decoding => horizon_thread::yield_now(),
                     Next::Lost => panic!("the decoder stopped"),
                 }
             };

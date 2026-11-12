@@ -5,10 +5,10 @@
 //! game home, where saves and options.txt live.
 #[allow(unused_imports)]
 use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
+use horizon_thread as thread;
 use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
-    thread,
 };
 use web_time::{Duration, Instant};
 

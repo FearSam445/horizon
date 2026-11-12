@@ -29,7 +29,7 @@ static DEBUG_CPU: std::sync::OnceLock<String> = std::sync::OnceLock::new();
 /// Reads the overlay's CPU name in the background when the window opens, for F3's first frame.
 pub(super) fn warm_debug_cpu() {
     // A thread that can't start only leaves the read to that first frame.
-    let _ = std::thread::Builder::new()
+    let _ = horizon_thread::Builder::new()
         .name("debug-cpu-name".into())
         .spawn(|| {
             DEBUG_CPU.get_or_init(horizon_client::crash::cpu);

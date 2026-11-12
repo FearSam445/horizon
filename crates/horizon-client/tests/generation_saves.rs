@@ -17,12 +17,12 @@ use horizon_client::{
     streaming::{ChunkGenerator, Proto, Streaming, WorkerContext},
     world::World,
 };
+use horizon_thread as thread;
 use horizon_world::registry::BlockStateId;
 use std::{
     collections::HashMap,
     path::Path,
     sync::{Arc, Mutex},
-    thread,
 };
 use web_time::{Duration, Instant};
 

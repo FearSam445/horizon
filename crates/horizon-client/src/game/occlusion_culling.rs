@@ -12,6 +12,7 @@ use horizon_client::{
     world::World,
 };
 use horizon_core::geometry::Aabb;
+use horizon_thread::JoinHandle;
 use std::{
     cell::{Cell, RefCell},
     sync::{
@@ -19,7 +20,6 @@ use std::{
         atomic::{AtomicU64, Ordering},
         mpsc::{self, Receiver, SyncSender, TrySendError},
     },
-    thread::JoinHandle,
 };
 use web_time::Instant;
 
@@ -810,7 +810,7 @@ impl AsyncOcclusionCuller {
         let job_generation = Arc::new(AtomicU64::new(0));
         let worker_generation = Arc::clone(&job_generation);
         let plane_generation = Arc::clone(&job_generation);
-        let thread = std::thread::Builder::new()
+        let thread = horizon_thread::Builder::new()
             .name("world-occlusion-culling".into())
             .spawn(move || {
                 let mut scratch = PlaneWorkerScratch::default();
@@ -824,7 +824,7 @@ impl AsyncOcclusionCuller {
                 }
             })?;
         let ray_plane_tx = plane_tx.clone();
-        let ray_thread = std::thread::Builder::new()
+        let ray_thread = horizon_thread::Builder::new()
             .name("entity-ray-cull".into())
             .spawn(move || {
                 let mut scratch = RayWorkerScratch::default();

@@ -528,7 +528,7 @@ mod tests {
         let world = horizon_fs::temp_dir().join(format!(
             "horizon-stats-file-{}-{:?}",
             std::process::id(),
-            std::thread::current().id()
+            horizon_thread::current().id()
         ));
         let stats = world.join("players").join("stats");
         horizon_fs::create_dir_all(&stats).unwrap();

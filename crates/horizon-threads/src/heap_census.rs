@@ -86,7 +86,7 @@ pub(crate) fn thread_name(buf: &mut [u8; 64]) -> &[u8] {
 /// than recursing, as the module's note on naming allocations says.
 #[cfg(any(miri, not(any(target_vendor = "apple", target_os = "linux"))))]
 pub(crate) fn thread_name(buf: &mut [u8; 64]) -> &[u8] {
-    let current = std::thread::current();
+    let current = horizon_thread::current();
     let Some(name) = current.name() else {
         return &[];
     };
@@ -281,7 +281,7 @@ mod tests {
         let block = unsafe { CensusAllocator.realloc(block, layout, 3 << 20) } as usize;
         assert_eq!(live("test.step"), 3 << 20, "growing keeps the step's tag");
         let grown = Layout::from_size_align(3 << 20, 64).unwrap();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let _other = tag("test.other");
             // SAFETY: `block` came from this allocator with `grown`.
             unsafe { CensusAllocator.dealloc(block as *mut u8, grown) };
@@ -315,12 +315,12 @@ mod tests {
     #[test]
     fn without_a_step_a_block_counts_for_its_thread() {
         let layout = Layout::from_size_align(4096, 8).unwrap();
-        let (name, block) = std::thread::Builder::new()
+        let (name, block) = horizon_thread::Builder::new()
             .name("census-test".into())
             .spawn(move || {
                 // SAFETY: a nonzero layout.
                 let block = unsafe { CensusAllocator.alloc(layout) } as usize;
-                (std::thread::current().name().unwrap().to_owned(), block)
+                (horizon_thread::current().name().unwrap().to_owned(), block)
             })
             .unwrap()
             .join()
@@ -345,11 +345,11 @@ mod tests {
             CensusAllocator.dealloc(block, small);
         }
 
-        std::thread::scope(|s| {
+        horizon_thread::scope(|s| {
             for idx in 0..4 {
                 s.spawn(move || {
                     let name = format!("miri-t-{idx}");
-                    std::thread::Builder::new()
+                    horizon_thread::Builder::new()
                         .name(name)
                         .spawn(move || {
                             // SAFETY: valid layout.

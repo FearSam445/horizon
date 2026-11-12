@@ -1,0 +1,7 @@
+[package]
+name = "horizon-thread"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "std::thread on the desktop; in the browser build, which has one thread, spawned work runs where it is spawned"
+publish = false

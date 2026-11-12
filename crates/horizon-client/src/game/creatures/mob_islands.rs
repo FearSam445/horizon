@@ -113,7 +113,9 @@ fn capped_lanes(requested: usize, hardware: Option<usize>) -> usize {
 
 /// The threads the loop may run on, capped at the machine's available parallelism.
 fn lanes() -> usize {
-    let hardware = std::thread::available_parallelism().ok().map(usize::from);
+    let hardware = horizon_thread::available_parallelism()
+        .ok()
+        .map(usize::from);
     #[cfg(test)]
     if let Some(lanes) = LANES.with(Cell::get) {
         return capped_lanes(lanes, hardware);
@@ -357,7 +359,7 @@ impl Islands<'_> {
         let (first, first_ticking) = parts.next().expect("a plan has groups");
         #[cfg(test)]
         let failure = FAIL_THREADS.with(|f| f.borrow().clone());
-        std::thread::scope(|s| {
+        horizon_thread::scope(|s| {
             // Guards for every not-yet-started lane live inside the scope's callback. If the
             // OS refuses a spawn, they drop before scope joins any started, waiting threads.
             let first_done = first.random.lane_done();
@@ -382,7 +384,7 @@ impl Islands<'_> {
                     failure.started.wait();
                     panic!("injected spawn failure at the OS-spawn error boundary");
                 }
-                let handle = std::thread::Builder::new()
+                let handle = horizon_thread::Builder::new()
                     .name("mob-island".into())
                     .spawn_scoped(s, move || {
                         let _done = done;
@@ -1028,7 +1030,7 @@ mod tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn startup_and_turn_failures_release_lanes_and_preserve_payload() {
         let (sent, finished) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             for (at, expected) in [
                 (
                     FailAt::Spawn,
@@ -1388,7 +1390,7 @@ mod tests {
             .unwrap();
         let template = game.mobs[0].seen(None);
         let (sent, finished) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let draws = OrderedDraws::new(&horizon_core::random::LegacyRandom::new(7), 2);
             let mut frozen = vec![template.clone(), template];
             frozen[0].id = 10;
@@ -1407,7 +1409,7 @@ mod tests {
             };
             assert_eq!(foreign.seen(11).unwrap().position, board.frozen[1].position);
             assert!(foreign.seen(999).is_none());
-            std::thread::scope(|s| {
+            horizon_thread::scope(|s| {
                 s.spawn(|| {
                     let mut random = board.draws.lane(0);
                     let _done = random.lane_done();
@@ -1431,7 +1433,7 @@ mod tests {
                 draws: OrderedDraws::new(&horizon_core::random::LegacyRandom::new(7), 2),
                 ..board
             };
-            std::thread::scope(|s| {
+            horizon_thread::scope(|s| {
                 let earlier = s.spawn(|| {
                     let random = missing.draws.lane(0);
                     let _done = random.lane_done();
@@ -1666,7 +1668,9 @@ mod tests {
         assert_eq!(runs[0].3, 0, "one lane runs serially");
         let available = capped_lanes(
             3,
-            std::thread::available_parallelism().ok().map(usize::from),
+            horizon_thread::available_parallelism()
+                .ok()
+                .map(usize::from),
         );
         let grouped = if available > 1 { available } else { 0 };
         assert_eq!(

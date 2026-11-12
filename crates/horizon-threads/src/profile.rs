@@ -1,9 +1,9 @@
 //! A profiling session: the sampler's rings drained by a writer thread into bounded aggregates, reported at stop.
 
+use horizon_thread::{self as thread, JoinHandle};
 use std::io;
 use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
 use std::sync::{Arc, mpsc};
-use std::thread::{self, JoinHandle};
 use std::time::SystemTime;
 use web_time::{Duration, Instant};
 

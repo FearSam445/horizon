@@ -268,7 +268,7 @@ fn ping_all(servers: &[ServerEntry], pings: &Pings, icons: &Icons, file: &Path) 
             icons.lock().unwrap().insert(address.clone(), pixels);
         }
         let (pings, icons, file) = (pings.clone(), icons.clone(), file.to_owned());
-        let _ = std::thread::Builder::new()
+        let _ = horizon_thread::Builder::new()
             .name("horizon-ping".into())
             .spawn(move || {
                 let result = match crate::net::ping(&address, Duration::from_secs(5)) {

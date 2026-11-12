@@ -23,13 +23,11 @@ pub use model::{
 };
 
 use crate::auth::{self, AuthSession};
+use horizon_thread as thread;
 use serde_json::{Value, json};
-use std::{
-    sync::{
-        Arc, Mutex, OnceLock,
-        atomic::{AtomicBool, Ordering},
-    },
-    thread,
+use std::sync::{
+    Arc, Mutex, OnceLock,
+    atomic::{AtomicBool, Ordering},
 };
 use web_time::{Duration, Instant};
 

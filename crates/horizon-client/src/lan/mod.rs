@@ -46,6 +46,7 @@ use horizon_protocol::{
     GAME_VERSION, PROTOCOL_VERSION, crypto::uuid_string, packets::configuration::ClientInformation,
     text::translatable,
 };
+use horizon_thread::JoinHandle;
 use std::{
     collections::HashMap,
     io,
@@ -55,7 +56,6 @@ use std::{
         atomic::{AtomicBool, AtomicI32, AtomicU32, AtomicU64, AtomicUsize, Ordering},
         mpsc::{Receiver, Sender, channel},
     },
-    thread::JoinHandle,
 };
 use web_time::{Duration, Instant};
 
@@ -363,7 +363,7 @@ impl OwnerProfile {
         fetch: impl FnOnce() -> Vec<horizon_protocol::packets::login::Property> + Send + 'static,
     ) -> Self {
         let (send, receive) = channel();
-        let _ = std::thread::Builder::new()
+        let _ = horizon_thread::Builder::new()
             .name("Profile fetcher".into())
             .spawn(move || {
                 let _ = send.send(fetch());
@@ -407,7 +407,7 @@ impl SecureChat {
         enforce: bool,
         fetch: impl FnOnce() -> Vec<horizon_protocol::rsa::RsaPublicKey> + Send + 'static,
     ) -> Self {
-        let handle = std::thread::Builder::new()
+        let handle = horizon_thread::Builder::new()
             .name("Services keys".into())
             .spawn(fetch)
             .ok();
@@ -520,7 +520,7 @@ impl Shared {
                 if web_time::Instant::now() > deadline {
                     return Some(translatable("multiplayer.disconnect.slow_login", &[]));
                 }
-                std::thread::sleep(Duration::from_millis(10));
+                horizon_thread::sleep(Duration::from_millis(10));
             }
         }
         self.online.lock().unwrap().push((uuid, name.to_owned()));
@@ -773,7 +773,7 @@ impl Lan {
         let port = listener.local_addr()?.port();
         let stop = Arc::new(AtomicBool::new(false));
         let (accept_shared, accept_stop) = (self.shared.clone(), stop.clone());
-        let thread = std::thread::Builder::new()
+        let thread = horizon_thread::Builder::new()
             .name("horizon-lan-accept".into())
             .spawn(move || accept_loop(listener, accept_shared, &accept_stop))?;
         self._pinger = if announce && !test_loopback() {
@@ -805,7 +805,7 @@ impl Lan {
     pub fn connect_local(&self) -> io::Result<horizon_protocol::connection::Pipe> {
         let (client, server) = horizon_protocol::connection::Pipe::pair();
         let shared = self.shared.clone();
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("horizon-local-conn".into())
             .spawn(move || {
                 if let Err(e) = conn::serve_local(server, shared)
@@ -1027,7 +1027,7 @@ fn accept_loop(listener: TcpListener, shared: Arc<Shared>, stop: &AtomicBool) {
                     continue;
                 };
                 shared.wait(&counted, &stream);
-                let _ = std::thread::Builder::new()
+                let _ = horizon_thread::Builder::new()
                     .name("horizon-lan-conn".into())
                     .spawn(move || {
                         WAITING.set(Some(counted.2));
@@ -1035,9 +1035,9 @@ fn accept_loop(listener: TcpListener, shared: Arc<Shared>, stop: &AtomicBool) {
                     });
             }
             Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
-                std::thread::sleep(Duration::from_millis(25));
+                horizon_thread::sleep(Duration::from_millis(25));
             }
-            Err(_) => std::thread::sleep(Duration::from_millis(100)),
+            Err(_) => horizon_thread::sleep(Duration::from_millis(100)),
         }
     }
 }
@@ -1145,7 +1145,7 @@ mod tests {
                 Instant::now() < deadline,
                 "the held sockets were not all accepted"
             );
-            std::thread::sleep(Duration::from_millis(10));
+            horizon_thread::sleep(Duration::from_millis(10));
         }
         let mut late = TcpStream::connect(address).unwrap();
         late.set_read_timeout(Some(Duration::from_secs(5))).unwrap();
@@ -1167,7 +1167,7 @@ mod tests {
                 Instant::now() < deadline,
                 "the closed sockets' threads did not end"
             );
-            std::thread::sleep(Duration::from_millis(10));
+            horizon_thread::sleep(Duration::from_millis(10));
         }
     }
 

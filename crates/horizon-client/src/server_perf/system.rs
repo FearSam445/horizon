@@ -28,7 +28,7 @@ impl SystemProbe {
         let stat = horizon_fs::read_to_string("/proc/stat")
             .ok()
             .and_then(|s| parse_cpu_stat(&s));
-        let threads = std::thread::available_parallelism().map_or(1, |n| n.get()) as f64;
+        let threads = horizon_thread::available_parallelism().map_or(1, |n| n.get()) as f64;
         let mut g = Gauges {
             rss_mb: horizon_bench::rss_bytes(pid).map_or(0.0, |b| (b >> 20) as f32),
             players: counts.players,
@@ -72,7 +72,7 @@ impl BackgroundProbe {
         let (requests, wanted) = std::sync::mpsc::channel::<(f64, WorldCounts)>();
         let latest = std::sync::Arc::new(std::sync::Mutex::new(Gauges::default()));
         let shared = std::sync::Arc::clone(&latest);
-        let worker = std::thread::Builder::new()
+        let worker = horizon_thread::Builder::new()
             .name("horizon-perf-gauges".into())
             .spawn(move || {
                 super::profiler_thread();
@@ -146,7 +146,7 @@ static HARDWARE: OnceLock<horizon_bench::Hardware> = OnceLock::new();
 
 /// Describes the hardware on a thread of its own: the probes run commands, which the tick must not wait for.
 pub fn warm_hardware() {
-    std::thread::spawn(|| {
+    horizon_thread::spawn(|| {
         HARDWARE.get_or_init(horizon_bench::Hardware::detect);
     });
 }
@@ -167,7 +167,7 @@ pub fn machine(hardware: Option<&horizon_bench::Hardware>) -> Machine {
     let mut m = Machine {
         os: std::env::consts::OS.to_owned(),
         arch: std::env::consts::ARCH.to_owned(),
-        cpu_threads: std::thread::available_parallelism().map_or(0, |n| n.get() as u32),
+        cpu_threads: horizon_thread::available_parallelism().map_or(0, |n| n.get() as u32),
         cgroup_cpu_cores: cgroup("cpu.max").and_then(|t| parse_cgroup_cpu(&t)),
         cgroup_memory_mb: cgroup("memory.max").and_then(|t| parse_cgroup_memory(&t)),
         ..Machine::default()

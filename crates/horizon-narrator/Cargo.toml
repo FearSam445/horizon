@@ -7,6 +7,8 @@ rust-version.workspace = true
 description = "The narrator: vanilla's text-to-speech (GameNarrator, com.mojang.text2speech) and screen narration state"
 
 [dependencies]
+# std::thread, inline in the browser build's one thread (web/).
+horizon-thread = { path = "../../web/thread" }
 # std::time, with a clock in the browser build (web/).
 web-time = "1.1"
 log = "0.4"

@@ -278,7 +278,7 @@ pub(crate) fn operating_system() -> String {
 
 /// Logical processors and the CPU's name (`12x AMD Ryzen 5 5600X ...`).
 pub fn cpu() -> String {
-    let threads = std::thread::available_parallelism().map_or(0, |n| n.get());
+    let threads = horizon_thread::available_parallelism().map_or(0, |n| n.get());
     let name = if cfg!(target_os = "linux") {
         read("/proc/cpuinfo").and_then(|t| horizon_system::linux_cpu_name(&t))
     } else if cfg!(target_os = "macos") {
@@ -371,7 +371,7 @@ pub fn system_details(side: &str) -> Vec<(String, String)> {
 /// The thread's name as vanilla's reports say it: the main thread is the client's "Render thread"
 /// and the dedicated server's "Server thread".
 fn thread_name(side: &str) -> String {
-    let current = std::thread::current();
+    let current = horizon_thread::current();
     match current.name() {
         Some("main") | None if side == "server" => "Server thread".into(),
         Some("main") | None => "Render thread".into(),
@@ -609,10 +609,10 @@ pub fn install(home: PathBuf, side: &'static str) {
             return;
         }
         default(info);
-        let main = std::thread::current().name() == Some("main");
+        let main = horizon_thread::current().name() == Some("main");
         if main {
             deliver(&home, panic_report(info, side));
-        } else if is_worker_thread(std::thread::current().name()) {
+        } else if is_worker_thread(horizon_thread::current().name()) {
             deliver(&home, worker_panic_report(info, side));
             // The crash ends the game, as the relayed report does on vanilla's main thread.
             std::process::exit(101);
@@ -821,7 +821,7 @@ mod tests {
     #[test]
     fn a_dedicated_servers_report_names_its_server_thread_and_no_render_settings() {
         let unnamed = |side: &'static str| {
-            std::thread::spawn(move || thread_name(side))
+            horizon_thread::spawn(move || thread_name(side))
                 .join()
                 .unwrap()
         };

@@ -449,7 +449,7 @@ fn main() {
         ),
     );
 
-    let cores = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let cores = horizon_thread::available_parallelism().map_or(1, |n| n.get());
     println!("| Stage (scale {scale}, {cores} threads, median of {runs}) | ms |");
     println!("|---|---:|");
     for (name, ms) in &rows {

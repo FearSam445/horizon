@@ -43,7 +43,7 @@ fn label_order_does_not_change_identity() {
 #[test]
 fn counters_are_exact_across_threads() {
     let reg = Registry::new();
-    std::thread::scope(|s| {
+    horizon_thread::scope(|s| {
         for _ in 0..8 {
             s.spawn(|| {
                 for _ in 0..1000 {

@@ -153,7 +153,7 @@ mod imp {
             if Instant::now() >= until {
                 return Err(NoStack::NoAnswer);
             }
-            std::thread::sleep(Duration::from_millis(2));
+            horizon_thread::sleep(Duration::from_millis(2));
         }
     }
 }
@@ -197,7 +197,7 @@ mod tests {
         let (tx, rx) = mpsc::channel();
         let worker = {
             let stop = stop.clone();
-            std::thread::spawn(move || {
+            horizon_thread::spawn(move || {
                 tx.send(Watched::current()).unwrap();
                 busy_in_a_named_frame(&stop);
             })

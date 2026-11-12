@@ -501,7 +501,7 @@ fn warm_pool() -> Option<&'static WarmPool> {
         let started = (0..threads)
             .filter(|i| {
                 let pool = pool.clone();
-                std::thread::Builder::new()
+                horizon_thread::Builder::new()
                     .name(format!("horizon-chunk-encode-{i}"))
                     .spawn(move || {
                         let mut done = 0;

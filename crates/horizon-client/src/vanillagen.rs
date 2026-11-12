@@ -710,12 +710,12 @@ impl VanillaTerrain {
         const QUIET: u64 = 2_000;
         const LATEST: u64 = 60_000;
         let terrain = Arc::downgrade(self);
-        let spawned = std::thread::Builder::new()
+        let spawned = horizon_thread::Builder::new()
             .name("Ring search".into())
             .spawn(move || {
                 horizon_threads::idle_current();
                 loop {
-                    std::thread::sleep(web_time::Duration::from_millis(500));
+                    horizon_thread::sleep(web_time::Duration::from_millis(500));
                     // The world closed: nothing to search for.
                     let Some(terrain) = terrain.upgrade() else {
                         return;

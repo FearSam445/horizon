@@ -1696,7 +1696,7 @@ impl Title {
         let (send, receive) = mpsc::channel();
         let saves = self.saves.clone();
         let folder = world.folder.clone();
-        std::thread::spawn(move || {
+        horizon_thread::spawn(move || {
             let _ = send.send(world_management::backup(&saves, &folder).map_err(|e| e.to_string()));
         });
         self.backup_shown.set(false);
@@ -4875,7 +4875,7 @@ Would you like to enable the Narrator or visit the Accessibility Settings?",
         };
         if !STARTED.swap(true, Ordering::Relaxed) {
             let session = session.clone();
-            let spawned = std::thread::Builder::new()
+            let spawned = horizon_thread::Builder::new()
                 .name("Account status".into())
                 .spawn(move || {
                     let _ = STATUS.set(crate::auth::fetch_account_status(&session));

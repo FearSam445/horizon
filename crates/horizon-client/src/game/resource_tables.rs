@@ -104,7 +104,7 @@ impl UiResources {
     pub fn load(root: &std::path::Path, defaults: &std::path::Path) -> Result<Self> {
         // The title screen waits for both: the panorama's six faces decode
         // beside the atlas.
-        std::thread::scope(|scope| {
+        horizon_thread::scope(|scope| {
             let panorama = named_scope(scope, "panorama", || {
                 startup::time("ui.panorama", || {
                     horizon_client::gfx::panorama::Faces::load(root, defaults)
@@ -193,7 +193,7 @@ impl PackResources {
         // images and language map together so a custom-sky pack cannot put all
         // of the pack assembly on the critical path behind its own files.
         let (names, clouds, forcefield, custom_sky, environments, polytone_particles) =
-            std::thread::scope(|scope| {
+            horizon_thread::scope(|scope| {
                 let names = named_scope(scope, "pack.names", || Names::load(root));
                 let clouds = named_scope(scope, "pack.clouds", || load_clouds(root));
                 let forcefield = named_scope(scope, "pack.forcefield", || load_forcefield(root));

@@ -785,11 +785,11 @@ fn upgrade_regions_with_threads(
             }
         }
     };
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         // This thread is worker 0; a helper that fails to start leaves its
         // share to the others.
         for i in 1..threads.clamp(1, files.len()) {
-            let _ = std::thread::Builder::new()
+            let _ = horizon_thread::Builder::new()
                 .name(format!("World Upgrader #{i}"))
                 .spawn_scoped(scope, work);
         }

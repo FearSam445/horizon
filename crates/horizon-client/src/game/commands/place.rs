@@ -310,7 +310,7 @@ mod live_dungeon_spawner_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h173-{:?}", std::thread::current().id())),
+                .join(format!("h173-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         crate::game::growth::install_live_features(&loaded.resources, &loaded.pack, &options);

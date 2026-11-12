@@ -399,7 +399,7 @@ pub mod timeline {
     fn join() -> Option<Mine> {
         let mut slot = RUN.lock().unwrap_or_else(PoisonError::into_inner);
         let run = slot.as_mut()?;
-        let name = std::thread::current()
+        let name = horizon_thread::current()
             .name()
             .unwrap_or("unnamed")
             .to_owned();
@@ -517,7 +517,7 @@ pub mod startup {
         let tid = THREAD.with(|id| {
             if id.get() == 0 {
                 id.set(NEXT_THREAD.fetch_add(1, Ordering::Relaxed));
-                let name = std::thread::current()
+                let name = horizon_thread::current()
                     .name()
                     .unwrap_or("unnamed")
                     .replace(['"', '\\'], "_");
@@ -669,7 +669,7 @@ mod tests {
     fn samples_inside_a_span_carry_its_id() {
         use horizon_threads::{sampler, work};
         use web_time::{Duration, Instant};
-        let worker = std::thread::spawn(|| {
+        let worker = horizon_thread::spawn(|| {
             assert!(sampler::sampled_thread("spans-id-test"));
             let config = sampler::Config {
                 hz: 1000,
@@ -778,7 +778,7 @@ mod tests {
     /// spans it ran inside, after them.
     #[test]
     fn a_recording_thread_keeps_its_spans_and_their_nesting() {
-        std::thread::spawn(|| {
+        horizon_thread::spawn(|| {
             super::record_here(true);
             super::time("tick", || {
                 super::time("tick_mobs", || ());
@@ -814,7 +814,7 @@ mod tests {
             super::time("open_maps", || ());
             2
         }
-        std::thread::spawn(|| {
+        horizon_thread::spawn(|| {
             super::record_here(true);
             assert_eq!(step(true), 1);
             assert_eq!(step(false), 2);
@@ -879,7 +879,7 @@ mod tests {
         off.lap("unseen");
         super::enable(true);
         let mut laps = super::laps();
-        std::thread::sleep(web_time::Duration::from_millis(2));
+        horizon_thread::sleep(web_time::Duration::from_millis(2));
         laps.lap("first");
         laps.lap("second");
         super::enable(false);
@@ -912,7 +912,7 @@ mod tests {
     #[test]
     fn thread_cpu_counts_work_not_sleep() {
         let start = super::thread_cpu().unwrap();
-        std::thread::sleep(web_time::Duration::from_millis(50));
+        horizon_thread::sleep(web_time::Duration::from_millis(50));
         let slept = super::thread_cpu().unwrap() - start;
         // Busy until the clock shows 10 ms of work (a loaded machine gives
         // the thread less than its wall time).
@@ -942,12 +942,12 @@ mod tests {
             "the process has one timeline"
         );
         let spawn = |name: &str, alive_with: Option<Arc<Barrier>>| {
-            std::thread::Builder::new()
+            horizon_thread::Builder::new()
                 .name(name.into())
                 .spawn(move || {
                     super::time("outer", || {
-                        std::thread::sleep(Duration::from_millis(4));
-                        super::time("inner", || std::thread::sleep(Duration::from_millis(3)));
+                        horizon_thread::sleep(Duration::from_millis(4));
+                        super::time("inner", || horizon_thread::sleep(Duration::from_millis(3)));
                     });
                     if let Some(barrier) = alive_with {
                         barrier.wait();

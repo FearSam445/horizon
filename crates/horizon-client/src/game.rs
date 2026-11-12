@@ -554,6 +554,7 @@ use horizon_core::{
     position::BlockPos,
 };
 use horizon_core::{geometry::Vec3, random::RandomSource};
+use horizon_thread::JoinHandle;
 use horizon_world::{
     block_collision::BlockCollisionRegistry,
     collision_context::{CollisionContext, CollisionEntity, CollisionItem},
@@ -615,7 +616,6 @@ use std::{
         atomic::{AtomicU32, Ordering},
         mpsc::{Receiver, TryRecvError},
     },
-    thread::JoinHandle,
 };
 use web_time::{Duration, Instant};
 use winit::{
@@ -2454,7 +2454,7 @@ struct Game<'a> {
     loading_progress: f32,
     /// `CreateWorldScreen.openCreateWorldScreen`'s data read, on a worker,
     /// while the title says `createWorld.preparing`.
-    creation_job: Option<std::thread::JoinHandle<std::result::Result<(), String>>>,
+    creation_job: Option<horizon_thread::JoinHandle<std::result::Result<(), String>>>,
     /// When `loading_progress` last eased (the server thread's load, 50 ms a step).
     loading_progress_at: Option<web_time::Instant>,
     /// A received packet started or ended a piston's move: `poll_remote`
@@ -12117,7 +12117,7 @@ fn load_world_rest(
         nether_environment,
         end_environment,
     ) = if threads > 1 {
-        std::thread::scope(|scope| {
+        horizon_thread::scope(|scope| {
             let items = named_scope(scope, "items", || text(load_items()));
             let behaviours = named_scope(scope, "behaviours", || text(load_behaviours()));
             let block_entity_render = named_scope(scope, "block_entity_render", || {

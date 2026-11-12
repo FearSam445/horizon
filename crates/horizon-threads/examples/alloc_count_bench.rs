@@ -11,7 +11,7 @@ const PAIRS: u64 = 10_000_000;
 fn pairs<A: GlobalAlloc + Sync>(allocator: &A, threads: u64) -> f64 {
     let layout = Layout::from_size_align(64, 8).unwrap();
     let start = Instant::now();
-    std::thread::scope(|scope| {
+    horizon_thread::scope(|scope| {
         for _ in 0..threads {
             scope.spawn(|| {
                 for _ in 0..PAIRS {

@@ -20,8 +20,9 @@ use horizon_client::{
     streaming::{ChunkGenerator, Proto, Streaming, WorkerContext},
     world::World,
 };
+use horizon_thread as thread;
 use horizon_world::registry::BlockStateId;
-use std::{path::Path, sync::Arc, thread};
+use std::{path::Path, sync::Arc};
 use web_time::{Duration, Instant};
 
 fn resources() -> Option<std::path::PathBuf> {

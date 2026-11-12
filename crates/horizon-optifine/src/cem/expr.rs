@@ -814,7 +814,7 @@ mod tests {
 
     #[test]
     fn unseeded_random_differs_between_threads() {
-        let draw = || std::thread::spawn(|| value("random()")).join().unwrap();
+        let draw = || horizon_thread::spawn(|| value("random()")).join().unwrap();
         assert_ne!(draw(), draw());
     }
 

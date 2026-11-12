@@ -185,7 +185,7 @@ impl AccountSync {
         self.again = None;
         let (tx, rx) = channel();
         self.sending = Some(rx);
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("Cosmetics account".into())
             .spawn(move || {
                 let _ = tx.send(send(wish));
@@ -540,7 +540,7 @@ impl Seat {
         {
             let (tx, rx) = channel();
             o.asking = Some(rx);
-            std::thread::Builder::new()
+            horizon_thread::Builder::new()
                 .name("Cosmetics account".into())
                 .spawn(move || {
                     let _ = tx.send(check_owner());
@@ -595,7 +595,7 @@ impl Seat {
             let (tx, rx) = channel();
             o.sending = Some(rx);
             let kept = o.kept.clone();
-            std::thread::Builder::new()
+            horizon_thread::Builder::new()
                 .name("Cosmetics emote".into())
                 .spawn(move || {
                     let _ = tx.send(send_emote(&kept, wish.as_deref()));
@@ -916,7 +916,7 @@ impl Game<'_> {
         let (tx, rx) = channel();
         e.loading = Some(rx);
         let kept = service(|s| s.emote_out.kept.clone());
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("Cosmetics emotes owned".into())
             .spawn(move || {
                 let _ = tx.send(load_owned_emotes(&kept));
@@ -1017,7 +1017,7 @@ mod tests {
             if worn.is_some() || Instant::now() >= deadline {
                 break worn;
             }
-            std::thread::sleep(Duration::from_millis(20));
+            horizon_thread::sleep(Duration::from_millis(20));
         };
         let asked = service.0.lock().unwrap().clone();
         (worn, asked)
@@ -1098,7 +1098,7 @@ mod tests {
                 if worn.is_some() || Instant::now() >= deadline {
                     break worn;
                 }
-                std::thread::sleep(Duration::from_millis(20));
+                horizon_thread::sleep(Duration::from_millis(20));
             };
             let asked = service.0.lock().unwrap().clone();
             (worn.is_some(), asked)

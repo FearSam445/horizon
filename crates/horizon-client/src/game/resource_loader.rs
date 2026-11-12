@@ -88,7 +88,7 @@ impl GameCpuResources {
             boat_models,
             cart_models,
             creative_screen,
-        ) = std::thread::scope(|scope| {
+        ) = horizon_thread::scope(|scope| {
             let painting_variants = named_scope(scope, "game_cpu.paintings", move || {
                 paintings::PaintingVariants::load(root)
             });

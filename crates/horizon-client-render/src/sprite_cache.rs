@@ -274,7 +274,7 @@ mod tests {
                 .is_some()
         );
         // Same length, new content and time: still stale.
-        std::thread::sleep(web_time::Duration::from_millis(30));
+        horizon_thread::sleep(web_time::Duration::from_millis(30));
         fs::write(&png, b"two").unwrap();
         assert!(
             SpriteCache::open(&root)
@@ -333,7 +333,7 @@ mod tests {
             decoded,
             "cache hit differs from decoding"
         );
-        std::thread::sleep(web_time::Duration::from_millis(30));
+        horizon_thread::sleep(web_time::Duration::from_millis(30));
         write_png(&png, [0, 255, 0, 255]);
         let fresh = sprite_pixels(&root);
         assert_eq!(&fresh[..4], &[0, 255, 0, 255]);

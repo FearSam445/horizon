@@ -7,6 +7,8 @@ license.workspace = true
 description = "The .hzperf capture contract (docs/perf-platform.md §3): generated protobuf types and the gzip writer"
 
 [dependencies]
+# std::thread, inline in the browser build's one thread (web/).
+horizon-thread = { path = "../../web/thread" }
 # std::fs, in memory in the browser build (web/).
 horizon-fs = { path = "../../web/fs" }
 # std::time, with a clock in the browser build (web/).

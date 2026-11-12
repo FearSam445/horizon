@@ -70,7 +70,7 @@ impl Game<'_> {
                 )?;
                 wrote_config = true;
             }
-            std::thread::sleep(Duration::from_millis(2));
+            horizon_thread::sleep(Duration::from_millis(2));
         }
         server.stop()
     }
@@ -225,7 +225,7 @@ impl Game<'_> {
             if Instant::now() > deadline {
                 return Err("command harness: terrain did not load".into());
             }
-            std::thread::sleep(Duration::from_millis(2));
+            horizon_thread::sleep(Duration::from_millis(2));
         }
     }
     pub(super) fn run_command_harness(&mut self, script: &Path, output: &Path) -> Result<()> {
@@ -246,7 +246,7 @@ impl Game<'_> {
             if Instant::now() > deadline {
                 return Err("command harness: owner did not connect".into());
             }
-            std::thread::sleep(Duration::from_millis(2));
+            horizon_thread::sleep(Duration::from_millis(2));
         }
         self.harness_owner(|g| g.harness_settle(deadline, None))?;
         if let Some(path) = std::env::var_os("HORIZON_FISHING_TICK_REFERENCE") {
@@ -491,7 +491,7 @@ impl Game<'_> {
                             if Instant::now() > deadline {
                                 return Err("initial target readiness timed out".into());
                             }
-                            std::thread::sleep(Duration::from_millis(2));
+                            horizon_thread::sleep(Duration::from_millis(2));
                         }
                         Ok(())
                     })?;
@@ -575,11 +575,11 @@ impl Game<'_> {
                         while self.profile_fetches_pending()
                             && asked.elapsed() < Duration::from_secs(10)
                         {
-                            std::thread::sleep(Duration::from_millis(1));
+                            horizon_thread::sleep(Duration::from_millis(1));
                         }
                         self.tick_server(false)?;
                         if let Some(ms) = op["pace_ms"].as_u64() {
-                            std::thread::sleep(
+                            horizon_thread::sleep(
                                 Duration::from_millis(ms * (i + 1))
                                     .saturating_sub(paced_start.elapsed()),
                             );
@@ -610,7 +610,7 @@ impl Game<'_> {
                         if Instant::now() > deadline {
                             return Err("command harness: portal did not arrive".into());
                         }
-                        std::thread::sleep(Duration::from_millis(2));
+                        horizon_thread::sleep(Duration::from_millis(2));
                     }
                     self.harness_owner(|g| g.harness_settle(deadline, op.get("required_chunks")))?;
                 }

@@ -12,6 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 DEPS = {
     "horizon_fs": ("horizon-fs", '{ path = "../../web/fs" }', "std::fs, in memory in the browser build (web/)."),
     "horizon_clock": ("horizon-clock", '{ path = "../../web/clock" }', "SystemTime::now, also in the browser build (web/)."),
+    "horizon_thread": ("horizon-thread", '{ path = "../../web/thread" }', "std::thread, inline in the browser build's one thread (web/)."),
     "web_time": ("web-time", '"1.1"', "std::time, with a clock in the browser build (web/)."),
 }
 

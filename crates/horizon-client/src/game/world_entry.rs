@@ -100,7 +100,7 @@ impl Game<'_> {
                     )
                 })
                 .unwrap_or_default();
-            self.creation_job = std::thread::Builder::new()
+            self.creation_job = horizon_thread::Builder::new()
                 .name("world-creation".into())
                 .spawn(move || {
                     horizon_client::vanillagen::shared_data_with(&dir, &overrides, registry)
@@ -113,7 +113,7 @@ impl Game<'_> {
         if !self
             .creation_job
             .as_ref()
-            .is_none_or(std::thread::JoinHandle::is_finished)
+            .is_none_or(horizon_thread::JoinHandle::is_finished)
         {
             return;
         }
@@ -374,7 +374,7 @@ impl Game<'_> {
             while self.rest_loader.is_some() {
                 self.poll_world_rest()?;
                 if self.rest_loader.is_some() {
-                    std::thread::sleep(Duration::from_millis(10));
+                    horizon_thread::sleep(Duration::from_millis(10));
                 }
             }
             log::info!(

@@ -555,7 +555,7 @@ impl Worker {
     fn spawn(min_y: i32, sections: i32) -> Option<Self> {
         let (jobs, job_rx) = mpsc::channel::<Job>();
         let (done_tx, done) = mpsc::channel();
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("occlusion".into())
             .spawn(move || {
                 let mut columns = Columns::new(min_y, sections);

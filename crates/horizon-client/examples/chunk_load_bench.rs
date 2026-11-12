@@ -31,6 +31,7 @@ use horizon_client::{
     world::World,
 };
 use horizon_core::biome::{BiomeZoom, obfuscate_seed};
+use horizon_thread as thread;
 use horizon_world::registry::BlockStateId;
 use std::{
     hash::{DefaultHasher, Hash, Hasher},
@@ -39,7 +40,6 @@ use std::{
         Arc,
         atomic::{AtomicUsize, Ordering},
     },
-    thread,
 };
 use web_time::{Duration, Instant};
 

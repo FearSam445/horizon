@@ -467,7 +467,7 @@ impl Game<'_> {
                 let file = game_path(&file);
                 let reply = reply.clone();
                 horizon_hooks::engine::captures().ok_or_else(unavailable)?;
-                std::thread::Builder::new()
+                horizon_thread::Builder::new()
                     .name("perf-share".into())
                     .spawn(move || {
                         let _ = reply.send(match run_job(Job::Share, &file) {
@@ -889,7 +889,7 @@ impl Game<'_> {
         if let Some((path, job)) = self.profile.jobs.pop_front() {
             let (send, receive) = std::sync::mpsc::channel();
             let file = path.clone();
-            match std::thread::Builder::new()
+            match horizon_thread::Builder::new()
                 .name("perf-share".into())
                 .spawn(move || {
                     let _ = send.send(run_job(job, &file));
@@ -1249,7 +1249,7 @@ mod tests {
             samples: false,
             ..StartOptions::default()
         };
-        std::thread::sleep(Duration::from_millis(30));
+        horizon_thread::sleep(Duration::from_millis(30));
         let t = profile.perf.now();
         profile
             .perf

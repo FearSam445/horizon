@@ -1,6 +1,6 @@
+use horizon_thread as thread;
 use std::hint::black_box;
 use std::sync::mpsc;
-use std::thread;
 use web_time::Duration;
 
 use super::*;

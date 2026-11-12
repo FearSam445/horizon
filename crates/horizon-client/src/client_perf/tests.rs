@@ -228,7 +228,7 @@ fn health_samples_carry_the_process_gauges_and_this_seconds_counts() {
             break s;
         }
         assert!(Instant::now() < deadline, "no sample carried an rss_mb");
-        std::thread::sleep(web_time::Duration::from_millis(50));
+        horizon_thread::sleep(web_time::Duration::from_millis(50));
     };
     assert_eq!((sample.players, sample.chunks, sample.entities), (3, 40, 7));
 }
@@ -276,7 +276,7 @@ fn a_trace_of_two_seconds_writes_a_timeline_capture_at_its_file() {
     let started = begin(&mut perf, 0.0, &reports, &options);
     assert_eq!(started, file);
     let render = || {
-        std::thread::Builder::new()
+        horizon_thread::Builder::new()
             .name("render".into())
             .spawn(|| crate::spans::time("draw", || crate::spans::time("terrain", || ())))
             .unwrap()
@@ -598,7 +598,7 @@ fn status_grows_with_the_capture() {
     let waited = Instant::now();
     while perf.status(6.5).unwrap().bytes == 0 {
         assert!(waited.elapsed().as_secs() < 5, "the writer wrote nothing");
-        std::thread::sleep(web_time::Duration::from_millis(10));
+        horizon_thread::sleep(web_time::Duration::from_millis(10));
     }
     perf.stop(7.0, R::Normal);
     perf.take_saved(true).pop().unwrap().unwrap();
@@ -907,7 +907,7 @@ mod sampled {
             )
             .unwrap();
         let join = client.join().unwrap();
-        let server = std::thread::spawn(move || {
+        let server = horizon_thread::spawn(move || {
             let mut perf = ServerPerf::with_role(Role::INTEGRATED, 0.0, 250.0);
             let options = CaptureOptions {
                 samples: true,

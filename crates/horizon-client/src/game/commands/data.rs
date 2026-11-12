@@ -2362,7 +2362,7 @@ mod bell_command_identity_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h174-{:?}", std::thread::current().id())),
+                .join(format!("h174-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -2490,7 +2490,7 @@ mod falling_live_adoption_tests {
         options.resources = root.clone();
         options.game_dir = Some(
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
-                .join(format!("h098-{:?}", std::thread::current().id())),
+                .join(format!("h098-{:?}", horizon_thread::current().id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
