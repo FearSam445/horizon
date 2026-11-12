@@ -117,7 +117,7 @@ fn run(
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = crate::args().collect();
-    let input = std::fs::read_to_string(&args[1])?;
+    let input = horizon_fs::read_to_string(&args[1])?;
     let mut lines = input.lines();
     let data: Json = serde_json::from_str(lines.next().ok_or("no data")?)?;
     let mut maps = HashMap::new();
@@ -136,6 +136,6 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     for line in lines {
         run(&maps, &timelines, &serde_json::from_str(line)?, &mut output)?;
     }
-    std::fs::write(&args[2], output)?;
+    horizon_fs::write(&args[2], output)?;
     Ok(())
 }

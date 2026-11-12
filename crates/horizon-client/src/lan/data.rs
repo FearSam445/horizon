@@ -3,6 +3,8 @@
 //! pack) and the tags of every registry, loaded from the prepared resources
 //! (`data/minecraft/...`) and the registries report.
 use crate::chunk::LevelShapes;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::{
     entity_data,
     packets::configuration::{RegistryData, RegistryEntry, RegistryTags, TagEntry, UpdateTags},
@@ -439,7 +441,7 @@ impl SyncData {
         Self::merge_pack_tags(&mut tags, &root, overlay, &builtin, &dynamic);
         Self::merge_damage_tags(&mut tags, resources, overlay, &builtin, &dynamic)?;
         drop(tags_step);
-        let content_identity = if resources.join(crate::content_identity::MARKER).exists()
+        let content_identity = if resources.join(crate::content_identity::MARKER).fs_exists()
             || horizon_protocol::item::custom::entries().next().is_some()
         {
             Some(
@@ -794,7 +796,7 @@ impl SyncData {
         keys.sort();
         for key in keys {
             let dir = tag_root.join(key.trim_start_matches("minecraft:"));
-            if !dir.is_dir() {
+            if !dir.fs_is_dir() {
                 continue;
             }
             let mut files = BTreeMap::new();
@@ -1055,15 +1057,15 @@ mod tests {
     /// for keeps what `load_tags` read.
     #[test]
     fn world_packs_tags_reach_every_synchronized_registry() {
-        let root = std::env::temp_dir().join(format!("horizon-pack-tags-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-pack-tags-{}", std::process::id()));
         let block_tags = root.join("tags/block");
-        std::fs::create_dir_all(block_tags.join("mineable")).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(block_tags.join("mineable")).unwrap();
+        horizon_fs::write(
             block_tags.join("climbable.json"),
             r#"{"values":["minecraft:ladder"]}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             block_tags.join("mineable/pickaxe.json"),
             r#"{"values":["minecraft:stone"]}"#,
         )
@@ -1108,7 +1110,7 @@ mod tests {
         ];
         let overlay = horizon_world::loot::PackOverlay { files: &files };
         SyncData::merge_pack_tags(&mut tags, &root, &overlay, &builtin, &dynamic);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let sent = |registry: &str, tag: &str| -> Vec<i32> {
             tags.registries
                 .iter()

@@ -1,6 +1,7 @@
 //! Feature world transport retaining ordered mutations and partial failures.
 use crate::support::common::tag;
 use horizon_core::random::{LegacyRandom, RandomSource, WorldgenRandom, XoroshiroRandom};
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     heightmap::HeightmapType,
@@ -19,7 +20,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     io::{self, Write},
     path::Path,
 };

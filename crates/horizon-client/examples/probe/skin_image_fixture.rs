@@ -2,8 +2,8 @@
 //! decodes each base64 PNG and runs `horizon_client::skins::process_legacy_skin`,
 //! writing the RGBA result in base64, or "refused".
 #![forbid(unsafe_code)]
+use horizon_fs as fs;
 use std::{
-    fs,
     io::{BufWriter, Write},
     path::PathBuf,
 };

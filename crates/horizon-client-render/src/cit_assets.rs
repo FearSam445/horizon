@@ -6,9 +6,11 @@
 //! `models/`) keeps its vanilla id, so it is not packed twice.
 
 use horizon_assets::model::{CuboidModel, TextureSlot};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_optifine::cit::{Kind, Rule};
 use std::collections::{BTreeMap, BTreeSet};
-use std::fs;
 use std::path::Path;
 
 /// The namespace of CIT files outside `textures/` and `models/`.
@@ -282,7 +284,8 @@ mod tests {
 
     #[test]
     fn rule_models_load_with_their_relative_textures_and_parents() {
-        let root = std::env::temp_dir().join(format!("horizon-cit-models-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-cit-models-{}", std::process::id()));
         let cit = root.join("assets/minecraft/optifine/cit");
         fs::create_dir_all(cit.join("swords")).unwrap();
         let write = |rel: &str, text: &str| fs::write(cit.join(rel), text).unwrap();
@@ -297,7 +300,7 @@ mod tests {
         let props =
             horizon_optifine::Properties::parse_equals_first("items=stick\nmodel=./swords/flame");
         let rule = Rule::parse("assets/minecraft/optifine/cit/a.properties", &props, |p| {
-            root.join(p).is_file()
+            root.join(p).fs_is_file()
         })
         .unwrap();
         let models = load_models(&root, &[rule]);

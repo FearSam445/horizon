@@ -10,6 +10,8 @@
 //! and totals are capped, vanilla ids cannot be redefined, and no two mods
 //! share a namespace ([`clash`]).
 use crate::manifest::{Capability, MANIFEST, Manifest};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde::Deserialize;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -607,16 +609,16 @@ pub struct Content {
 /// Reads a mod's content files ([`Content::reader`]).
 pub enum FileReader<'a> {
     Dir(&'a Path),
-    Zip(Box<zip::ZipArchive<std::fs::File>>),
+    Zip(Box<zip::ZipArchive<horizon_fs::File>>),
 }
 impl FileReader<'_> {
     /// One content file's bytes.
     pub fn read(&mut self, name: &str) -> Result<Vec<u8>, String> {
         check_path(name)?;
         let reader: Box<dyn Read + '_> = match self {
-            Self::Dir(root) => {
-                Box::new(std::fs::File::open(root.join(name)).map_err(|e| format!("{name}: {e}"))?)
-            }
+            Self::Dir(root) => Box::new(
+                horizon_fs::File::open(root.join(name)).map_err(|e| format!("{name}: {e}"))?,
+            ),
             Self::Zip(zip) => Box::new(zip.by_name(name).map_err(|e| format!("{name}: {e}"))?),
         };
         let mut out = Vec::new();
@@ -637,7 +639,7 @@ impl FileReader<'_> {
             return Ok(None);
         };
         let path = root.join(name);
-        let len = std::fs::metadata(&path)
+        let len = horizon_fs::metadata(&path)
             .map_err(|e| format!("{name}: {e}"))?
             .len();
         if len > MAX_FILE {
@@ -671,7 +673,7 @@ impl Content {
         manifest: &Manifest,
         declared: &[String],
     ) -> Result<Content, String> {
-        let (source, sized) = if path.is_dir() {
+        let (source, sized) = if path.fs_is_dir() {
             let mut out = Vec::new();
             for top in ["assets", "data"] {
                 walk(path, &path.join(top), &mut out)?;
@@ -1439,23 +1441,23 @@ fn reader_of(source: &Source) -> Result<FileReader<'_>, String> {
     })
 }
 
-fn open_zip(path: &Path) -> Result<zip::ZipArchive<std::fs::File>, String> {
-    let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
+fn open_zip(path: &Path) -> Result<zip::ZipArchive<horizon_fs::File>, String> {
+    let file = horizon_fs::File::open(path).map_err(|e| e.to_string())?;
     zip::ZipArchive::new(file).map_err(|e| e.to_string())
 }
 
 /// Files under `dir`, relative to `root` with `/` separators. Symbolic links
 /// are not followed: a mod folder holds its own files.
 fn walk(root: &Path, dir: &Path, out: &mut Vec<(String, u64)>) -> Result<(), String> {
-    let Ok(read) = std::fs::read_dir(dir) else {
+    let Ok(read) = horizon_fs::read_dir(dir) else {
         return Ok(());
     };
     for entry in read.flatten() {
         let path = entry.path();
-        let meta = std::fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
-        if meta.is_dir() {
+        let meta = horizon_fs::symlink_metadata(&path).map_err(|e| e.to_string())?;
+        if meta.fs_is_dir() {
             walk(root, &path, out)?;
-        } else if meta.is_file() {
+        } else if meta.fs_is_file() {
             let rel = path.strip_prefix(root).map_err(|e| e.to_string())?;
             let parts: Option<Vec<&str>> = rel.iter().map(|p| p.to_str()).collect();
             let name = parts.ok_or_else(|| format!("{} is not UTF-8", rel.display()))?;
@@ -1487,9 +1489,9 @@ capabilities = ["registries"]
 
     fn scratch(name: &str) -> PathBuf {
         let dir =
-            std::env::temp_dir().join(format!("horizon-content-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
+            horizon_fs::temp_dir().join(format!("horizon-content-{}-{name}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
+        horizon_fs::create_dir_all(&dir).unwrap();
         dir
     }
     #[test]
@@ -1545,10 +1547,10 @@ capabilities = ["registries"]
     fn hmod(name: &str, manifest: &str, files: &[(&str, &[u8])]) -> Result<Content, String> {
         let dir = scratch(name);
         let path = dir.join("m.hmod");
-        std::fs::write(&path, Package::write_files(manifest, None, files)?).unwrap();
+        horizon_fs::write(&path, Package::write_files(manifest, None, files)?).unwrap();
         let package = Package::read(&path);
         let content = package.and_then(|p| Content::read(&path, &p.manifest));
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
         content
     }
 
@@ -1799,14 +1801,14 @@ capabilities = ["registries"]
         let read = |declared: &[String]| {
             let dir = scratch("declared-remainder");
             let path = dir.join("m.hmod");
-            std::fs::write(
+            horizon_fs::write(
                 &path,
                 Package::write_files(MANIFEST_TEXT, None, files).unwrap(),
             )
             .unwrap();
             let package = Package::read(&path).unwrap();
             let content = Content::read_declaring(&path, &package.manifest, declared);
-            std::fs::remove_dir_all(&dir).unwrap();
+            horizon_fs::remove_dir_all(&dir).unwrap();
             content
         };
         assert!(read(&[]).is_err(), "a remainder nobody declares is refused");
@@ -2435,16 +2437,16 @@ capabilities = ["registries"]
     #[test]
     fn folder_mod_reads_the_same() {
         let dir = scratch("folder");
-        std::fs::write(dir.join(MANIFEST), MANIFEST_TEXT).unwrap();
+        horizon_fs::write(dir.join(MANIFEST), MANIFEST_TEXT).unwrap();
         let block = dir.join("data/ruby/horizon/block");
-        std::fs::create_dir_all(&block).unwrap();
-        std::fs::write(block.join("ruby_block.json"), BLOCK).unwrap();
+        horizon_fs::create_dir_all(&block).unwrap();
+        horizon_fs::write(block.join("ruby_block.json"), BLOCK).unwrap();
         let package = Package::read(&dir).unwrap();
         assert!(package.wasm.is_none());
         let content = Content::read(&dir, &package.manifest).unwrap();
         assert_eq!(content.files, ["data/ruby/horizon/block/ruby_block.json"]);
         assert_eq!(content.file(&content.files[0]).unwrap(), BLOCK);
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     /// A connecting block names a block tag and copies a `PipeBlock`.
@@ -2846,7 +2848,7 @@ capabilities = ["registries"]
         let dir = scratch("no-cap");
         let path = dir.join("m.hmod");
         let files: &[(&str, &[u8])] = &[("assets/ruby/lang/en_us.json", b"{}")];
-        std::fs::write(
+        horizon_fs::write(
             &path,
             Package::write_files(&code_only, Some(b"\0asm"), files).unwrap(),
         )
@@ -2854,7 +2856,7 @@ capabilities = ["registries"]
         let package = Package::read(&path).unwrap();
         let e = Content::read(&path, &package.manifest).err().unwrap();
         assert!(e.contains("not capability registries"), "{e}");
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

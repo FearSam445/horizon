@@ -2,6 +2,8 @@
 //! server threads and the play-state hub, feeds it the world's entities each
 //! tick and turns what the guests do into gameplay. A world that is not open
 //! costs one `Option` check per tick.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 mod event_timings;
 mod level_event_targets;
 mod mob_states;
@@ -1771,7 +1773,7 @@ impl Game<'_> {
         };
         let tree = self.advancement_tree();
         let path = super::stats::player_json(&self.world_root, "advancements", uuid);
-        let saved = std::fs::read_to_string(path)
+        let saved = horizon_fs::read_to_string(path)
             .ok()
             .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok());
         if let Some(g) = host.hub.guest_mut(conn)
@@ -4777,14 +4779,14 @@ mod owner_attachment_save_tests {
 
 #[cfg(test)]
 mod connected_statistics_save_tests {
-    use std::fs;
+    use horizon_fs as fs;
 
     fn connected_stats_save_control(stale: bool) {
         use super::super::{execution_role::ExecutionRole, stats};
         use std::sync::{Arc, Mutex};
         let mut game = super::super::native_machines::tests::server_game();
         game.options.execution_role = ExecutionRole::DedicatedServer;
-        let dir = std::env::current_dir().unwrap().join(if stale {
+        let dir = horizon_fs::current_dir().unwrap().join(if stale {
             "stats-stale"
         } else {
             "stats-missing"
@@ -4888,8 +4890,8 @@ mod connected_statistics_save_exclusion_tests {
     fn excluded_guest_records_are_not_invented_or_written() {
         let mut game = super::super::native_machines::tests::server_game();
         let _rx = super::world_spawn_sync_tests::host_for(&mut game);
-        game.world_root = std::env::current_dir().unwrap().join("stats-excluded");
-        std::fs::create_dir_all(&game.world_root).unwrap();
+        game.world_root = horizon_fs::current_dir().unwrap().join("stats-excluded");
+        horizon_fs::create_dir_all(&game.world_root).unwrap();
         let path = super::super::stats::player_json(&game.world_root, "stats", [0, 0, 0, 1]);
         let mut host = game.lan.take().unwrap();
         host.play
@@ -4974,7 +4976,7 @@ mod merchant_packet_tests {
         )
         .unwrap();
         game.world_root =
-            std::env::temp_dir().join(format!("horizon-merchant-packet-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-merchant-packet-{}", std::process::id()));
         game.build_registries();
         game.set_allow_commands(true);
 

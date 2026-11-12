@@ -1,8 +1,8 @@
 //! Unwinds a copied stack with the loaded objects' `.eh_frame` tables (framehop); runs on the draining thread only.
 
+use horizon_fs::File;
 use std::collections::HashSet;
 use std::ffi::{CStr, c_int, c_void};
-use std::fs::File;
 use std::ops::Range;
 use std::sync::Arc;
 

@@ -100,29 +100,30 @@ def add_dep(crate):
     open(path, "w").write(text)
 
 
-for crate in sys.argv[1:]:
-    changed = False
-    for root, _, files in os.walk(os.path.join(crate, "src")):
-        for f in files:
-            if not f.endswith(".rs"):
-                continue
-            p = os.path.join(root, f)
-            src = open(p).read()
-            new = fix(src)
-            if new != src:
-                open(p, "w").write(new)
-                changed = True
-    for extra in ("tests", "examples", "benches"):
-        d = os.path.join(crate, extra)
-        for root, _, files in os.walk(d) if os.path.isdir(d) else []:
+if __name__ == "__main__":
+    for crate in sys.argv[1:]:
+        changed = False
+        for root, _, files in os.walk(os.path.join(crate, "src")):
             for f in files:
-                if f.endswith(".rs"):
-                    p = os.path.join(root, f)
-                    src = open(p).read()
-                    new = fix(src)
-                    if new != src:
-                        open(p, "w").write(new)
-                        changed = True
-    if changed:
-        add_dep(crate)
-        print("moved", crate)
+                if not f.endswith(".rs"):
+                    continue
+                p = os.path.join(root, f)
+                src = open(p).read()
+                new = fix(src)
+                if new != src:
+                    open(p, "w").write(new)
+                    changed = True
+        for extra in ("tests", "examples", "benches"):
+            d = os.path.join(crate, extra)
+            for root, _, files in os.walk(d) if os.path.isdir(d) else []:
+                for f in files:
+                    if f.endswith(".rs"):
+                        p = os.path.join(root, f)
+                        src = open(p).read()
+                        new = fix(src)
+                        if new != src:
+                            open(p, "w").write(new)
+                            changed = True
+        if changed:
+            add_dep(crate)
+            print("moved", crate)

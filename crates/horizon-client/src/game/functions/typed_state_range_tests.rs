@@ -7,14 +7,14 @@ mod typed_state_range_read_tests {
         let mut game = crate::game::native_machines::tests::server_game();
         let source =
             std::path::PathBuf::from(std::env::var_os("HORIZON_TYPED_RANGE_PACK").unwrap());
-        game.world_root = std::env::current_dir().unwrap().join("typed-range-world");
+        game.world_root = horizon_fs::current_dir().unwrap().join("typed-range-world");
         let target = game.world_root.join("datapacks/typed_ranges");
         let preds = target.join("data/ranges/predicate");
-        std::fs::create_dir_all(&preds).unwrap();
-        std::fs::copy(source.join("pack.mcmeta"), target.join("pack.mcmeta")).unwrap();
-        for entry in std::fs::read_dir(source.join("data/ranges/predicate")).unwrap() {
+        horizon_fs::create_dir_all(&preds).unwrap();
+        horizon_fs::copy(source.join("pack.mcmeta"), target.join("pack.mcmeta")).unwrap();
+        for entry in horizon_fs::read_dir(source.join("data/ranges/predicate")).unwrap() {
             let path = entry.unwrap().path();
-            std::fs::copy(&path, preds.join(path.file_name().unwrap())).unwrap();
+            horizon_fs::copy(&path, preds.join(path.file_name().unwrap())).unwrap();
         }
         game.build_registries();
         game.set_allow_commands(true);
@@ -34,11 +34,11 @@ mod typed_state_range_read_tests {
                 .count(),
             13
         );
-        for entry in std::fs::read_dir(source.join("data/ranges/predicate")).unwrap() {
+        for entry in horizon_fs::read_dir(source.join("data/ranges/predicate")).unwrap() {
             let path = entry.unwrap().path();
             let id = format!("ranges:{}", path.file_stem().unwrap().to_str().unwrap());
             let expected: serde_json::Value =
-                serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+                serde_json::from_str(&horizon_fs::read_to_string(&path).unwrap()).unwrap();
             assert_eq!(game.fns.store.predicates.get(&id), Some(&expected), "{id}");
         }
         // The helper's empty resident column has not passed server loading.
@@ -153,16 +153,16 @@ mod typed_state_range_read_tests {
         let mut game = crate::game::native_machines::tests::server_game();
         let source =
             std::path::PathBuf::from(std::env::var_os("HORIZON_TYPED_RANGE_PACK").unwrap());
-        game.world_root = std::env::current_dir()
+        game.world_root = horizon_fs::current_dir()
             .unwrap()
             .join("typed-direction-world");
         let target = game.world_root.join("datapacks/typed_ranges");
         let preds = target.join("data/ranges/predicate");
-        std::fs::create_dir_all(&preds).unwrap();
-        std::fs::copy(source.join("pack.mcmeta"), target.join("pack.mcmeta")).unwrap();
-        for entry in std::fs::read_dir(source.join("data/ranges/predicate")).unwrap() {
+        horizon_fs::create_dir_all(&preds).unwrap();
+        horizon_fs::copy(source.join("pack.mcmeta"), target.join("pack.mcmeta")).unwrap();
+        for entry in horizon_fs::read_dir(source.join("data/ranges/predicate")).unwrap() {
             let path = entry.unwrap().path();
-            std::fs::copy(&path, preds.join(path.file_name().unwrap())).unwrap();
+            horizon_fs::copy(&path, preds.join(path.file_name().unwrap())).unwrap();
         }
         game.build_registries();
         game.set_allow_commands(true);
@@ -182,11 +182,11 @@ mod typed_state_range_read_tests {
                 .count(),
             13
         );
-        for entry in std::fs::read_dir(source.join("data/ranges/predicate")).unwrap() {
+        for entry in horizon_fs::read_dir(source.join("data/ranges/predicate")).unwrap() {
             let path = entry.unwrap().path();
             let id = format!("ranges:{}", path.file_stem().unwrap().to_str().unwrap());
             let expected: serde_json::Value =
-                serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+                serde_json::from_str(&horizon_fs::read_to_string(&path).unwrap()).unwrap();
             assert_eq!(game.fns.store.predicates.get(&id), Some(&expected), "{id}");
         }
         // The helper's empty resident column has not passed server loading.
@@ -233,7 +233,7 @@ mod typed_state_range_read_tests {
             ),
         ];
         for (name, prop, bounds) in &cases {
-            std::fs::write(preds.join(format!("{name}.json")), serde_json::json!({"type":"minecraft:location_check","predicate":{"block":{"state":{prop.to_string():bounds}}}}).to_string()).unwrap();
+            horizon_fs::write(preds.join(format!("{name}.json")), serde_json::json!({"type":"minecraft:location_check","predicate":{"block":{"state":{prop.to_string():bounds}}}}).to_string()).unwrap();
         }
         assert!(game.run_command("reload"));
         assert_eq!(

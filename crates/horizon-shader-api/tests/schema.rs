@@ -10,7 +10,7 @@ fn sample_dir() -> &'static Path {
 }
 
 fn sample_text() -> String {
-    std::fs::read_to_string(sample_dir().join(MANIFEST)).unwrap()
+    horizon_fs::read_to_string(sample_dir().join(MANIFEST)).unwrap()
 }
 
 fn refused(text: &str) -> String {
@@ -378,12 +378,12 @@ fn reads_the_sample_folder_and_its_package_alike() {
         folder.package().unwrap(),
         "packaging is reproducible"
     );
-    let dir = std::env::temp_dir().join(format!("horizon-shader-api-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = horizon_fs::temp_dir().join(format!("horizon-shader-api-{}", std::process::id()));
+    horizon_fs::create_dir_all(&dir).unwrap();
     let path = dir.join("sample_pack.hshader");
-    std::fs::write(&path, &bytes).unwrap();
+    horizon_fs::write(&path, &bytes).unwrap();
     let packaged = Pack::read(&path).unwrap();
-    std::fs::remove_dir_all(&dir).unwrap();
+    horizon_fs::remove_dir_all(&dir).unwrap();
     assert_eq!(packaged.files, folder.files);
     assert_eq!(packaged.manifest, folder.manifest);
 }
@@ -558,11 +558,11 @@ fn a_pack_texture_is_declared_for_every_stage_and_decoded() {
     let head = "schema = 1\nid = \"a\"\nname = \"A\"\nversion = \"1\"\napi = \"0.1\"\n\
                 [sky]\nfile = \"s.wgsl\"\n";
     let texture = "[[textures]]\nid = \"noise\"\nfile = \"noise.png\"\nwrap = \"clamp\"\n";
-    let dir = std::env::temp_dir().join(format!("horizon-pack-texture-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join(MANIFEST), format!("{head}{texture}")).unwrap();
-    std::fs::write(
+    let dir = horizon_fs::temp_dir().join(format!("horizon-pack-texture-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
+    horizon_fs::create_dir_all(&dir).unwrap();
+    horizon_fs::write(dir.join(MANIFEST), format!("{head}{texture}")).unwrap();
+    horizon_fs::write(
         dir.join("s.wgsl"),
         "fn sky(input: SkyInput) -> vec4<f32> {\n    \
          return textureSampleLevel(noise, noise_sampler, input.direction.xy, 0.0);\n}\n",
@@ -570,7 +570,7 @@ fn a_pack_texture_is_declared_for_every_stage_and_decoded() {
     .unwrap();
     // Named but missing, then present.
     assert!(Pack::read(&dir).unwrap_err().contains("noise.png"));
-    std::fs::write(dir.join("noise.png"), png_bytes()).unwrap();
+    horizon_fs::write(dir.join("noise.png"), png_bytes()).unwrap();
     let pack = Pack::read(&dir).unwrap();
     let t = &pack.manifest.textures[0];
     assert!(t.linear && !t.repeat);
@@ -579,10 +579,10 @@ fn a_pack_texture_is_declared_for_every_stage_and_decoded() {
     assert_eq!((image.width, image.height), (2, 1));
     assert_eq!(image.rgba, [255, 0, 0, 255, 0, 255, 0, 255]);
     // A file that is no PNG is the check's refusal, not a panic.
-    std::fs::write(dir.join("noise.png"), b"nope").unwrap();
+    horizon_fs::write(dir.join("noise.png"), b"nope").unwrap();
     let pack = Pack::read(&dir).unwrap();
     assert!(horizon_shader_api::check(&pack).is_err());
-    std::fs::remove_dir_all(&dir).unwrap();
+    horizon_fs::remove_dir_all(&dir).unwrap();
 
     let refused = |rest: &str, needle: &str| {
         let e = Manifest::parse(&format!("{head}{rest}"))

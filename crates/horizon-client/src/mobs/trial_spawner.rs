@@ -15,6 +15,8 @@ use super::{
 };
 pub use crate::chunk::block_entity::{ConfigSlot, TrialConfig, TrialSpawner};
 use horizon_core::{position::BlockPos, random::RandomSource};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::{Compound, JavaString, Tag};
 use std::{collections::HashMap, path::Path, sync::OnceLock};
 
@@ -174,16 +176,16 @@ static REGISTRY: OnceLock<HashMap<String, TrialConfig>> = OnceLock::new();
 pub fn load_registry(root: &Path) {
     REGISTRY.get_or_init(|| {
         let mut out = HashMap::new();
-        let Ok(namespaces) = std::fs::read_dir(root.join("data")) else {
+        let Ok(namespaces) = horizon_fs::read_dir(root.join("data")) else {
             return out;
         };
         for ns in namespaces.flatten() {
             let base = ns.path().join("trial_spawner");
             let mut stack = vec![base.clone()];
             while let Some(dir) = stack.pop() {
-                for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+                for entry in horizon_fs::read_dir(&dir).into_iter().flatten().flatten() {
                     let path = entry.path();
-                    if path.is_dir() {
+                    if path.fs_is_dir() {
                         stack.push(path);
                         continue;
                     }
@@ -195,7 +197,7 @@ pub fn load_registry(root: &Path) {
                     ) else {
                         continue;
                     };
-                    let config = std::fs::read(&path)
+                    let config = horizon_fs::read(&path)
                         .ok()
                         .and_then(|b| serde_json::from_slice(&b).ok())
                         .and_then(|v| TrialConfig::decode(&crate::scoreboard::json_to_tag(&v)));

@@ -1,4 +1,6 @@
-use std::fs;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::{Path, PathBuf};
 
 use horizon_perf_format::files::{self, KEEP_FILES};
@@ -9,7 +11,7 @@ struct Scratch(PathBuf);
 
 impl Scratch {
     fn new(tag: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("hzperf-files-{tag}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("hzperf-files-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         Self(dir)
@@ -75,11 +77,11 @@ fn retention_deletes_the_oldest_of_31_and_never_a_renamed_file() {
     let keep = dir.join(&names[30]);
     let deleted = files::retain(dir, &keep, KEEP_FILES, u64::MAX).unwrap();
     assert_eq!(deleted, vec![dir.join(&names[0])]);
-    assert!(!dir.join(&names[0]).exists());
+    assert!(!dir.join(&names[0]).fs_exists());
     for name in &names[1..] {
-        assert!(dir.join(name).exists(), "{name}");
+        assert!(dir.join(name).fs_exists(), "{name}");
     }
-    assert!(renamed.exists() && old_report.exists());
+    assert!(renamed.fs_exists() && old_report.fs_exists());
 }
 
 #[test]
@@ -91,14 +93,14 @@ fn retention_by_size_stops_once_under_the_limit_and_spares_the_new_file() {
     let c = touch(dir, "profile-20251107-120000Z.hzperf", 400);
     let deleted = files::retain(dir, &c, 30, 1000).unwrap();
     assert_eq!(deleted, vec![a.clone()]);
-    assert!(!a.exists() && b.exists() && c.exists());
+    assert!(!a.fs_exists() && b.fs_exists() && c.fs_exists());
     let deleted = files::retain(dir, &c, 30, 100).unwrap();
     assert_eq!(
         deleted,
         vec![b],
         "the file just written stays even when alone it is over"
     );
-    assert!(c.exists());
+    assert!(c.fs_exists());
 }
 
 #[test]

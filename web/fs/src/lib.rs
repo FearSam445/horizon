@@ -159,3 +159,39 @@ impl MetaExt for DirEntry {
         self.metadata()
     }
 }
+
+/// `std::env::temp_dir()`: `/tmp` in the browser build, where std's panics.
+pub fn temp_dir() -> PathBuf {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let dir = PathBuf::from("/tmp");
+        let _ = create_dir_all(&dir);
+        dir
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    std::env::temp_dir()
+}
+
+/// `std::env::current_dir()`: `/` in the browser build.
+pub fn current_dir() -> io::Result<PathBuf> {
+    #[cfg(target_arch = "wasm32")]
+    return Ok(PathBuf::from("/"));
+    #[cfg(not(target_arch = "wasm32"))]
+    std::env::current_dir()
+}
+
+/// `std::env::set_current_dir()`: the browser build has only `/`.
+pub fn set_current_dir(path: impl AsRef<Path>) -> io::Result<()> {
+    #[cfg(target_arch = "wasm32")]
+    return metadata(path).map(|_| ());
+    #[cfg(not(target_arch = "wasm32"))]
+    std::env::set_current_dir(path)
+}
+
+/// `std::env::current_exe()`: `/horizon` in the browser build.
+pub fn current_exe() -> io::Result<PathBuf> {
+    #[cfg(target_arch = "wasm32")]
+    return Ok(PathBuf::from("/horizon"));
+    #[cfg(not(target_arch = "wasm32"))]
+    std::env::current_exe()
+}

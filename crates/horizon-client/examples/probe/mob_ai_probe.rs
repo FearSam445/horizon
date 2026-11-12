@@ -27,12 +27,12 @@ use horizon_core::{
     geometry::{Aabb, Vec3},
     random::{LegacyRandom, RandomSource},
 };
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
 use horizon_world::{chunk::BlockState, registry::BlockRegistry, registry::BlockStateId};
 use std::{
     collections::{BTreeMap, HashMap},
     fmt::Write as _,
-    fs,
     path::Path,
     sync::Arc,
 };

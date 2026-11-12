@@ -3,6 +3,8 @@
 //! - `new <dir> [--template post|sky|material] [--name "Name"]`: a pack from a template.
 //! - `check <pack>... [--json]`: the check the game, the launcher and the registry run.
 //! - `pack <dir> [--out <file.hshader>]`: check, then write the reproducible `.hshader`.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_shader_api::{EXTENSION, MANIFEST, Pack, Problem, check, package::sha256_hex};
 use serde::Serialize;
 use std::{path::Path, process::ExitCode};
@@ -88,7 +90,7 @@ fn new(args: &[String]) -> Result<(), String> {
         .try_into()
         .map_err(|_| USAGE.to_string())?;
     let dir = Path::new(&dir);
-    if dir.exists() {
+    if dir.fs_exists() {
         return Err(format!("{} already exists", dir.display()));
     }
     let template = flag(args, "--template").unwrap_or("post");
@@ -110,13 +112,13 @@ fn new(args: &[String]) -> Result<(), String> {
         .collect();
     id.truncate(64);
     let name = flag(args, "--name").map_or_else(|| base.replace(['-', '_'], " "), str::to_owned);
-    std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    horizon_fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     for (file, text) in files {
         let text = text
             .replace("{{id}}", &id)
             .replace("{{name}}", &name.replace('"', "'"));
         let path = dir.join(file);
-        std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
+        horizon_fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
     }
     println!(
         "Made {} from the {template} template. Edit it, then: horizon-shader check {}",
@@ -184,10 +186,10 @@ fn check_one(path: &Path) -> CheckJson {
     out.id = Some(pack.manifest.id.clone());
     out.version = Some(pack.manifest.version.clone());
     out.api = Some(pack.manifest.api.to_string());
-    out.sha256 = if path.is_dir() {
+    out.sha256 = if path.fs_is_dir() {
         pack.sha256().ok()
     } else {
-        std::fs::read(path).ok().map(|b| sha256_hex(&b))
+        horizon_fs::read(path).ok().map(|b| sha256_hex(&b))
     };
     match check(&pack) {
         Ok(report) => {
@@ -280,9 +282,9 @@ fn pack(args: &[String]) -> Result<(), String> {
         .try_into()
         .map_err(|_| USAGE.to_string())?;
     let dir = Path::new(&dir)
-        .canonicalize()
+        .fs_canonicalize()
         .map_err(|e| format!("{dir}: {e}"))?;
-    if !dir.is_dir() {
+    if !dir.fs_is_dir() {
         return Err(format!("{} is not a pack folder", dir.display()));
     }
     let dir = dir.as_path();
@@ -301,7 +303,7 @@ fn pack(args: &[String]) -> Result<(), String> {
         },
         Into::into,
     );
-    std::fs::write(&out, &bytes).map_err(|e| format!("{}: {e}", out.display()))?;
+    horizon_fs::write(&out, &bytes).map_err(|e| format!("{}: {e}", out.display()))?;
     println!("Wrote {} (sha256 {})", out.display(), sha256_hex(&bytes));
     Ok(())
 }

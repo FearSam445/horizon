@@ -60,7 +60,7 @@ fn kind() -> Arc<MobType> {
 
 pub fn main() -> Result<()> {
     let args: Vec<String> = crate::args().collect();
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[1])?);
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[1])?);
     for initial in [0, 7, 14, 15] {
         for hand in ["MAIN_HAND", "OFF_HAND"] {
             for item in [

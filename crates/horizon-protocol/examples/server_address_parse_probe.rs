@@ -1,6 +1,7 @@
 //! Host/port parser corpus, without DNS or a connection.
+use horizon_fs::File;
 use horizon_protocol::servers::parse_address;
-use std::{error::Error, fs::File};
+use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = std::env::args().collect();

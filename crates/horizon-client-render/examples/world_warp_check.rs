@@ -64,7 +64,9 @@ const SHIFT: &str = "fn world_warp(pos: vec3<f32>, section: vec3<f32>) -> Warped
 ";
 
 fn read(path: &Path) -> Vec<[u8; 4]> {
-    let decoder = png::Decoder::new(std::io::BufReader::new(std::fs::File::open(path).unwrap()));
+    let decoder = png::Decoder::new(std::io::BufReader::new(
+        horizon_fs::File::open(path).unwrap(),
+    ));
     let mut reader = decoder.read_info().unwrap();
     let mut bytes = vec![0; reader.output_buffer_size().unwrap()];
     let info = reader.next_frame(&mut bytes).unwrap();
@@ -104,7 +106,7 @@ fn wall() -> SectionMesh {
 fn fixture(window: Arc<Window>) -> Result<(), Box<dyn std::error::Error>> {
     let out = std::env::args().nth(1).ok_or("output directory required")?;
     let out = Path::new(&out);
-    std::fs::create_dir_all(out)?;
+    horizon_fs::create_dir_all(out)?;
     native_render::install(Box::new([&Mod])).map_err(|_| "mod already installed")?;
     let white = [255; 16 * 16 * 4];
     let zero = [0; 4];
@@ -232,7 +234,7 @@ fn fixture(window: Arc<Window>) -> Result<(), Box<dyn std::error::Error>> {
 
     let back = shot("after", None);
     assert!(back == plain, "with the warp gone the frame is as before");
-    std::fs::write(
+    horizon_fs::write(
         out.join("result.json"),
         serde_json::to_vec_pretty(&serde_json::json!({
             "wall_pixels": wall_px, "entity_pixels": entity_px, "lifted_red_pixels": red,
@@ -362,7 +364,7 @@ fn bench(renderer: &mut Renderer, out: &Path) -> Result<(), Box<dyn std::error::
             .find(|(name, _)| name == "Graphics Adapter").map(|(_, detail)| detail),
     });
     println!("{result}");
-    std::fs::write(out.join("bench.json"), serde_json::to_vec_pretty(&result)?)?;
+    horizon_fs::write(out.join("bench.json"), serde_json::to_vec_pretty(&result)?)?;
     Ok(())
 }
 

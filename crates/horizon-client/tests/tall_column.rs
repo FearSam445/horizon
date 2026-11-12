@@ -1,6 +1,8 @@
 //! A level taller than vanilla's (To The Max's Overworld: -64..2032, 131
 //! sections) streams, lights and meshes to its top, and edits near the top
 //! relight and remesh it.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 extern crate horizon_client_lib as horizon_client;
 use horizon_client::{
     assets::Assets,
@@ -23,7 +25,7 @@ fn resources() -> Option<std::path::PathBuf> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    root.join("items.json").exists().then_some(root)
+    root.join("items.json").fs_exists().then_some(root)
 }
 
 /// Saved columns without their light: a stone spire to y 1799 in the middle

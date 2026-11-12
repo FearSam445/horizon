@@ -7,6 +7,8 @@
 //! Only what explains performance: no serial number, host name, user name or path is read. The
 //! slower probes (a command to run) are read once per process. [`scrub`] reads the user name only
 //! to take it out of text that leaves the machine (a telemetry item, a bug report's bundle).
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::Path;
 use std::sync::OnceLock;
 
@@ -208,7 +210,7 @@ fn arm_core_name(implementer: u32, part: u32) -> String {
 }
 
 fn read(path: &str) -> Option<String> {
-    std::fs::read_to_string(path).ok()
+    horizon_fs::read_to_string(path).ok()
 }
 
 /// The value after `key` in a `key: value` or `key=value` listing.
@@ -418,7 +420,7 @@ pub fn storage(path: &Path) -> Option<&'static str> {
         let source = mount_source(&read("/proc/self/mountinfo")?, path)?;
         let name = source.strip_prefix("/dev/")?;
         // /dev/mapper/x and /dev/dm-0 (LUKS, LVM) sit on the disks in their slaves/.
-        let name = std::fs::canonicalize(format!("/dev/{name}"))
+        let name = horizon_fs::canonicalize(format!("/dev/{name}"))
             .ok()
             .and_then(|p| p.file_name().map(|n| n.to_string_lossy().into_owned()))
             .unwrap_or_else(|| name.to_owned());
@@ -454,7 +456,7 @@ pub fn storage(path: &Path) -> Option<&'static str> {
 
 /// The device mounted at the longest mount point above `path`, from `/proc/self/mountinfo`.
 fn mount_source(mountinfo: &str, path: &Path) -> Option<String> {
-    let path = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_owned());
+    let path = horizon_fs::canonicalize(path).unwrap_or_else(|_| path.to_owned());
     mountinfo
         .lines()
         .filter_map(|line| {
@@ -475,14 +477,14 @@ fn linux_disk_kind(name: &str, depth: u8) -> Option<&'static str> {
     }
     let class = Path::new("/sys/class/block").join(name);
     // A mapper device: the first disk under it.
-    if let Ok(slaves) = std::fs::read_dir(class.join("slaves"))
+    if let Ok(slaves) = horizon_fs::read_dir(class.join("slaves"))
         && let Some(slave) = slaves.flatten().next()
     {
         return linux_disk_kind(&slave.file_name().to_string_lossy(), depth + 1);
     }
     // A partition: its disk is the parent directory.
-    let device = std::fs::canonicalize(&class).ok()?;
-    let disk = if device.join("partition").exists() {
+    let device = horizon_fs::canonicalize(&class).ok()?;
+    let disk = if device.join("partition").fs_exists() {
         device.parent()?.to_owned()
     } else {
         device
@@ -491,7 +493,7 @@ fn linux_disk_kind(name: &str, depth: u8) -> Option<&'static str> {
     if disk_name.starts_with("nvme") {
         return Some("nvme");
     }
-    match std::fs::read_to_string(disk.join("queue/rotational"))
+    match horizon_fs::read_to_string(disk.join("queue/rotational"))
         .ok()?
         .trim()
     {
@@ -548,9 +550,12 @@ pub fn power() -> Option<&'static str> {
         });
     }
     let mut on_battery = None;
-    for entry in std::fs::read_dir("/sys/class/power_supply").ok()?.flatten() {
+    for entry in horizon_fs::read_dir("/sys/class/power_supply")
+        .ok()?
+        .flatten()
+    {
         let read =
-            |name: &str| std::fs::read_to_string(entry.path().join(name)).unwrap_or_default();
+            |name: &str| horizon_fs::read_to_string(entry.path().join(name)).unwrap_or_default();
         match read("type").trim() {
             "Mains" if read("online").trim() == "1" => return Some("ac"),
             "Battery" => on_battery = Some("battery"),
@@ -572,11 +577,12 @@ fn form() -> Option<&'static str> {
                 _ => {}
             }
         }
-        let battery = std::fs::read_dir("/sys/class/power_supply")
+        let battery = horizon_fs::read_dir("/sys/class/power_supply")
             .ok()?
             .flatten()
             .any(|e| {
-                std::fs::read_to_string(e.path().join("type")).is_ok_and(|t| t.trim() == "Battery")
+                horizon_fs::read_to_string(e.path().join("type"))
+                    .is_ok_and(|t| t.trim() == "Battery")
             });
         Some(if battery { "laptop" } else { "desktop" })
     } else if cfg!(target_os = "macos") {
@@ -618,7 +624,7 @@ fn read_vram_mb(vendor: &str) -> Option<u32> {
             .max();
         }
         // amdgpu (and Intel's discrete xe/i915 cards) in sysfs.
-        std::fs::read_dir("/sys/class/drm")
+        horizon_fs::read_dir("/sys/class/drm")
             .ok()?
             .flatten()
             .filter_map(|e| {
@@ -756,7 +762,7 @@ pub fn load_average() -> Option<f64> {
             .parse()
             .ok()
     } else {
-        std::fs::read_to_string("/proc/loadavg")
+        horizon_fs::read_to_string("/proc/loadavg")
             .ok()?
             .split_whitespace()
             .next()?
@@ -773,7 +779,7 @@ pub fn rss_bytes(pid: u32) -> Option<u64> {
             .ok()
             .map(|kb| kb * 1024);
     }
-    let status = std::fs::read_to_string(format!("/proc/{pid}/status")).ok()?;
+    let status = horizon_fs::read_to_string(format!("/proc/{pid}/status")).ok()?;
     let line = status.lines().find(|l| l.starts_with("VmRSS:"))?;
     line.split_whitespace()
         .nth(1)?
@@ -797,7 +803,7 @@ pub fn cpu_seconds(pid: u32) -> Option<f64> {
         return Some(days * 86_400.0 + seconds);
     }
     // utime and stime, fields 14 and 15, in clock ticks (100 per second on Linux).
-    let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+    let stat = horizon_fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
     let fields: Vec<&str> = stat.rsplit_once(')')?.1.split_whitespace().collect();
     let ticks: f64 = fields.get(11)?.parse::<f64>().ok()? + fields.get(12)?.parse::<f64>().ok()?;
     Some(ticks / 100.0)
@@ -1065,7 +1071,7 @@ mod tests {
         assert!(machine.cores == 0 || machine.cores <= machine.threads);
         assert!(["", "ac", "battery"].contains(&machine.power));
         assert!(["", "laptop", "desktop"].contains(&machine.form));
-        let dir = std::env::temp_dir();
+        let dir = horizon_fs::temp_dir();
         assert!(["", "nvme", "ssd", "hdd"].contains(&Machine::detect_in(Some(&dir)).storage));
     }
 

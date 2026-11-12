@@ -5,6 +5,8 @@ use crate::{
     items::ItemStack,
     save::{Level, put, read_dat, uuid_from_tag, uuid_tag, write_dat},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::crypto::uuid_string;
 use horizon_world::{
     attachments::{ATTACHMENTS_KEY, attachment_compound},
@@ -19,7 +21,7 @@ use std::{
 /// as its constructor does with `mkdirs`.
 pub fn directory(world: &Path) -> PathBuf {
     let dir = directory_path(world);
-    if let Err(e) = std::fs::create_dir_all(&dir) {
+    if let Err(e) = horizon_fs::create_dir_all(&dir) {
         log::warn!("Horizon: {} is not created: {e}", dir.display());
     }
     dir
@@ -50,7 +52,7 @@ pub fn ints_uuid(ints: [i32; 4]) -> u128 {
 
 /// Whether a saved file exists for this player.
 pub fn exists(world: &Path, uuid: u128) -> bool {
-    path(world, uuid).is_file()
+    path(world, uuid).fs_is_file()
 }
 
 /// The key `ServerPlayer.addAdditionalSaveData` stores the `WardenSpawnTracker` under.
@@ -168,7 +170,7 @@ pub fn migrate_owner(world: &Path, level: &mut Level, old: u128, new: u128) -> b
     // times cannot be compared, the file level.dat names (the old one) wins.
     let prefer_new = match (&old_data, &new_data) {
         (Some(_), Some(_)) => {
-            let modified = |path: &Path| std::fs::metadata(path).and_then(|m| m.modified()).ok();
+            let modified = |path: &Path| horizon_fs::metadata(path).and_then(|m| m.modified()).ok();
             matches!(
                 (modified(&old_file), modified(&new_file)),
                 (Some(old), Some(new)) if new > old
@@ -202,8 +204,8 @@ pub fn migrate_owner(world: &Path, level: &mut Level, old: u128, new: u128) -> b
         // The same data is under the account's name now. The offline files are kept
         // beside it as `.dat_offline` / `.dat_old_offline` rather than deleted, so a
         // migration that went wrong never costs the player their inventory.
-        let _ = std::fs::rename(&old_file, old_file.with_extension("dat_offline"));
-        let _ = std::fs::rename(&old_old, old_file.with_extension("dat_old_offline"));
+        let _ = horizon_fs::rename(&old_file, old_file.with_extension("dat_offline"));
+        let _ = horizon_fs::rename(&old_old, old_file.with_extension("dat_old_offline"));
     }
     level.player_uuid = Some(new_ints);
     // `saveDataTag`: `singleplayer_uuid` is the profile the world's player file is named
@@ -742,8 +744,9 @@ mod tests {
     }
 
     fn world(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("horizon-owner-{name}-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-owner-{name}-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         dir
     }
 
@@ -782,14 +785,14 @@ mod tests {
         drop(saves);
         assert!(load(&mut loaded, &dir));
         assert_eq!(first_item(&loaded), Some(("minecraft:iron_ingot", 11)));
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn autosave_failures_recover_and_drop_drains_writes() {
         let dir = world("async-error");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("players"), b"not a directory").unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(dir.join("players"), b"not a directory").unwrap();
         let mut saves = Autosaves::default();
         saves.enqueue(&holding(1, "minecraft:diamond", 5), &dir);
         assert!(saves.completed(true).is_empty());
@@ -797,7 +800,7 @@ mod tests {
         assert!(saves.completed(false).is_empty());
         assert!(saves.writes_finished().unwrap());
         drop(saves);
-        std::fs::remove_file(dir.join("players")).unwrap();
+        horizon_fs::remove_file(dir.join("players")).unwrap();
         let mut saves = Autosaves::default();
         saves.enqueue(&holding(1, "minecraft:diamond", 5), &dir);
         for uuid in 2..=150 {
@@ -814,7 +817,7 @@ mod tests {
         loaded.uuid = 1;
         assert!(load(&mut loaded, &dir));
         assert_eq!(first_item(&loaded), Some(("minecraft:diamond", 5)));
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
@@ -822,8 +825,8 @@ mod tests {
         let bad = world("mixed-bad");
         let good = world("mixed-good");
         let reference = world("mixed-reference");
-        std::fs::create_dir_all(&bad).unwrap();
-        std::fs::write(bad.join("players"), b"not a directory").unwrap();
+        horizon_fs::create_dir_all(&bad).unwrap();
+        horizon_fs::write(bad.join("players"), b"not a directory").unwrap();
         let mut saves = Autosaves::default();
         let g = holding(2, "minecraft:emerald", 9);
         saves.enqueue(&holding(1, "minecraft:diamond", 5), &bad);
@@ -838,12 +841,12 @@ mod tests {
             read_dat(&path(&good, 2)).unwrap(),
             read_dat(&path(&reference, 2)).unwrap()
         );
-        std::fs::remove_file(bad.join("players")).unwrap();
+        horizon_fs::remove_file(bad.join("players")).unwrap();
         saves.enqueue(&g, &bad);
         assert_eq!(saves.completed(true).len(), 1);
         assert!(saves.writes_finished().unwrap());
         for dir in [bad, good, reference] {
-            std::fs::remove_dir_all(dir).unwrap();
+            horizon_fs::remove_dir_all(dir).unwrap();
         }
     }
 
@@ -868,7 +871,7 @@ mod tests {
         assert!(saves.writer.is_some());
         assert_eq!(saves.completed(true).len(), 1);
         assert!(saves.writes_finished().unwrap());
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 
     fn first_item(g: &Guest) -> Option<(&str, u32)> {
@@ -896,7 +899,7 @@ mod tests {
         g.uuid = owner;
         assert!(load_owner(&mut g, &dir, Some(&saved)));
         assert_eq!(first_item(&g), Some(("minecraft:gold_ingot", 7)));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -911,7 +914,7 @@ mod tests {
         g.uuid = owner;
         assert!(load_owner(&mut g, &dir, Some(&saved)));
         assert_eq!(first_item(&g), Some(("minecraft:diamond", 5)));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -940,7 +943,7 @@ mod tests {
         assert!(load(&mut loaded, &dir));
         loaded.attachments = loaded.attachments.copy_on_death().unwrap();
         assert_eq!(loaded.attachments.get(&keep), Ok(31));
-        let _ = std::fs::remove_dir_all(dir);
+        let _ = horizon_fs::remove_dir_all(dir);
     }
 
     #[test]
@@ -958,8 +961,8 @@ mod tests {
         }
         let named = path(&dir, ints_uuid(level.player_uuid.unwrap()));
         for file in [&named, &path(&dir, owner)] {
-            std::fs::remove_file(file).unwrap();
-            assert!(file.with_extension("dat_old").is_file());
+            horizon_fs::remove_file(file).unwrap();
+            assert!(file.with_extension("dat_old").fs_is_file());
         }
         let saved = Level::read(&dir).unwrap();
         assert!(saved.singleplayer_file, "the named file's .dat_old counts");
@@ -971,7 +974,7 @@ mod tests {
         g.uuid = owner;
         assert!(load(&mut g, &dir), "a guest's own file falls back too");
         assert_eq!(first_item(&g), Some(("minecraft:diamond", 5)));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -995,7 +998,7 @@ mod tests {
         g.uuid = owner;
         assert!(load(&mut g, &dir));
         assert_eq!(first_item(&g), Some(("minecraft:gold_ingot", 7)));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -1021,9 +1024,9 @@ mod tests {
             Some(uuid_ints(new)),
             "the file is named after its UUID"
         );
-        assert!(!path(&dir, old).exists(), "the offline file is gone");
+        assert!(!path(&dir, old).fs_exists(), "the offline file is gone");
         assert!(
-            path(&dir, old).with_extension("dat_offline").exists(),
+            path(&dir, old).with_extension("dat_offline").fs_exists(),
             "the offline file is kept as a backup"
         );
         let named = read_dat(&dir.join("level.dat")).unwrap();
@@ -1038,7 +1041,7 @@ mod tests {
         g.uuid = new;
         assert!(load_owner(&mut g, &dir, Some(&saved)));
         assert_eq!(first_item(&g), Some(("minecraft:diamond", 5)));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -1061,12 +1064,12 @@ mod tests {
         assert!(migrate_owner(&dir, &mut read, old, new));
         let moved = read_dat(&path(&dir, new)).unwrap();
         assert_eq!(uuid_from_tag(moved.get("UUID")), Some(uuid_ints(new)));
-        assert!(!path(&dir, old).exists());
+        assert!(!path(&dir, old).fs_exists());
         let mut g = guest();
         g.uuid = new;
         assert!(load_owner(&mut g, &dir, Some(&read)));
         assert_eq!(first_item(&g), Some(("minecraft:emerald", 9)));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -1093,10 +1096,10 @@ mod tests {
         let mut read = Level::read(&dir).unwrap();
         assert_eq!(read.player_uuid, None);
         assert!(migrate_owner(&dir, &mut read, old, new));
-        assert!(path(&dir, new).is_file());
-        assert!(!path(&dir, old).exists());
+        assert!(path(&dir, new).fs_is_file());
+        assert!(!path(&dir, old).fs_exists());
         assert_eq!(read.player_uuid, Some(uuid_ints(new)));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -1116,8 +1119,8 @@ mod tests {
         let mut read = Level::read(&dir).unwrap();
         assert!(!migrate_owner(&dir, &mut read, old, new));
         assert_eq!(read_dat(&dir.join("level.dat")).unwrap(), before);
-        assert!(!path(&dir, new).exists());
-        let _ = std::fs::remove_dir_all(&dir);
+        assert!(!path(&dir, new).fs_exists());
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -1333,7 +1336,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return None;
         }
         let assets = crate::assets::Assets::load(&root).ok()?;
@@ -1525,7 +1528,7 @@ mod tests {
         )]));
         apply(&mut other, &level);
         assert_eq!(other.flying_speed, 0.05);
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -1538,7 +1541,7 @@ mod tests {
         save(&holding(friend, "minecraft:netherite_ingot", 9), &dir);
         let mut level = Level::default();
         level.write(&dir).unwrap();
-        let _ = std::fs::remove_file(dir.join("level.dat_old"));
+        let _ = horizon_fs::remove_file(dir.join("level.dat_old"));
         let mut tag = read_dat(&dir.join("level.dat")).unwrap();
         if let Some(Tag::Compound(data)) = tag.get_mut("Data") {
             data.remove(&"singleplayer_uuid".into());
@@ -1551,11 +1554,11 @@ mod tests {
         assert!(!known, "the owner has not been here before");
         assert_eq!(first_item(&g), None, "no inventory of the friend's");
         // The owner's save names the owner, and leaves the friend's file alone.
-        let before = std::fs::read(path(&dir, friend)).unwrap();
+        let before = horizon_fs::read(path(&dir, friend)).unwrap();
         let mut level = read;
         save_owner(&g, &mut level, &dir);
         assert_eq!(level.player_uuid, Some(uuid_ints(owner)));
-        assert_eq!(std::fs::read(path(&dir, friend)).unwrap(), before);
+        assert_eq!(horizon_fs::read(path(&dir, friend)).unwrap(), before);
         assert!(exists(&dir, owner));
     }
 
@@ -1580,6 +1583,6 @@ mod tests {
         g.uuid = account;
         assert!(load_owner(&mut g, &dir, Some(&read)));
         assert_eq!(first_item(&g), Some(("minecraft:diamond", 5)));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }

@@ -1,7 +1,7 @@
+use horizon_fs as fs;
 use horizon_world::status_effect::{BlendState, Details, EffectInstance};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

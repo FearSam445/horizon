@@ -4,8 +4,11 @@ use crate::{
     loot::PackOverlay,
     worldgen::tags::{TagDefinitions, identifier},
 };
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde_json::Value;
-use std::{collections::BTreeMap, fs, io, path::Path};
+use std::{collections::BTreeMap, io, path::Path};
 
 /// The resource root's files of one damage registry kind, in every namespace.
 /// `json_folder` also reads prepared vanilla files from horizon-data.bin.
@@ -18,7 +21,7 @@ pub fn resource_files(root: &Path, kind: &str) -> io::Result<BTreeMap<String, Ve
     };
     for namespace in namespaces {
         let namespace = namespace?;
-        if !namespace.path().is_dir() {
+        if !namespace.path().fs_is_dir() {
             continue;
         }
         let ns = namespace.file_name().to_string_lossy().into_owned();
@@ -44,7 +47,7 @@ pub fn resource_tags<T: Clone + Ord>(
 ) -> io::Result<BTreeMap<String, Vec<T>>> {
     let mut files: BTreeMap<String, Vec<Vec<u8>>> = BTreeMap::new();
     let exported = root.join("damage-tags.json");
-    if exported.exists() {
+    if exported.fs_exists() {
         let value: Value = serde_json::from_slice(&fs::read(exported)?)?;
         for (id, json) in value
             .as_object()

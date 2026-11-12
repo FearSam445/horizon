@@ -1,8 +1,8 @@
 //! The packet identifier parity corpus, without a connection or game resources.
+use horizon_fs::File;
 use horizon_protocol::buf::{Codec, Ident, Reader};
 use std::{
     error::Error,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 

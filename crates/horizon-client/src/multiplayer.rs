@@ -6,6 +6,8 @@ use crate::hud::{HudAtlas, HudBatch, rgba};
 use crate::lan::discovery::Scanner;
 use crate::text::{DARK_GRAY, GRAY, Text, format_translation};
 use crate::title::confirm_top;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::servers::{self, ServerEntry};
 pub use page::Form;
 use std::{
@@ -2489,9 +2491,9 @@ mod tests {
 
     #[test]
     fn arrow_keys_select_servers_and_shift_moves_them() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-keys-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-keys-{}", std::process::id()));
         let saves = dir.join("saves");
-        std::fs::create_dir_all(&saves).unwrap();
+        horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
         let list: Vec<ServerEntry> = ["a", "b", "c"]
             .iter()
@@ -2533,14 +2535,14 @@ mod tests {
         screen.arrow(true, true, size, &saves);
         assert_eq!(state(&screen).1, Some(0));
         assert_eq!(state(&screen).0[0], "c");
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn enter_joins_the_selected_server() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-enter-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-enter-{}", std::process::id()));
         let saves = dir.join("saves");
-        std::fs::create_dir_all(&saves).unwrap();
+        horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
         let list = vec![
             ServerEntry::new("a", "127.0.0.1:2"),
@@ -2568,14 +2570,14 @@ mod tests {
             }
             _ => panic!("Enter did not join the second server"),
         }
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn a_server_dragged_by_its_row_moves_and_is_saved_on_release() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-drag-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-drag-{}", std::process::id()));
         let saves = dir.join("saves");
-        std::fs::create_dir_all(&saves).unwrap();
+        horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
         let list: Vec<ServerEntry> = ["a", "b", "c", "d"]
             .iter()
@@ -2628,18 +2630,18 @@ mod tests {
         screen.drag(row(0.0), size);
         assert_eq!(order(&screen).0, "bcda");
         // A press and release with no move saves nothing new.
-        std::fs::remove_file(&file).unwrap();
+        horizon_fs::remove_file(&file).unwrap();
         screen.click(None, x, row(1.0), size, &saves);
         screen.release(&saves);
-        assert!(!file.exists());
-        let _ = std::fs::remove_dir_all(&dir);
+        assert!(!file.fs_exists());
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn icon_arrows_join_and_move_servers() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-arrows-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-arrows-{}", std::process::id()));
         let saves = dir.join("saves");
-        std::fs::create_dir_all(&saves).unwrap();
+        horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
         let names = ["a", "b", "c"];
         let list: Vec<ServerEntry> = names
@@ -2691,14 +2693,14 @@ mod tests {
             }
             _ => panic!("the join arrow connects"),
         }
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn delete_asks_before_removing_the_server() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-delete-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-delete-{}", std::process::id()));
         let saves = dir.join("saves");
-        std::fs::create_dir_all(&saves).unwrap();
+        horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
         let list = vec![
             ServerEntry::new("Keep", "127.0.0.1:2"),
@@ -2757,14 +2759,14 @@ mod tests {
             matches!(&screen, Screen::List { selected: None, servers, .. } if servers.len() == 1)
         );
         assert_eq!(names(), ["Keep"]);
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn edit_cycles_and_saves_the_server_resource_pack_setting() {
-        let dir = std::env::temp_dir().join(format!("horizon-mp-packs-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-packs-{}", std::process::id()));
         let saves = dir.join("saves");
-        std::fs::create_dir_all(&saves).unwrap();
+        horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
         let mut entry = ServerEntry::new("Packs", "127.0.0.1:4");
         entry.accept_textures = Some(false);
@@ -2811,6 +2813,6 @@ mod tests {
         // A new server asks.
         screen.click(Some(42), 0.0, 0.0, size, &saves);
         assert_eq!(cycle(&screen).unwrap().3, "Server Resource Packs: Prompt");
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }

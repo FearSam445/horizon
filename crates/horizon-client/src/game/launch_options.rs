@@ -1,6 +1,8 @@
 //! The command line the game starts with (`Options`): what it asks for, read once at start,
 //! then the game folder and the account it names.
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 #[derive(Clone)]
 pub(super) struct Options {
@@ -88,7 +90,7 @@ impl Options {
     /// next to options.txt (created on first use).
     pub(super) fn player_name(&self) -> String {
         self.player_name.clone().unwrap_or_else(|| {
-            std::env::current_dir().map_or_else(
+            horizon_fs::current_dir().map_or_else(
                 |_| horizon_client::offline_name::generate(0),
                 |_| {
                     horizon_client::offline_name::load_or_create(
@@ -146,18 +148,18 @@ impl Options {
             // These too stay relative to where the game was started.
             o.resources = std::path::absolute(&o.resources)?;
             o.report = o.report.map(std::path::absolute).transpose()?;
-            std::fs::create_dir_all(&dir)
-                .and_then(|()| std::env::set_current_dir(&dir))
+            horizon_fs::create_dir_all(&dir)
+                .and_then(|()| horizon_fs::set_current_dir(&dir))
                 .map_err(|e| format!("game folder {}: {e}", dir.display()))?;
         }
         // Vanilla's quick play (Main, QuickPlay.joinSingleplayerWorld): only a
         // world that exists opens; else the title screen. --world also creates one.
         if let Some(world) = o.quick_play.take() {
-            if std::env::current_dir()?
+            if horizon_fs::current_dir()?
                 .join("saves")
                 .join(&world)
                 .join("level.dat")
-                .is_file()
+                .fs_is_file()
             {
                 o.world = Some(world);
             } else {
@@ -176,12 +178,12 @@ impl Options {
     /// The command line alone: no file is read and nothing changes. `None` for `--help` and
     /// `--launch-api`, which print and end the run.
     pub(super) fn parse(mut args: impl Iterator<Item = String>) -> Result<Option<Self>> {
-        let sibling = std::env::current_exe()?
+        let sibling = horizon_fs::current_exe()?
             .parent()
             .ok_or("missing executable directory")?
             .join("resources");
         let mut o = Self {
-            resources: if sibling.join("horizon-resources.json").exists() {
+            resources: if sibling.join("horizon-resources.json").fs_exists() {
                 sibling
             } else {
                 std::path::Path::new(".local/horizon-client").join(horizon_core::VANILLA_VERSION)

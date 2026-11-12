@@ -1,4 +1,5 @@
 use crate::support::common::f32_bits;
+use horizon_fs as fs;
 use horizon_world::damage_immunity::{DamageRule, ImmunityTag, ImmunityWorld};
 use horizon_world::living_hurt::{HurtState, HurtTag, HurtWorld};
 use horizon_world::{
@@ -24,7 +25,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::sync::Arc;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

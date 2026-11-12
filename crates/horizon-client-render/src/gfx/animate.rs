@@ -17,6 +17,8 @@
 use super::upload::Uploads;
 use crate::mipmap::Settings;
 use crate::sprites::{FrameBlend, SpriteAnimation};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use wgpu::util::DeviceExt;
 
 /// Bytes of `animate.wgsl`'s `Job`.
@@ -728,7 +730,7 @@ mod tests {
             .join(horizon_core::VANILLA_VERSION);
         if !root
             .join("assets/minecraft/textures/block/water_still.png")
-            .exists()
+            .fs_exists()
         {
             return;
         }
@@ -771,7 +773,7 @@ mod tests {
             .join(horizon_core::VANILLA_VERSION);
         if !root
             .join("assets/minecraft/textures/block/kelp.png")
-            .exists()
+            .fs_exists()
         {
             return;
         }

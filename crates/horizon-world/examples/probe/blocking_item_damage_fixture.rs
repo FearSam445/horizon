@@ -1,3 +1,4 @@
+use horizon_fs as fs;
 use horizon_world::item_durability::{self, DurabilityStack, DurabilityWorld};
 use horizon_world::{
     blocking_item_damage::{self, BlockingItemDamageWorld},
@@ -5,7 +6,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

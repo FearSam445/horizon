@@ -6,9 +6,11 @@ use super::profile_capture::{reports_dir, shown};
 use horizon_client::perf_net::{
     CHANNEL, Held, OPERATOR_LEVEL, Outgoing, Refusal, Reply, Request, Verdict, Wanted, judge,
 };
+use horizon_fs::File;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_perf_format::v1::{StopReason, Trigger};
 use horizon_protocol::packets::{configuration::CustomPayload, play};
-use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
@@ -189,7 +191,7 @@ impl Game<'_> {
                 } => {
                     log::info!("Horizon: {name}'s server profile saved to {path}");
                     let (bytes, sending) = match File::open(&file).and_then(|f| {
-                        let len = f.metadata()?.len();
+                        let len = f.fs_metadata()?.len();
                         Ok((f, len))
                     }) {
                         Ok((file, len)) => (

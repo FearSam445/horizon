@@ -10,6 +10,8 @@
 //! writes `{"transport":"tcp","port":N,"token":"..."}` to the path, readable
 //! only by its user; a client's first line must then be `auth TOKEN`.
 use crate::block_entity_render::StaticCacheFrameStats;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_threads::alloc_count::{Counts, ON};
 use std::{
     io::{self, BufRead, BufReader, Read, Write},
@@ -84,7 +86,7 @@ pub fn uses_tcp(path: &Path) -> bool {
 
 /// The TCP endpoint file: (port, token).
 fn read_endpoint(path: &Path) -> io::Result<(u16, String)> {
-    let text = std::fs::read_to_string(path)?;
+    let text = horizon_fs::read_to_string(path)?;
     let bad = || io::Error::new(io::ErrorKind::InvalidData, "not a control endpoint file");
     let v: serde_json::Value = serde_json::from_str(&text).map_err(|_| bad())?;
     let port = v["port"]
@@ -159,7 +161,7 @@ pub fn default_path() -> PathBuf {
         return path.into();
     }
     if !cfg!(unix) {
-        return std::env::temp_dir().join("horizon-control.json");
+        return horizon_fs::temp_dir().join("horizon-control.json");
     }
     let dir = std::env::var_os("XDG_RUNTIME_DIR")
         .map(PathBuf::from)
@@ -178,8 +180,8 @@ fn fallback_dir() -> Option<PathBuf> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        let temp = std::env::temp_dir();
-        let shared = std::fs::metadata(&temp).is_ok_and(|m| m.permissions().mode() & 0o002 != 0);
+        let temp = horizon_fs::temp_dir();
+        let shared = horizon_fs::metadata(&temp).is_ok_and(|m| m.permissions().mode() & 0o002 != 0);
         let uid = own_uid().filter(|_| shared)?;
         Some(temp.join(format!("horizon-{uid}")))
     }
@@ -191,9 +193,9 @@ fn fallback_dir() -> Option<PathBuf> {
 #[cfg(unix)]
 fn own_uid() -> Option<u32> {
     use std::os::unix::fs::MetadataExt;
-    std::fs::metadata("/proc/self")
+    horizon_fs::metadata("/proc/self")
         .ok()
-        .or_else(|| std::fs::metadata(std::env::var_os("HOME")?).ok())
+        .or_else(|| horizon_fs::metadata(std::env::var_os("HOME")?).ok())
         .map(|m| m.uid())
 }
 
@@ -212,13 +214,13 @@ fn private_dir(path: &Path, make: bool) -> io::Result<()> {
 fn check_private(dir: &Path, make: bool) -> io::Result<()> {
     use std::os::unix::fs::{DirBuilderExt, MetadataExt, PermissionsExt};
     if make {
-        match std::fs::DirBuilder::new().mode(0o700).create(dir) {
+        match horizon_fs::DirBuilder::new().mode(0o700).create(dir) {
             Err(e) if e.kind() != io::ErrorKind::AlreadyExists => return Err(e),
             _ => {}
         }
     }
-    let meta = std::fs::symlink_metadata(dir)?;
-    if !meta.is_dir()
+    let meta = horizon_fs::symlink_metadata(dir)?;
+    if !meta.fs_is_dir()
         || meta.permissions().mode() & 0o077 != 0
         || own_uid().is_some_and(|uid| uid != meta.uid())
     {
@@ -261,8 +263,8 @@ impl Server {
         check_path(path)?;
         private_dir(path, true)?;
         // An endpoint left by a crashed game refuses connections; replace it.
-        if path.exists() && connect(path).is_err() {
-            std::fs::remove_file(path)?;
+        if path.fs_exists() && connect(path).is_err() {
+            horizon_fs::remove_file(path)?;
         }
         let (sender, requests) = mpsc::channel();
         let local = sender.clone();
@@ -418,7 +420,7 @@ impl Drop for Server {
             #[cfg(not(unix))]
             None => {}
         }
-        let _ = std::fs::remove_file(&self.path);
+        let _ = horizon_fs::remove_file(&self.path);
     }
 }
 
@@ -472,30 +474,31 @@ mod tests {
     #[test]
     fn the_fallback_socket_folder_must_be_private() {
         use std::os::unix::fs::PermissionsExt;
-        let base = std::env::temp_dir().join(format!("horizon-control-dir-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&base);
-        std::fs::create_dir_all(&base).unwrap();
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-control-dir-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&base);
+        horizon_fs::create_dir_all(&base).unwrap();
         // Made 0700 when missing, and then fine to reach.
         let made = base.join("made");
         super::check_private(&made, true).unwrap();
-        let mode = std::fs::metadata(&made).unwrap().permissions().mode();
+        let mode = horizon_fs::metadata(&made).unwrap().permissions().mode();
         assert_eq!(mode & 0o777, 0o700);
         super::check_private(&made, false).unwrap();
         // One another user could enter or write: refused, made or not.
         let open = base.join("open");
-        std::fs::create_dir(&open).unwrap();
-        std::fs::set_permissions(&open, std::fs::Permissions::from_mode(0o777)).unwrap();
+        horizon_fs::create_dir(&open).unwrap();
+        horizon_fs::set_permissions(&open, horizon_fs::Permissions::from_mode(0o777)).unwrap();
         assert!(super::check_private(&open, true).is_err());
         assert!(super::check_private(&open, false).is_err());
         // A link to a private folder, or a file: refused.
         std::os::unix::fs::symlink(&made, base.join("link")).unwrap();
         assert!(super::check_private(&base.join("link"), false).is_err());
-        std::fs::write(base.join("file"), b"").unwrap();
+        horizon_fs::write(base.join("file"), b"").unwrap();
         assert!(super::check_private(&base.join("file"), true).is_err());
         // Missing and not to be made: an error, not a folder made by whoever connects.
         assert!(super::check_private(&base.join("missing"), false).is_err());
-        assert!(!base.join("missing").exists());
-        let _ = std::fs::remove_dir_all(&base);
+        assert!(!base.join("missing").fs_exists());
+        let _ = horizon_fs::remove_dir_all(&base);
     }
 
     use super::*;
@@ -505,39 +508,39 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn check_path_says_what_bind_does() {
-        let dir = std::env::temp_dir().join(format!("hz-sock-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("hz-sock-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let (mut fits, mut too_long) = (false, false);
         for len in 1..=150 {
             let path = dir.join("x".repeat(len));
             let bound = UnixListener::bind(&path).is_ok();
             assert_eq!(check_path(&path).is_ok(), bound, "{}", path.display());
-            let _ = std::fs::remove_file(&path);
+            let _ = horizon_fs::remove_file(&path);
             fits |= bound;
             too_long |= !bound;
         }
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
         assert!(fits && too_long, "the lengths tried must cross the limit");
     }
 
     /// A `.json` endpoint is a file and TCP: the socket limit is not its limit.
     #[test]
     fn long_tcp_endpoint_opens() {
-        let dir = std::env::temp_dir().join(format!("hz-long-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("hz-long-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join(format!("{}.json", "x".repeat(150)));
         let server = Server::start(&path);
         assert!(server.is_ok(), "{:?}", server.err());
         drop(server);
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn tcp_endpoint_round_trip() {
         let path =
-            std::env::temp_dir().join(format!("horizon-ctl-test-{}.json", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-ctl-test-{}.json", std::process::id()));
         let server = Server::start(&path).unwrap();
-        let text = std::fs::read_to_string(&path).unwrap();
+        let text = horizon_fs::read_to_string(&path).unwrap();
         assert!(text.contains("\"tcp\""));
         let mut client = connect(&path).unwrap();
         writeln!(client, "status").unwrap();
@@ -553,14 +556,14 @@ mod tests {
         BufReader::new(client).read_line(&mut reply).unwrap();
         assert_eq!(reply.trim(), r#"{"ok":true}"#);
         drop(server);
-        assert!(!path.exists());
+        assert!(!path.fs_exists());
     }
 
     /// A request past the limit is answered with an error and never reaches the game.
     #[test]
     fn a_request_longer_than_the_limit_is_refused() {
         let path =
-            std::env::temp_dir().join(format!("horizon-ctl-long-{}.json", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-ctl-long-{}.json", std::process::id()));
         let server = Server::start(&path).unwrap();
         let client = connect(&path).unwrap();
         let mut writing = client.try_clone().unwrap();
@@ -588,7 +591,7 @@ mod tests {
     #[test]
     fn tcp_refuses_a_wrong_token() {
         let path =
-            std::env::temp_dir().join(format!("horizon-ctl-bad-{}.json", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-ctl-bad-{}.json", std::process::id()));
         let _server = Server::start(&path).unwrap();
         let (port, _) = read_endpoint(&path).unwrap();
         let mut stream = TcpStream::connect((Ipv4Addr::LOCALHOST, port)).unwrap();

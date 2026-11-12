@@ -7,15 +7,15 @@
 #[test]
 fn a_sulfur_cube_sends_its_fuse_at_19_and_from_bucket_at_20() {
     use horizon_world::nbt::Tag;
-    let root = std::env::temp_dir().join(format!("horizon-sulfur-meta-{}", std::process::id()));
-    std::fs::create_dir_all(&root).unwrap();
-    std::fs::write(
+    let root = horizon_fs::temp_dir().join(format!("horizon-sulfur-meta-{}", std::process::id()));
+    horizon_fs::create_dir_all(&root).unwrap();
+    horizon_fs::write(
         root.join("entity-types.json"),
         r#"{"minecraft:sulfur_cube":{"width":0.52,"height":0.52,"eye_height":0.325,"category":"monster","fire_immune":false,"attributes":{"minecraft:max_health":4.0}}}"#,
     )
     .unwrap();
     let types = horizon_client::mobs::MobTypes::load_for_server(&root).unwrap();
-    let _ = std::fs::remove_dir_all(&root);
+    let _ = horizon_fs::remove_dir_all(&root);
     let kind = std::sync::Arc::new(types.types["minecraft:sulfur_cube"].clone());
     let at = horizon_core::geometry::Vec3::new(0.5, 64.0, 0.5);
     let mut cube = Mob::new(1, kind, at, 0.0);

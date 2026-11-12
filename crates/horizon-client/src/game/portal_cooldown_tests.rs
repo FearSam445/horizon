@@ -8,7 +8,7 @@ use std::sync::Arc;
 #[ignore = "needs explicit HORIZON_TEST_RESOURCES and HORIZON_PORTAL_REFERENCE"]
 fn portal_contact_and_waiting_handoff_match_vanilla_counters() {
     let reference: serde_json::Value = serde_json::from_str(
-        &std::fs::read_to_string(std::env::var_os("HORIZON_PORTAL_REFERENCE").unwrap()).unwrap(),
+        &horizon_fs::read_to_string(std::env::var_os("HORIZON_PORTAL_REFERENCE").unwrap()).unwrap(),
     )
     .unwrap();
     let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
@@ -28,7 +28,7 @@ fn portal_contact_and_waiting_handoff_match_vanilla_counters() {
     let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
     options.resources = root.clone();
     options.headless = true;
-    options.game_dir = Some(std::env::current_dir().unwrap());
+    options.game_dir = Some(horizon_fs::current_dir().unwrap());
     options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
     let mut game = Game::new(
         &loaded.resources,
@@ -159,7 +159,7 @@ fn portal_contact_and_waiting_handoff_match_vanilla_counters() {
     }
     let report = serde_json::json!({"runtime":runtime,"handoff":handoff});
     if let Some(path) = std::env::var_os("HORIZON_PORTAL_REPORT") {
-        std::fs::write(path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+        horizon_fs::write(path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
     }
     for (field, expected) in [("runtime", "contact"), ("handoff", "delays")] {
         assert_eq!(report[field], reference[expected], "{field}");

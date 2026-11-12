@@ -7,9 +7,11 @@ use crate::{
     nbt::{self, Limits, NamedTag},
 };
 use horizon_core::position::ChunkPos;
+use horizon_fs::{self as fs, File, OpenOptions};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     cell::RefCell,
-    fs::{self, File, OpenOptions},
     io::{self, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicU32, Ordering},
@@ -144,7 +146,7 @@ impl RegionFile {
 
     fn from_file(path: PathBuf, mut file: File) -> io::Result<Self> {
         let position = position_from_path(&path)?;
-        let len = file.metadata()?.len();
+        let len = file.fs_metadata()?.len();
         // RegionFile's constructor: a short header (an empty or truncated file)
         // reads as far as it goes, the rest stays zero (no chunks).
         let mut header = [0; HEADER];
@@ -370,7 +372,7 @@ impl RegionFile {
             // data only warns; and a stub whose file is gone is a chunk that is
             // not there (`null`), not a damaged one.
             let path = external_path(self.path.parent().unwrap_or(Path::new(".")), chunk);
-            if !path.is_file() {
+            if !path.fs_is_file() {
                 return Ok(None);
             }
             let file = File::open(path)?;
@@ -450,7 +452,7 @@ impl RegionWriter {
     pub fn create(destination: impl AsRef<Path>) -> io::Result<Self> {
         let destination = destination.as_ref().to_owned();
         let position = position_from_path(&destination)?;
-        if destination.try_exists()? {
+        if destination.fs_try_exists()? {
             return Err(io::Error::new(
                 io::ErrorKind::AlreadyExists,
                 "destination region already exists",
@@ -601,9 +603,9 @@ mod tests {
 
     #[test]
     fn allocation_matches_first_fit_from_zero() {
-        let dir =
-            std::env::temp_dir().join(format!("horizon-region-first-free-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-region-first-free-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("r.0.0.mca");
         let mut region = RegionFile::open_writable(&path, true).unwrap();
 
@@ -648,6 +650,6 @@ mod tests {
             assert_eq!(region.used, naive);
             assert_eq!(region.first_free, naive_first_fit(&naive, 1));
         }
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }

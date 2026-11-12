@@ -22,16 +22,16 @@ fn a_pack_reads_paged_maps_at_the_colours_coordinates() {
         ..Default::default()
     }))
     .unwrap();
-    let root = std::env::temp_dir().join(format!("horizon-paged-pack-{}", std::process::id()));
-    std::fs::create_dir_all(root.join("shaders")).unwrap();
-    std::fs::write(
+    let root = horizon_fs::temp_dir().join(format!("horizon-paged-pack-{}", std::process::id()));
+    horizon_fs::create_dir_all(root.join("shaders")).unwrap();
+    horizon_fs::write(
         root.join("shaders/gbuffers_terrain.vsh"),
         "#version 120\nvoid main(){gl_Position=gl_Vertex;}",
     )
     .unwrap();
     // Each pixel reads one atlas texel's centre: in the texture (on four pages), beside it,
     // on a page without maps, and the specular map, which no texture has.
-    std::fs::write(
+    horizon_fs::write(
         root.join("shaders/gbuffers_terrain.fsh"),
         r#"#version 120
 uniform sampler2D normals;
@@ -205,5 +205,5 @@ void main() {
     for (i, e) in expected.iter().enumerate() {
         assert_eq!(&data[i * 4..i * 4 + 4], e, "pixel {i}");
     }
-    std::fs::remove_dir_all(root).unwrap();
+    horizon_fs::remove_dir_all(root).unwrap();
 }

@@ -72,8 +72,8 @@ fn actual_player_save_tracks_mutable_body_and_keeps_guest_context() {
         None,
     )
     .unwrap();
-    game.world_root = std::env::current_dir().unwrap().join("h157-owner");
-    std::fs::create_dir_all(&game.world_root).unwrap();
+    game.world_root = horizon_fs::current_dir().unwrap().join("h157-owner");
+    horizon_fs::create_dir_all(&game.world_root).unwrap();
     game.world
         .chunks
         .insert((0, 0), Arc::new(Chunk::empty(0, 0)));

@@ -5,7 +5,9 @@
 //!
 //! The engine routes the lines when it loads and saves the player's settings, never per frame.
 //! With no store registered it reads and writes nothing more than before.
-use std::fs;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::Path;
 
 use crate::TooLate;
@@ -186,7 +188,8 @@ mod tests {
     }
 
     fn scratch(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("horizon-hooks-{name}-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-hooks-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         dir
@@ -238,11 +241,11 @@ mod tests {
         let stores: [&dyn Store; 2] = [&pad, &zoom];
         save_files(&stores, &dir, &["horizon-extras.txt"]);
         assert!(
-            !dir.join("horizon-pad.txt").exists(),
+            !dir.join("horizon-pad.txt").fs_exists(),
             "defaults make no file"
         );
         assert!(
-            !dir.join("horizon-extras.txt").exists(),
+            !dir.join("horizon-extras.txt").fs_exists(),
             "the engine writes that one"
         );
         pad.set(true);

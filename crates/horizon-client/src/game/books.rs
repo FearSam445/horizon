@@ -1791,21 +1791,21 @@ mod lectern_books_tag_tests {
     fn a_packs_lectern_books_entry_goes_onto_the_lectern() {
         let mut game = server_game();
         let dir =
-            std::env::temp_dir().join(format!("horizon-lectern-books-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+            horizon_fs::temp_dir().join(format!("horizon-lectern-books-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         let tags = dir.join("datapacks/books/data/minecraft/tags/item");
-        std::fs::create_dir_all(&tags).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&tags).unwrap();
+        horizon_fs::write(
             dir.join("datapacks/books/pack.mcmeta"),
             r#"{"pack":{"description":"fixture"}}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             tags.join("lectern_books.json"),
             r#"{"values":["minecraft:written_book","minecraft:writable_book","minecraft:book"]}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             dir.join("datapacks.json"),
             r#"{"enabled":["file/books"],"disabled":[]}"#,
         )

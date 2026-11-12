@@ -807,16 +807,16 @@ mod client_tests {
 
         // A name that climbs out of the packs is refused, even where a picture
         // is there.
-        let packs = std::env::temp_dir().join(format!("horizon-texture-{}", std::process::id()));
+        let packs = horizon_fs::temp_dir().join(format!("horizon-texture-{}", std::process::id()));
         let textures = packs.join("assets/minecraft/textures");
-        std::fs::create_dir_all(&textures).unwrap();
-        let png =
-            std::fs::read(root.join("assets/minecraft/textures/entity/zombie/zombie.png")).unwrap();
-        std::fs::write(textures.join("inside.png"), &png).unwrap();
-        std::fs::write(packs.join("outside.png"), &png).unwrap();
+        horizon_fs::create_dir_all(&textures).unwrap();
+        let png = horizon_fs::read(root.join("assets/minecraft/textures/entity/zombie/zombie.png"))
+            .unwrap();
+        horizon_fs::write(textures.join("inside.png"), &png).unwrap();
+        horizon_fs::write(packs.join("outside.png"), &png).unwrap();
         game.options.resources = packs.clone();
         assert!(game.client_texture("inside").is_some());
         assert!(game.client_texture("../../../outside").is_none());
-        std::fs::remove_dir_all(&packs).unwrap();
+        horizon_fs::remove_dir_all(&packs).unwrap();
     }
 }

@@ -4,6 +4,7 @@ use horizon_core::{
     density::{SamplerContext, graph::DensityCompiler},
     position::{BlockPos, ChunkPos},
 };
+use horizon_fs as fs;
 use horizon_world::worldgen::{
     biome_chunk::BiomeChunk,
     biome_source::{BiomeSet, BiomeSourceDefinition},
@@ -13,7 +14,6 @@ use horizon_world::worldgen::{
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     io::{self, Write},
     path::Path,
 };

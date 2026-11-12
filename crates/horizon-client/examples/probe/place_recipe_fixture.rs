@@ -10,9 +10,10 @@ use horizon_client::{
     items::Items,
     menu::{Env, Kind, Menu, place::PostPlace},
 };
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
 use serde_json::Value;
-use std::{fs, path::Path};
+use std::path::Path;
 
 fn state(menu: &Menu) -> String {
     let slots: Vec<String> = (0..menu.slot_count())

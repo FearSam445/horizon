@@ -1,9 +1,9 @@
 mod support;
 use horizon_assets::{model::*, resolve::ModelLibrary};
+use horizon_fs::File;
 use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 

@@ -19,6 +19,8 @@
 //!
 //! Every target keeps GL's rows (row 0 is the bottom edge): the frame is flipped into
 //! the chain's `main` and back, and each pass draws with clip y negated.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -826,7 +828,7 @@ impl PostEffects {
         id: &str,
         extras: &Extras,
     ) -> Result<Option<Chain>, String> {
-        let Ok(text) = std::fs::read_to_string(resource_path(root, id)) else {
+        let Ok(text) = horizon_fs::read_to_string(resource_path(root, id)) else {
             return Ok(None);
         };
         let mut config = Config::parse(&text)?;
@@ -1089,7 +1091,7 @@ impl PostEffects {
             .join("textures/effect")
             .join(format!("{path}.png"));
         let mut decoder = png::Decoder::new(std::io::BufReader::new(
-            std::fs::File::open(&file).map_err(|e| format!("{}: {e}", file.display()))?,
+            horizon_fs::File::open(&file).map_err(|e| format!("{}: {e}", file.display()))?,
         ));
         // As the other resource-pack images: stb_image never checks chunk CRCs.
         decoder.ignore_checksums(true);
@@ -1955,11 +1957,11 @@ mod tests {
     }
 
     fn scratch(name: &str, json: &str) -> PathBuf {
-        let root =
-            std::env::temp_dir().join(format!("horizon-post-chain-{}-{name}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-post-chain-{}-{name}", std::process::id()));
         let dir = root.join("assets/minecraft/post_effect");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join(format!("{name}.json")), json).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(dir.join(format!("{name}.json")), json).unwrap();
         root
     }
 
@@ -2068,7 +2070,7 @@ mod tests {
             near(px[0], 51) && near(px[1], 102) && near(px[2], 153),
             "{px:?}"
         );
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -2085,7 +2087,7 @@ mod tests {
         let names = ["minecraft:unknown".to_owned()];
         assert!(!run(&device, &queue, &mut effects, &root, &names).0);
         assert!(effects.failed.contains("minecraft:unknown"));
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// The chains the prepared vanilla resources hold all load (skipped without
@@ -2196,7 +2198,7 @@ mod tests {
         );
         assert_eq!(top, [255, 0, 0, 255]);
         assert_eq!(bottom, [0, 255, 0, 255]);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// A chain with its own GLSL, a target read twice, a depth input and a
@@ -2237,7 +2239,7 @@ mod tests {
         // Green stays below it: 0.5 * 1 * 1.
         assert!(bottom[0] == 0 && near(bottom[1], 128), "{bottom:?}");
         assert!(effects.failed.is_empty());
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// The frame's depth reaches a pass as 26.3 keeps it, reverse-Z (the sky 0, a near pixel
@@ -2254,7 +2256,7 @@ mod tests {
              "output":"minecraft:main"}]}"#,
         );
         own_glsl(&root);
-        std::fs::write(
+        horizon_fs::write(
             root.join("assets/minecraft/shaders/post/depth.fsh"),
             "#version 330\nuniform sampler2D DepthSampler;\nlayout(location = 0) in vec2 texCoord;\n\
              layout(location = 0) out vec4 fragColor;\n\
@@ -2330,20 +2332,20 @@ mod tests {
         assert!(ran);
         // 0.25 of 255, not 0.75.
         assert!(red.abs_diff(64) <= 1, "{red}");
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// `core/quad.vsh`, `post/mine.fsh` and the `tint` image of `a_chain_runs_its_own_glsl`.
     fn own_glsl(root: &Path) {
         let shaders = root.join("assets/minecraft/shaders");
-        std::fs::create_dir_all(shaders.join("core")).unwrap();
-        std::fs::create_dir_all(shaders.join("post")).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(shaders.join("core")).unwrap();
+        horizon_fs::create_dir_all(shaders.join("post")).unwrap();
+        horizon_fs::write(
             shaders.join("core/quad.vsh"),
             "#version 330\nlayout(location = 0) out vec2 texCoord;\nvoid main() {\n  vec2 uv = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);\n  gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);\n  texCoord = uv;\n}\n",
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             shaders.join("post/mine.fsh"),
             "#version 330\nuniform sampler2D InSampler;\nuniform sampler2D DepthSampler;\nuniform sampler2D TintSampler;\n\
              layout(std140) uniform SamplerInfo { vec2 OutSize; vec2 InSize; };\n\
@@ -2355,7 +2357,7 @@ mod tests {
         .unwrap();
         // A 1x1 image, (0.5, 1, 1).
         let effect = root.join("assets/minecraft/textures/effect");
-        std::fs::create_dir_all(&effect).unwrap();
+        horizon_fs::create_dir_all(&effect).unwrap();
         let mut png_bytes = Vec::new();
         {
             let mut encoder = png::Encoder::new(&mut png_bytes, 1, 1);
@@ -2364,7 +2366,7 @@ mod tests {
             let mut writer = encoder.write_header().unwrap();
             writer.write_image_data(&[128, 255, 255, 255]).unwrap();
         }
-        std::fs::write(effect.join("tint.png"), png_bytes).unwrap();
+        horizon_fs::write(effect.join("tint.png"), png_bytes).unwrap();
     }
 
     /// A chain `preload` loaded arrives with its pipelines compiled on the loading
@@ -2419,7 +2421,7 @@ mod tests {
         let near = |a: u8, b: u8| a.abs_diff(b) <= 3;
         assert!(near(top[0], 32) && top[1] == 0 && top[3] == 255, "{top:?}");
         assert!(bottom[0] == 0 && near(bottom[1], 128), "{bottom:?}");
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// Vanilla's own chains run on the GPU without a validation error (skipped
@@ -2432,7 +2434,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3");
         if !root
             .join("assets/minecraft/post_effect/invert.json")
-            .exists()
+            .fs_exists()
         {
             return;
         }
@@ -2465,7 +2467,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3");
         if !root
             .join("assets/minecraft/post_effect/invert.json")
-            .exists()
+            .fs_exists()
         {
             return;
         }

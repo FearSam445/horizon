@@ -2,10 +2,10 @@ use horizon_client::{
     Result, item_data,
     items::{ItemStack, Items},
 };
+use horizon_fs::File;
 use horizon_items::item_nbt;
 use horizon_world::loot::PackOverlay;
 use std::{
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
 };

@@ -8,6 +8,8 @@ use horizon_client::{
     options_ui::{Event, OptionsUi, Page},
     widgets::{Kind, Target},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use winit::{event::KeyEvent, keyboard::ModifiersState};
 
 #[derive(Default)]
@@ -103,7 +105,7 @@ impl StartupMenu {
         self.root = root;
         if self.title.is_none() {
             let mut title = Title::new(
-                std::env::current_dir().unwrap_or_default().join("saves"),
+                horizon_fs::current_dir().unwrap_or_default().join("saves"),
                 &self.root,
             );
             title.last_server = settings.file.string("lastServer");
@@ -574,7 +576,7 @@ impl Loading {
                 }
                 Event::OpenPackFolder => {
                     let dir = packs::packs_dir();
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     packs::open_folder(&dir);
                 }
                 Event::ImportPacks(paths) => {
@@ -600,12 +602,12 @@ impl Loading {
                     }
                 }
                 Event::OpenDataPackFolder(dir) => {
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     packs::open_folder(&dir);
                 }
                 Event::OpenModFolder => {
                     let dir = Game::game_dir().join(horizon_client::mod_list::DIR);
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     packs::open_folder(&dir);
                 }
                 Event::BrowseMods => {
@@ -649,7 +651,7 @@ impl Loading {
                 }
                 Event::OpenShaderPackFolder => {
                     let dir = Game::shader_packs_dir();
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     packs::open_folder(&dir);
                 }
                 Event::Credits => {
@@ -691,7 +693,7 @@ impl Loading {
                 | Event::Volume(..) => {}
                 Event::OpenStudioFolder => {
                     let dir = std::path::PathBuf::from("recordings");
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     packs::open_folder(&dir);
                 }
                 Event::OpenStudioReplay(path) => {
@@ -1423,17 +1425,17 @@ mod tests {
         }
         let root =
             PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").expect("prepared resources"));
-        let game_dir = std::env::current_dir().unwrap();
+        let game_dir = horizon_fs::current_dir().unwrap();
         assert!(
-            std::fs::read_dir(&game_dir).unwrap().next().is_none(),
+            horizon_fs::read_dir(&game_dir).unwrap().next().is_none(),
             "run the built test executable directly from an empty scratch game directory"
         );
         let source = game_dir.join("drop-fixtures");
-        std::fs::create_dir(&source).unwrap();
+        horizon_fs::create_dir(&source).unwrap();
         for name in ["Startup pack", "Game pack"] {
             let path = source.join(name);
-            std::fs::create_dir_all(&path).unwrap();
-            std::fs::write(
+            horizon_fs::create_dir_all(&path).unwrap();
+            horizon_fs::write(
                 path.join("pack.mcmeta"),
                 br#"{"pack":{"pack_format":1,"description":"Drop test"}}"#,
             )
@@ -1456,7 +1458,7 @@ mod tests {
                 .unwrap()
                 .confirming()
         );
-        assert!(!packs::packs_dir().join("Startup pack").exists());
+        assert!(!packs::packs_dir().join("Startup pack").fs_exists());
         let batch = HudBatch::new(loading.menu_size());
         let events = loading.menu.options.click(
             &mut loading.settings,
@@ -1473,7 +1475,7 @@ mod tests {
         assert!(
             packs::packs_dir()
                 .join("Startup pack/pack.mcmeta")
-                .is_file()
+                .fs_is_file()
         );
         assert!(
             loading
@@ -1516,7 +1518,7 @@ mod tests {
         game.open_options_at(true, Page::Packs);
         game.handle_window_event_inner(&Loop, WindowEvent::DroppedFile(source.join("Game pack")));
         assert!(game.ui.options.pack_screen.as_ref().unwrap().confirming());
-        assert!(!packs::packs_dir().join("Game pack").exists());
+        assert!(!packs::packs_dir().join("Game pack").fs_exists());
         let size = game.gui_size();
         let events = game.ui.options.click(
             &mut game.settings,
@@ -1530,7 +1532,11 @@ mod tests {
         );
         assert!(events.iter().any(|e| matches!(e, Event::ImportPacks(_))));
         game.handle_option_events(events).unwrap();
-        assert!(packs::packs_dir().join("Game pack/pack.mcmeta").is_file());
+        assert!(
+            packs::packs_dir()
+                .join("Game pack/pack.mcmeta")
+                .fs_is_file()
+        );
         assert!(
             game.ui
                 .options
@@ -1560,7 +1566,7 @@ mod tests {
 
     #[test]
     fn menu_is_usable_while_the_core_worker_is_blocked() {
-        let root = std::env::temp_dir().join("horizon-startup-menu-no-world-resources");
+        let root = horizon_fs::temp_dir().join("horizon-startup-menu-no-world-resources");
         let (sender, receiver) = std::sync::mpsc::channel();
         let (release, wait) = std::sync::mpsc::channel();
         let (published, published_rx) = std::sync::mpsc::channel();

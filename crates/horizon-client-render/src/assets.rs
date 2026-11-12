@@ -1,4 +1,6 @@
 use crate::Result;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     DATA_VERSION,
     heightmap::HeightmapState,

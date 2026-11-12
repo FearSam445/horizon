@@ -11,8 +11,9 @@ use horizon_client::{
     item_data::canon_stack,
     lang::{self, Language},
 };
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{fs, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().collect();

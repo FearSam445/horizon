@@ -12,12 +12,12 @@ use horizon_core::{
     geometry::{Aabb, ShapeOp, Vec3, VoxelShape},
     position::BlockPos,
 };
+use horizon_fs::File;
 use horizon_world::world_ray::{RayBlockMode, RayFluidMode, RayWorld, clip_world};
 use serde_json::Value;
 use std::{
     collections::HashMap,
     convert::Infallible,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 

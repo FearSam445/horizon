@@ -3,6 +3,8 @@
 //! after its own decoration and its eight neighbours', and chunks that
 //! decoration wrote to are saved rather than generated again without those
 //! writes. Bastions lost whole chunks of pieces this way.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 extern crate horizon_client_lib as horizon_client;
 use horizon_client::{
     assets::Assets,
@@ -28,7 +30,7 @@ fn resources() -> Option<std::path::PathBuf> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    root.join("items.json").exists().then_some(root)
+    root.join("items.json").fs_exists().then_some(root)
 }
 
 /// A proto chunk that records the decorations that wrote to it.
@@ -336,8 +338,8 @@ fn saved_proto_chunks_restore_exactly() {
         "minecraft:the_nether",
     )
     .unwrap();
-    let dir = std::env::temp_dir().join(format!("horizon-proto-saves-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+    let dir = horizon_fs::temp_dir().join(format!("horizon-proto-saves-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
     let save = Arc::new(SaveDir::new(
         dir.clone(),
         horizon_client::save::LevelShape::OVERWORLD,
@@ -393,7 +395,7 @@ fn saved_proto_chunks_restore_exactly() {
     }
     drop(generator);
     drop(save);
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
 }
 
 #[test]
@@ -419,8 +421,8 @@ fn saved_proto_block_entities_keep_their_id() {
         "minecraft:overworld",
     )
     .unwrap();
-    let dir = std::env::temp_dir().join(format!("horizon-proto-ids-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+    let dir = horizon_fs::temp_dir().join(format!("horizon-proto-ids-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
     let save = Arc::new(SaveDir::new(
         dir.clone(),
         horizon_client::save::LevelShape::OVERWORLD,
@@ -463,7 +465,7 @@ fn saved_proto_block_entities_keep_their_id() {
     assert!(suspicious > 0, "the ruin placed no suspicious blocks");
     drop(generator);
     drop(save);
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
 }
 
 /// What the game's generator, `Persistent`, passes on of beside-final decoration: the block
@@ -501,8 +503,8 @@ fn persistent_forwards_the_block_entities_decoration_made_in_a_final_chunk() {
     };
     let assets = Arc::new(Assets::load(&root).unwrap());
     let biomes = Arc::new(Biomes::load(&root).unwrap());
-    let dir = std::env::temp_dir().join(format!("horizon-final-be-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+    let dir = horizon_fs::temp_dir().join(format!("horizon-final-be-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
     let generator = Persistent {
         inner: Arc::new(Marked),
         save: Arc::new(SaveDir::new(
@@ -515,7 +517,7 @@ fn persistent_forwards_the_block_entities_decoration_made_in_a_final_chunk() {
     let made = generator.final_block_entities(&(Box::new(()) as Proto), &[([1, 64, 2], 5)]);
     assert_eq!(made.len(), 1, "Persistent drops the block entities");
     assert_eq!(made[0].0, (1, 64, 2));
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
 }
 
 /// `NoiseGeneratorSettings.disableMobGeneration` reaches the client's

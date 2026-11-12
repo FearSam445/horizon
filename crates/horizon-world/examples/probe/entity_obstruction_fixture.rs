@@ -1,10 +1,10 @@
 use horizon_core::geometry::{Aabb, Axis, ShapeOp, Vec3, VoxelShape};
+use horizon_fs as fs;
 use horizon_world::entity_obstruction::{
     EntityIdentity, EntityObstructionWorld, ObstructionEntity, is_unobstructed,
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

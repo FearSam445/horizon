@@ -78,7 +78,7 @@ impl Consent {
 
     /// The saved answer; a missing or unreadable file is "never asked", which allows nothing.
     pub fn load(home: &Path) -> Self {
-        std::fs::read(Self::path(home))
+        horizon_fs::read(Self::path(home))
             .ok()
             .and_then(|b| serde_json::from_slice(&b).ok())
             .unwrap_or_default()
@@ -142,8 +142,8 @@ mod tests {
         assert!(consent.needs_asking());
         assert!(Kind::ALL.iter().all(|&k| !consent.allows(k)));
         // A broken file is the same as none.
-        std::fs::create_dir_all(crate::dir(&home)).unwrap();
-        std::fs::write(Consent::path(&home), b"{not json").unwrap();
+        horizon_fs::create_dir_all(crate::dir(&home)).unwrap();
+        horizon_fs::write(Consent::path(&home), b"{not json").unwrap();
         assert_eq!(Consent::load(&home), Consent::default());
     }
 

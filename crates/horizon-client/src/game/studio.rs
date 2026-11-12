@@ -253,7 +253,7 @@ impl Game<'_> {
             }
             TopBarAction::OpenRecordingsFolder => {
                 let directory = PathBuf::from("recordings");
-                if let Err(error) = std::fs::create_dir_all(&directory) {
+                if let Err(error) = horizon_fs::create_dir_all(&directory) {
                     log::warn!("Studio: could not create recordings folder: {error}");
                 } else {
                     packs::open_folder(&directory);

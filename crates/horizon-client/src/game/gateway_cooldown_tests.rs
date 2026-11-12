@@ -14,7 +14,7 @@ use horizon_core::{geometry::Vec3, position::BlockPos};
 #[ignore = "needs explicit HORIZON_TEST_RESOURCES and HORIZON_PORTAL_REFERENCE"]
 fn gateway_counters_match_actual_vanilla_methods() {
     let reference: serde_json::Value = serde_json::from_str(
-        &std::fs::read_to_string(std::env::var_os("HORIZON_PORTAL_REFERENCE").unwrap()).unwrap(),
+        &horizon_fs::read_to_string(std::env::var_os("HORIZON_PORTAL_REFERENCE").unwrap()).unwrap(),
     )
     .unwrap();
     let boat = Boat::new(1, "oak".into(), Vec3::ZERO, 0.0);
@@ -67,7 +67,7 @@ fn gateway_counters_match_actual_vanilla_methods() {
     let report = serde_json::json!({"contact":rows,"phases":phases});
     assert_eq!(report["contact"], reference["contact"]);
     if let Some(path) = std::env::var_os("HORIZON_PORTAL_REPORT") {
-        std::fs::write(path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
+        horizon_fs::write(path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
     }
 }
 
@@ -94,7 +94,7 @@ fn game_gateway_phases() -> [[i32; 2]; 4] {
     let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
     options.resources = root.clone();
     options.headless = true;
-    options.game_dir = Some(std::env::current_dir().unwrap());
+    options.game_dir = Some(horizon_fs::current_dir().unwrap());
     options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
     let mut game = Game::new(
         &loaded.resources,

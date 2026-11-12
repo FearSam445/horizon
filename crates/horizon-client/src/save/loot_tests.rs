@@ -2,7 +2,7 @@ use super::*;
 
 fn fixture() -> (BlockRegistry, Biomes) {
     static NEXT: AtomicU64 = AtomicU64::new(0);
-    let root = std::env::temp_dir().join(format!(
+    let root = horizon_fs::temp_dir().join(format!(
         "horizon-opened-loot-{}-{}",
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
@@ -208,7 +208,7 @@ fn eager_save_edits_reach_disk_during_ticks_and_again_after_cooldown() {
     let (registry, biomes) = fixture();
     let registry = Box::leak(Box::new(registry));
     let biomes = Arc::new(biomes);
-    let dir = std::env::temp_dir().join(format!("horizon-eager-edits-{}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!("horizon-eager-edits-{}", std::process::id()));
     fs::create_dir_all(&dir).unwrap();
     let save = SaveDir::new(dir.clone(), LevelShape::OVERWORLD);
     let mut chunk = Chunk::empty(0, 0);

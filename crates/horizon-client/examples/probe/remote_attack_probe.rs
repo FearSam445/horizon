@@ -5,11 +5,9 @@ use horizon_client::{
     Result,
     attack_strength::{ATTACKER_SLOWDOWN, AttackStrength, attacker_slows_after_hit},
 };
+use horizon_fs::File;
 use serde_json::Value;
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 
 fn double(v: &Value) -> f64 {
     f64::from_bits(u64::from_str_radix(v.as_str().unwrap(), 16).unwrap())

@@ -2,6 +2,8 @@
 //! reads `codeofconduct/<language>.txt`, and
 //! `ServerConfigurationPacketListenerImpl.addOptionalTasks` offers the one
 //! that fits the player's language.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::Path;
 
 /// `StringUtil.stripColor`: the pattern `(?i)§[0-9A-FK-OR]` removed.
@@ -51,19 +53,19 @@ fn join_lines(text: &str) -> String {
 /// its lowercased name, with the colour codes stripped. Files come in name
 /// order (vanilla's is the file system's).
 pub fn read(dir: &Path) -> Result<Vec<(String, String)>, String> {
-    if !std::fs::symlink_metadata(dir).is_ok_and(|m| m.is_dir()) {
+    if !horizon_fs::symlink_metadata(dir).is_ok_and(|m| m.fs_is_dir()) {
         return Err(format!(
             "Code of Conduct folder does not exist: {}",
             dir.display()
         ));
     }
-    let mut files: Vec<_> = std::fs::read_dir(dir)
+    let mut files: Vec<_> = horizon_fs::read_dir(dir)
         .map_err(|e| format!("Failed to read Code of Conduct folder: {e}"))?
         .flatten()
         .map(|e| e.path())
         .collect();
     files.sort();
-    let allowed = std::fs::canonicalize(dir).map_err(|e| e.to_string())?;
+    let allowed = horizon_fs::canonicalize(dir).map_err(|e| e.to_string())?;
     let mut out = Vec::new();
     for file in files {
         let Some(name) = file.file_name().and_then(|n| n.to_str()) else {
@@ -72,13 +74,13 @@ pub fn read(dir: &Path) -> Result<Vec<(String, String)>, String> {
         let Some(language) = name.strip_suffix(".txt") else {
             continue;
         };
-        let real = std::fs::canonicalize(&file).map_err(|e| e.to_string())?;
+        let real = horizon_fs::canonicalize(&file).map_err(|e| e.to_string())?;
         if real.parent() != Some(allowed.as_path()) {
             return Err(format!(
                 "Failed to read Code of Conduct file \"{name}\" because it links to a file outside the allowed directory"
             ));
         }
-        let bytes = std::fs::read(&file)
+        let bytes = horizon_fs::read(&file)
             .map_err(|e| format!("Failed to read Code of Conduct file {name}: {e}"))?;
         let text = String::from_utf8(bytes)
             .map_err(|_| format!("Failed to read Code of Conduct file {name}"))?;
@@ -135,7 +137,7 @@ mod tests {
 
     #[test]
     fn a_missing_folder_is_an_error() {
-        let dir = std::env::temp_dir().join("horizon-no-such-coc-folder");
+        let dir = horizon_fs::temp_dir().join("horizon-no-such-coc-folder");
         assert!(
             read(&dir)
                 .unwrap_err()
@@ -145,12 +147,12 @@ mod tests {
 
     #[test]
     fn only_txt_files_are_read_by_lowercased_name() {
-        let dir = std::env::temp_dir().join(format!("horizon-coc-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("EN_US.txt"), "\u{a7}lBe nice\nplease\n").unwrap();
-        std::fs::write(dir.join("notes.md"), "ignored").unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("horizon-coc-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(dir.join("EN_US.txt"), "\u{a7}lBe nice\nplease\n").unwrap();
+        horizon_fs::write(dir.join("notes.md"), "ignored").unwrap();
         let read = read(&dir).unwrap();
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
         assert_eq!(
             read,
             vec![("en_us".to_string(), "Be nice\nplease".to_string())]

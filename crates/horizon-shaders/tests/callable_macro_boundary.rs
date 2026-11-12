@@ -1,7 +1,7 @@
 //! Original token controls, independently checked with GCC and Clang preprocessing.
 //! The shader controls also pass glslang and Horizon's translation/backends.
+use horizon_fs as fs;
 use horizon_shaders::{Macros, Pack, Target, preprocess, translate_composite};
-use std::fs;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -98,7 +98,7 @@ struct OriginalPack(PathBuf);
 impl OriginalPack {
     fn new(files: &[(&str, &str)]) -> Self {
         static NEXT: AtomicU64 = AtomicU64::new(0);
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-call-boundary-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)

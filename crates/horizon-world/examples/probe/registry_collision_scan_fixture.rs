@@ -4,6 +4,7 @@ use horizon_core::{
     geometry::{Aabb, Axis, Vec3, VoxelShape},
     position::{BlockPos, ChunkPos},
 };
+use horizon_fs as fs;
 use horizon_world::{
     block_collision::{BlockCollisionRegistry, DynamicCollisionWorld, ShulkerCollisionState},
     block_collision_scan::{BlockCollisionScan, BlockCollisionWorld, CollisionScanError},
@@ -35,7 +36,6 @@ use serde_json::Value;
 use std::{
     cell::RefCell,
     collections::{BTreeMap, BTreeSet},
-    fs,
     io::{self, Write},
     path::Path,
     rc::Rc,

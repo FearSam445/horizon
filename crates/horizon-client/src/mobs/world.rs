@@ -10,6 +10,8 @@ use horizon_core::{
     geometry::{Aabb, Vec3, VoxelShape, block_floor_height, traverse_blocks},
     position::BlockPos,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     block_collision::{BlockCollisionRegistry, DynamicCollisionWorld},
     registry::BlockStateId,
@@ -798,8 +800,8 @@ struct TestResources {
 impl TestResources {
     /// `None` when `root` has no prepared vanilla data.
     fn load(root: &std::path::Path) -> Option<Self> {
-        if !root.join("entity-types.json").exists()
-            || !root.join("movement-properties.nbt").exists()
+        if !root.join("entity-types.json").fs_exists()
+            || !root.join("movement-properties.nbt").fs_exists()
         {
             return None;
         }

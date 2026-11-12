@@ -6,13 +6,13 @@ use horizon_client::client_perf::request::{
     Failed, GpuSwitch, ProfileSide, StartOptions, Started, Stopped,
 };
 use horizon_client::perf_net::{CHANNEL, Outcome, Refusal, Reply, Request, Unsent, Wanted};
+use horizon_fs::File;
 use horizon_perf_format::{FieldSender, PartMerger, RawSend, files, v1::WarningCode};
 use horizon_protocol::packets::{configuration::CustomPayload, play::Serverbound as S};
-use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::mpsc::Sender;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 use web_time::Instant;
 
 const MARK_SERVER_STARTED: &str = "server_started";
@@ -407,7 +407,7 @@ impl Game<'_> {
                 }
                 Dest::Own { file, path } => {
                     drop(file);
-                    let _ = std::fs::remove_file(path);
+                    let _ = horizon_fs::remove_file(path);
                     if let Some(reply) = reply {
                         let _ = reply.send(reply_text(&Failed { error: part_text() }));
                     }

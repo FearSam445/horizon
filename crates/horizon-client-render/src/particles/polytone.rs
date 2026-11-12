@@ -9,6 +9,8 @@ use super::{
 };
 use crate::environment::Frame;
 use horizon_core::random::{LegacyRandom, RandomSource};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_polytone::expr::{Host, Program, Root, Value as V};
 use horizon_polytone::particles::{
     BlockEmitters, CustomParticle, Emitter, EntityEmitters, LiquidAffinity, ParticleModifier,
@@ -125,9 +127,9 @@ fn json_files(root: &Path, dir: &Path) -> Vec<(String, Json)> {
     let mut out = Vec::new();
     let mut stack = vec![dir.to_path_buf()];
     while let Some(dir) = stack.pop() {
-        for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+        for entry in horizon_fs::read_dir(&dir).into_iter().flatten().flatten() {
             let path = entry.path();
-            if path.is_dir() {
+            if path.fs_is_dir() {
                 stack.push(path);
                 continue;
             }
@@ -177,7 +179,7 @@ impl Registry {
                 Err(e) => log::warn!("colors particle.{id}: {e}"),
             }
         }
-        let namespaces = std::fs::read_dir(pack_root.join("assets"))
+        let namespaces = horizon_fs::read_dir(pack_root.join("assets"))
             .into_iter()
             .flatten()
             .flatten();
@@ -1633,14 +1635,14 @@ mod tests {
     fn pack(files: &[(&str, serde_json::Value)]) -> std::path::PathBuf {
         static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-polytone-particles-{}-{n}",
             std::process::id()
         ));
         for (path, json) in files {
             let path = root.join(path);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(path, json.to_string()).unwrap();
+            horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+            horizon_fs::write(path, json.to_string()).unwrap();
         }
         root
     }
@@ -1762,7 +1764,7 @@ mod tests {
         assert_eq!((p.lifetime, p.size), (10, 0.5));
         assert_eq!(&p.rgba[..2], &[0.75, 0.5]);
         assert!(matches!(p.sprite, Sprite::Index(10)));
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// `light_level` is a floor under the block light a custom particle is drawn with (as the
@@ -1796,7 +1798,7 @@ mod tests {
         assert_eq!(p.light_coords(0.0, 240, 0), (240, 128));
         // A brighter block light is kept.
         assert_eq!(p.light_coords(0.0, 0, 208), (0, 208));
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -1824,7 +1826,7 @@ mod tests {
         assert!(matches!(p.sprite, Sprite::Index(10)));
         engine.tick_particle(&mut p, &level);
         assert!(p.removed, "removed once o.age >= 4");
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -1875,7 +1877,7 @@ mod tests {
         // `limit` 1: no second one while the first lives.
         engine.polytone_entity(&level, "minecraft:player", feet);
         assert_eq!(engine.pending.len(), 1);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -1927,7 +1929,7 @@ mod tests {
         assert_eq!(engine.pending.iter().filter(splashes).count(), 0);
         engine.polytone_entity(&level, "minecraft:player", [9.0, 64.0, 1.0]);
         assert_eq!(engine.pending.iter().filter(splashes).count(), 3);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// Measured in Java: a custom particle's `movement_aligned` quad has its texture's top
@@ -1981,7 +1983,7 @@ mod tests {
                 assert!(v.pos[1] > 0.0, "bottom row at {:?}", v.pos);
             }
         }
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// An `additive_translucent` custom particle takes the fog in Java, as vanilla's particle
@@ -2036,7 +2038,7 @@ mod tests {
                 .iter()
                 .all(|v| v.layer & 0xffff == crate::gfx::ADDITIVE_PARTICLE_OVERLAY)
         );
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// A particle's emitter spawns while the live particles tick: its children's
@@ -2081,7 +2083,7 @@ mod tests {
             .filter(|p| p.polytone_type.as_deref() == Some("test:ray"))
             .count();
         assert_eq!(rays, 1);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -2156,7 +2158,7 @@ mod tests {
             0,
             "gone once its 3 ticks are over"
         );
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -2213,7 +2215,7 @@ mod tests {
             (sounds[0].0, sounds[0].2, sounds[0].3),
             ("minecraft:block.note_block.harp", 0.5, 1.0)
         );
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -2230,7 +2232,7 @@ mod tests {
         };
         assert_eq!(colour("minecraft:flame"), [0.0, 0.0, 1.0, 1.0]);
         assert_eq!(colour("minecraft:smoke"), [1.0; 4]);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -2314,7 +2316,7 @@ mod tests {
         p.stopped_by_collision = true;
         engine.tick_particle(&mut p, &level);
         assert!(p.removed);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// `scene`, with the torch a full block of collision: something a particle's box can start in.
@@ -2452,7 +2454,7 @@ mod tests {
         assert_eq!(spawn("minecraft:creeper", 60.0), (0, 0));
         // Nor does one a clear particle emits there: the small one joins, its wide copy never.
         assert_eq!(spawn("minecraft:skeleton", 60.0), (1, 0));
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// Measured on the mod: with `limit` 1, one particle born inside a block and one clear of it
@@ -2516,7 +2518,7 @@ mod tests {
         assert_eq!(joined("minecraft:player"), vec![4.5]);
         assert_eq!(joined("minecraft:zombie"), vec![4.5]);
         assert_eq!(joined("minecraft:skeleton"), vec![2.5]);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -2542,7 +2544,7 @@ mod tests {
         );
         assert_eq!((p.lifetime, p.size), (33, 0.75));
         assert!(matches!(p.sprite, Sprite::Index(20)));
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -2601,7 +2603,7 @@ mod tests {
         engine.polytone_animate(&level, [1, 64, 1]);
         assert_eq!(engine.pending.len(), 1);
         assert_eq!(engine.pending[0].position, [1.0, 65.0, 1.0]);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -2631,6 +2633,6 @@ mod tests {
         assert_eq!(run("minecraft:block", None), (0.1, 10));
         assert_eq!(run("minecraft:item", Some("minecraft:apple")), (0.1, 50));
         assert_eq!(run("minecraft:item", Some("minecraft:bread")), (0.1, 10));
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 }

@@ -9,6 +9,8 @@ use super::{
 };
 use crate::mesher::Vertex;
 use horizon_core::geometry::trig::Mth;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::borrow::Cow;
 use std::f32::consts::PI;
 
@@ -2924,7 +2926,7 @@ mod tests {
     fn villager_layers_name_textures_that_exist() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -2947,7 +2949,7 @@ mod tests {
                         for layer in layers {
                             let png = root
                                 .join(format!("assets/minecraft/textures/{}.png", layer.texture));
-                            assert!(png.is_file(), "missing {}", png.display());
+                            assert!(png.fs_is_file(), "missing {}", png.display());
                         }
                     }
                 }
@@ -2959,7 +2961,7 @@ mod tests {
     fn sulfur_cube_opaque_core_is_submitted_before_its_translucent_shell() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let mut types = super::super::MobTypes::load(&root).unwrap();
@@ -3052,7 +3054,7 @@ mod tests {
     fn copper_golem_eyes_are_drawn_on_the_body_model() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -3108,7 +3110,7 @@ mod tests {
     fn the_vex_holds_its_item_at_the_small_scale() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -3149,7 +3151,7 @@ mod tests {
     fn villagers_and_traders_hold_items_in_crossed_arms() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -3173,7 +3175,7 @@ mod tests {
     fn the_phantom_model_sits_in_its_box() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -3220,7 +3222,7 @@ mod tests {
         );
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -3323,7 +3325,7 @@ mod tests {
     fn a_jeb_sheep_cycles_its_wool_colour_and_keeps_the_undercoat() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -3420,7 +3422,7 @@ mod scroll_tests {
     fn a_sheared_dyed_sheep_keeps_its_wool_undercoat() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -3477,7 +3479,7 @@ mod scroll_tests {
     fn no_two_part_names_share_a_key() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         fn names<'a>(p: &'a Part, out: &mut Vec<&'a str>) {
@@ -3515,7 +3517,7 @@ mod scroll_tests {
         use web_time::Instant;
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let types = super::super::MobTypes::load(&root).unwrap();
@@ -3670,28 +3672,28 @@ mod emissive_tests {
 
     fn data(files: &[&str]) -> MobData {
         static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-render-emissive-{}-{}",
             std::process::id(),
             N.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         for file in files {
             let path = root.join(file);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
             // Rules files pick variant 2; images are only their names.
             let text = if file.ends_with(".properties") {
                 "textures.1=2"
             } else {
                 ""
             };
-            std::fs::write(path, text).unwrap();
+            horizon_fs::write(path, text).unwrap();
         }
         let random = RandomTextures::scan(&root);
         let blinks = Blinks::scan(&root, &random);
         let mut emissive = Emissive::scan(&root, &random);
         emissive.pair_beside(&root, blinks.files());
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         MobData {
             states: Vec::new(),
             placements: Default::default(),
@@ -3962,14 +3964,14 @@ mod random_texture_tests {
     /// A pack whose silverfish has a second variant, every silverfish wearing it.
     fn data() -> MobData {
         let root =
-            std::env::temp_dir().join(format!("horizon-render-random-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+            horizon_fs::temp_dir().join(format!("horizon-render-random-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("assets/minecraft/optifine/random/entity");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("silverfish.properties"), "textures.1=2").unwrap();
-        std::fs::write(dir.join("silverfish2.png"), "").unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(dir.join("silverfish.properties"), "textures.1=2").unwrap();
+        horizon_fs::write(dir.join("silverfish2.png"), "").unwrap();
         let random = RandomTextures::scan(&root);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         MobData {
             states: Vec::new(),
             placements: Default::default(),

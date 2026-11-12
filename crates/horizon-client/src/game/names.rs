@@ -1002,17 +1002,17 @@ mod tests {
 
     fn tag_font() -> HudAtlas {
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-tag-cache-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         let textures = root.join("assets/minecraft/textures/font");
-        std::fs::create_dir_all(root.join("assets/minecraft/font")).unwrap();
-        std::fs::create_dir_all(&textures).unwrap();
-        std::fs::write(root.join("assets/minecraft/font/default.json"),
+        horizon_fs::create_dir_all(root.join("assets/minecraft/font")).unwrap();
+        horizon_fs::create_dir_all(&textures).unwrap();
+        horizon_fs::write(root.join("assets/minecraft/font/default.json"),
             r#"{"providers":[{"type":"bitmap","file":"minecraft:font/cache.png","ascent":7,"chars":["ab"]}]}"#).unwrap();
-        let file = std::fs::File::create(textures.join("cache.png")).unwrap();
+        let file = horizon_fs::File::create(textures.join("cache.png")).unwrap();
         let mut encoder = png::Encoder::new(file, 16, 8);
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
@@ -1031,7 +1031,7 @@ mod tests {
             (512, 512),
             atlas.sprites["horizon/white"],
         );
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
         atlas
     }
 

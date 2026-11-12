@@ -1,4 +1,5 @@
 use horizon_core::geometry::VoxelShape;
+use horizon_fs as fs;
 use horizon_world::{
     block_collision::{BlockCollisionRegistry, DynamicCollisionWorld, ShulkerCollisionState},
     collision::CachedCollisionRegistry,
@@ -11,7 +12,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs,
     io::{self, Write},
     path::Path,
     sync::Arc,

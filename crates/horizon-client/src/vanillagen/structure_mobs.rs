@@ -354,7 +354,7 @@ mod tests {
         let file = root.join("worldgen/structure/minecraft/bastion/mobs/crossbow_piglin.nbt");
         let mut bytes = Vec::new();
         std::io::Read::read_to_end(
-            &mut flate2::read::GzDecoder::new(std::fs::File::open(file).unwrap()),
+            &mut flate2::read::GzDecoder::new(horizon_fs::File::open(file).unwrap()),
             &mut bytes,
         )
         .unwrap();
@@ -631,7 +631,7 @@ mod tests {
     /// Without resources the finalizer has no data, read ahead or not.
     #[test]
     fn load_behind_without_resources_has_no_data() {
-        let dir = std::env::temp_dir().join("horizon-structure-mobs-none");
+        let dir = horizon_fs::temp_dir().join("horizon-structure-mobs-none");
         let finalizer = StructureMobFinalizer::new(dir, "minecraft:overworld");
         finalizer.load_behind();
         // The thread has to fill the cell on its own, before anyone asks.

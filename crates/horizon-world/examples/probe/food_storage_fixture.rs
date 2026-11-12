@@ -1,11 +1,11 @@
 use crate::support::common::f32_bits;
+use horizon_fs as fs;
 use horizon_world::{
     food::FoodData,
     nbt::{Compound, Tag},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

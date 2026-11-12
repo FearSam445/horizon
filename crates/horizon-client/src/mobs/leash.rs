@@ -699,7 +699,7 @@ mod tests {
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let reference = std::env::var_os("HORIZON_HAPPY_GHAST_LEASH_REFERENCE").unwrap();
         let rows: Vec<serde_json::Value> =
-            serde_json::from_slice(&std::fs::read(reference).unwrap()).unwrap();
+            serde_json::from_slice(&horizon_fs::read(reference).unwrap()).unwrap();
         assert_eq!(rows.len(), 36, "missing leash cases");
         let ran = crate::mobs::world::with_resource_test_world(
             &root,

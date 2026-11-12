@@ -6,11 +6,9 @@ use horizon_core::{
     },
     noise::DensityVolume,
 };
+use horizon_fs as fs;
 use serde_json::Value;
-use std::{
-    fs,
-    io::{self, Write},
-};
+use std::io::{self, Write};
 fn n(v: &Value) -> i32 {
     v.as_i64().unwrap() as i32
 }

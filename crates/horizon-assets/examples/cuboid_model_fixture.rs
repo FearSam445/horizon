@@ -1,10 +1,8 @@
 mod support;
 use horizon_assets::model::CuboidModel;
+use horizon_fs::File;
 use serde_json::json;
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 use support::model;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

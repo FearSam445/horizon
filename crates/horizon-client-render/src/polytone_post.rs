@@ -4,6 +4,8 @@
 //! (`post_targets`) kept between frames. `post_chain` runs them; this reads what they add.
 use crate::environment::Frame;
 use crate::post_chain::{Extras, InternalTarget};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_polytone::expr::Program;
 use serde_json::Value as Json;
 use std::path::Path;
@@ -68,16 +70,16 @@ impl PolyGlobals {
 /// Every `.json` under `assets/<namespace>/polytone/<kind>`, by its implicit id.
 fn files(root: &Path, kind: &str) -> Vec<(String, Json)> {
     let mut out = Vec::new();
-    let namespaces = std::fs::read_dir(root.join("assets"))
+    let namespaces = horizon_fs::read_dir(root.join("assets"))
         .into_iter()
         .flatten()
         .flatten();
     for namespace in namespaces {
         let mut stack = vec![namespace.path().join("polytone").join(kind)];
         while let Some(dir) = stack.pop() {
-            for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+            for entry in horizon_fs::read_dir(&dir).into_iter().flatten().flatten() {
                 let path = entry.path();
-                if path.is_dir() {
+                if path.fs_is_dir() {
                     stack.push(path);
                     continue;
                 }
@@ -225,11 +227,11 @@ mod tests {
     #[test]
     fn chains_run_while_their_condition_holds_with_their_uniforms() {
         let root =
-            std::env::temp_dir().join(format!("horizon-polytone-post-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-polytone-post-{}", std::process::id()));
         let write = |path: &str, text: &str| {
             let path = root.join(path);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(path, text).unwrap();
+            horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+            horizon_fs::write(path, text).unwrap();
         };
         write(
             "assets/p/polytone/post_chains/glare.json",
@@ -255,6 +257,6 @@ mod tests {
         assert!(extras.targets["p:history"].persistent);
         frame.rain = 1.0;
         assert!(post.frame(&frame, &PolyGlobals::default()).0.is_empty());
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 }

@@ -16,8 +16,10 @@
 //! Written from OptiFine's `emissive.properties` and ETF's `EMISSIVE_GUIDE.md` and
 //! `emissive.properties`; no mod's source was read.
 
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
 
 use crate::paths::files_under;
@@ -57,7 +59,7 @@ impl Emissive {
             for file in files_under(root, &format!("{prefix}textures/entity"), &[png.as_str()]) {
                 let overlay = &file[prefix.len()..file.len() - ".png".len()];
                 let base = &overlay[..overlay.len() - out.suffix.len()];
-                if root.join(format!("{prefix}{base}.png")).is_file() {
+                if root.join(format!("{prefix}{base}.png")).fs_is_file() {
                     out.overlays
                         .insert(atlas_name(&ns, base), atlas_name(&ns, overlay));
                 }
@@ -80,7 +82,7 @@ impl Emissive {
                 continue;
             };
             let overlay = format!("{stem}{png}");
-            if root.join(&overlay).is_file() {
+            if root.join(&overlay).fs_is_file() {
                 let overlay_name = format!("{name}{}", self.suffix);
                 self.overlays.insert(name.to_owned(), overlay_name.clone());
                 // Those under `textures/` are the atlas's already.
@@ -134,7 +136,7 @@ mod tests {
 
     fn pack(name: &str, files: &[&str], suffix: Option<&str>) -> (std::path::PathBuf, Emissive) {
         let root =
-            std::env::temp_dir().join(format!("horizon-emissive-{name}-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-emissive-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         for path in files {
             let path = root.join(path);
@@ -224,7 +226,7 @@ mod tests {
     #[test]
     fn where_the_suffix_is_read() {
         let suffix = |files: &[(&str, &[u8])]| {
-            let root = std::env::temp_dir().join(format!(
+            let root = horizon_fs::temp_dir().join(format!(
                 "horizon-emissive-where-{}-{}",
                 std::process::id(),
                 files.len()

@@ -181,7 +181,7 @@ impl Game<'_> {
         let Ok(bytes) = Compression::Gzip.encode(&raw) else {
             return false;
         };
-        std::fs::create_dir_all(parent).is_ok() && std::fs::write(file, bytes).is_ok()
+        horizon_fs::create_dir_all(parent).is_ok() && horizon_fs::write(file, bytes).is_ok()
     }
 
     /// `StructureTemplate.fillFromWorld` for a box at `origin`: every block

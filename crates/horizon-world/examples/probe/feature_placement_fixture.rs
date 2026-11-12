@@ -1,6 +1,7 @@
 //! Transport for native modifier chains and a feature callback sharing the RNG.
 use crate::support::placement_queries as queries;
 use horizon_core::random::{LegacyRandom, RandomSource, XoroshiroRandom};
+use horizon_fs as fs;
 use horizon_world::worldgen::{
     anchor::WorldGenerationContext,
     placement::{FeaturePlacer, PlacementModifier},
@@ -8,7 +9,6 @@ use horizon_world::worldgen::{
 use serde_json::Value;
 use std::cell::RefCell;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

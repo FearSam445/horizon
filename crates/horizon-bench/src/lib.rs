@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 
 use serde::{Deserialize, Serialize};
 
@@ -321,7 +321,7 @@ impl Report {
 
     /// Writes `<dir>/<kind>-<created>-<scenario>.json` and returns its path.
     pub fn write_to(&self, dir: &Path) -> io::Result<PathBuf> {
-        std::fs::create_dir_all(dir)?;
+        horizon_fs::create_dir_all(dir)?;
         let kind = match self.kind {
             Kind::Game => "game",
             Kind::Launcher => "launcher",
@@ -342,7 +342,7 @@ impl Report {
             })
             .collect();
         let path = dir.join(format!("{kind}-{stamp}-{scenario}.json"));
-        std::fs::write(&path, self.to_json() + "\n")?;
+        horizon_fs::write(&path, self.to_json() + "\n")?;
         Ok(path)
     }
 }
@@ -458,7 +458,7 @@ mod tests {
 
     #[test]
     fn writes_into_a_folder() {
-        let dir = std::env::temp_dir().join(format!("horizon-bench-test-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-bench-test-{}", std::process::id()));
         let mut r = Report::new(Kind::Launcher, App::default());
         r.created = "2026-10-15T14:03:27Z".into();
         r.conditions.scenario = Some("cold start".into());
@@ -468,9 +468,9 @@ mod tests {
             "launcher-20261015140327-cold_start.json"
         );
         assert_eq!(
-            Report::parse(&std::fs::read_to_string(&path).unwrap()).unwrap(),
+            Report::parse(&horizon_fs::read_to_string(&path).unwrap()).unwrap(),
             r
         );
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 }

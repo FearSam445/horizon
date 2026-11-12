@@ -1148,7 +1148,7 @@ mod tests {
     fn horse_armor_draws_its_equipment_asset_texture() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        let Ok(items) = std::fs::read(root.join("items.json")) else {
+        let Ok(items) = horizon_fs::read(root.join("items.json")) else {
             return;
         };
         let items: serde_json::Value = serde_json::from_slice(&items).unwrap();
@@ -1166,7 +1166,7 @@ mod tests {
             let asset = asset.strip_prefix("minecraft:").unwrap();
             let file = root.join(format!("assets/minecraft/equipment/{asset}.json"));
             let equipment: serde_json::Value =
-                serde_json::from_slice(&std::fs::read(file).unwrap()).unwrap();
+                serde_json::from_slice(&horizon_fs::read(file).unwrap()).unwrap();
             let texture = equipment["layers"]["horse_body"][0]["texture"]
                 .as_str()
                 .unwrap();

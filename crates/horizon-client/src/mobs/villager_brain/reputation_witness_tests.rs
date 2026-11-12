@@ -14,7 +14,7 @@ fn villager(id: u32, x: f64, z: f64, invisible: bool) -> Mob {
 #[ignore = "requires explicit prepared resources and vanilla oracle output"]
 fn witnesses_use_sensor_candidates_radius_invisibility_and_cached_results() {
     let root = std::env::var_os("HORIZON_TEST_RESOURCES").expect("explicit fixture resources");
-    let oracle = std::fs::read_to_string(
+    let oracle = horizon_fs::read_to_string(
         std::env::var_os("HORIZON_REPUTATION_ORACLE").expect("oracle output"),
     )
     .unwrap();

@@ -1,8 +1,8 @@
 use horizon_assets::blockstate::{BlockStateDefinition, Condition, Variant, VariantSet};
+use horizon_fs::File;
 use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 fn variant(v: &Variant) -> Value {

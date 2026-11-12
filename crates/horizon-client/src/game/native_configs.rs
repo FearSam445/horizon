@@ -10,7 +10,9 @@
 //! (`native_config_reloading`). A server's configs are dropped when it stops
 //! (`native_config_unloading`).
 use super::Game;
-use std::fs;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::{Component, Path, PathBuf};
 use std::time::SystemTime;
 use web_time::{Duration, Instant};
@@ -120,12 +122,12 @@ fn locate(
         && let Some(world) = world
     {
         let own = world.join("serverconfig").join(&config.file);
-        if own.is_file() {
+        if own.fs_is_file() {
             return Ok(own);
         }
     }
     let path = config_dir.join(&config.file);
-    if !path.exists() {
+    if !path.fs_exists() {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
@@ -318,7 +320,7 @@ mod tests {
 
     impl Folder {
         fn new(name: &str) -> Self {
-            let dir = std::env::temp_dir().join(format!(
+            let dir = horizon_fs::temp_dir().join(format!(
                 "horizon-native-configs-{name}-{}",
                 std::process::id()
             ));
@@ -376,7 +378,7 @@ mod tests {
             "hud = true\n"
         );
         // Another side's kind is neither read nor written.
-        assert!(!config.join("gt-server.toml").exists());
+        assert!(!config.join("gt-server.toml").fs_exists());
     }
 
     #[test]
@@ -409,7 +411,7 @@ mod tests {
             ]
         );
         // The world's copy stands for the default: nothing is written beside it.
-        assert!(!config.join("gt/ores.toml").exists());
+        assert!(!config.join("gt/ores.toml").fs_exists());
         assert_eq!(configs.drop_server().len(), 2);
         assert!(configs.files.is_empty());
     }
@@ -434,7 +436,7 @@ mod tests {
             loaded.iter().map(|f| f.mod_id.as_str()).collect::<Vec<_>>(),
             ["a"]
         );
-        assert!(!root.0.join("options.txt").exists());
+        assert!(!root.0.join("options.txt").fs_exists());
     }
 
     #[test]

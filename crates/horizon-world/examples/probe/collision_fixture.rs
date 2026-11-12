@@ -3,6 +3,7 @@ use horizon_core::{
     geometry::{Aabb, Axis, Vec3},
     position::BlockPos,
 };
+use horizon_fs as fs;
 use horizon_world::{
     chunk::BlockSection,
     collision::CachedCollisionRegistry,
@@ -11,7 +12,6 @@ use horizon_world::{
 };
 use std::{
     error::Error,
-    fs,
     io::{BufRead, Write},
     path::PathBuf,
 };

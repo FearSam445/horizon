@@ -1054,6 +1054,7 @@ use horizon_core::{
     random::LegacyRandom,
     ticks::{ScheduleResult, TickPriority},
 };
+use horizon_fs as fs;
 use horizon_world::{
     consumable::UseAnimation,
     fluid::{FluidKind, FluidState},
@@ -1063,7 +1064,6 @@ use horizon_world::{
 };
 use std::{
     collections::HashMap,
-    fs,
     path::{Path, PathBuf},
     sync::Arc,
 };

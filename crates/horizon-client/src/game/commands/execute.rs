@@ -185,7 +185,7 @@ impl Game<'_> {
             std::sync::OnceLock::new();
         EYE_HEIGHTS
             .get_or_init(|| {
-                std::fs::read(self.options.resources.join("entity-types.json"))
+                horizon_fs::read(self.options.resources.join("entity-types.json"))
                     .ok()
                     .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
                     .and_then(|v| {
@@ -1538,7 +1538,7 @@ mod terminal_fork_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(std::env::current_dir().unwrap().join("game"));
+        options.game_dir = Some(horizon_fs::current_dir().unwrap().join("game"));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,

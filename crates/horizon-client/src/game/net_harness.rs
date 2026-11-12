@@ -136,7 +136,7 @@ impl Game<'_> {
         if self.remote.is_some() {
             self.leave_server(None)?;
         }
-        std::fs::write(
+        horizon_fs::write(
             report,
             json!({
                 "position": position,

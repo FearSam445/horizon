@@ -3,6 +3,7 @@ use horizon_core::{
     noise::{NanRange, Noise},
     random::{LegacyRandom, PositionalRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::{
     registry::BlockStateId,
     worldgen::{
@@ -16,7 +17,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     io::{self, Write},
     path::Path,
     sync::{Arc, Mutex},

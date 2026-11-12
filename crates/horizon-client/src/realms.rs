@@ -8,6 +8,8 @@
 //! launcher hands over after its owner check (`auth::current`). Without one (offline play, an
 //! expired token) the screen says so and makes no request. Every request runs on a worker
 //! thread; the title polls the results once a frame (`poll`).
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 pub mod availability;
 pub mod client;
 pub mod download;
@@ -1542,7 +1544,7 @@ fn upload_created_world(
         };
         upload::upload_world(client, server.id, &realm_slot, &dir, progress)
     })();
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
     result
 }
 
@@ -1552,12 +1554,12 @@ fn upload_created_world(
 /// chunks: the Realm generates them when the world first opens.
 fn create_temporary_world(world: &CreatedWorld) -> std::result::Result<PathBuf, String> {
     static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-    let dir = std::env::temp_dir().join(format!(
+    let dir = horizon_fs::temp_dir().join(format!(
         "horizon-realms-world-upload-{}-{}",
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
     let result = (|| {
         let mut level = world.level.clone();
         level.data_packs = Some(world.data_packs.clone());
@@ -1574,14 +1576,14 @@ fn create_temporary_world(world: &CreatedWorld) -> std::result::Result<PathBuf, 
             // `Files.move(tempDataPackDir, worldFolder.resolve("datapacks"))`; the
             // Create World screen's temporary folder is gone afterwards.
             crate::datapack::install(pack_dir, &dir, &world.data_packs.0)?;
-            let _ = std::fs::remove_dir_all(pack_dir);
+            let _ = horizon_fs::remove_dir_all(pack_dir);
         }
         Ok(())
     })();
     match result {
         Ok(()) => Ok(dir),
         Err(e) => {
-            let _ = std::fs::remove_dir_all(&dir);
+            let _ = horizon_fs::remove_dir_all(&dir);
             Err(e)
         }
     }
@@ -1814,7 +1816,7 @@ impl Screen {
         let Some(path) = self.news_persistence_path() else {
             return (None, false);
         };
-        match std::fs::read_to_string(&path) {
+        match horizon_fs::read_to_string(&path) {
             Ok(json) => {
                 let data: serde_json::Value = serde_json::from_str(&json).unwrap_or_default();
                 (
@@ -1832,7 +1834,7 @@ impl Screen {
             return;
         };
         let json = serde_json::json!({ "newsLink": link, "hasUnreadNews": unread });
-        let _ = std::fs::write(&path, json.to_string());
+        let _ = horizon_fs::write(&path, json.to_string());
     }
 
     pub fn layout_state(&self) -> LayoutState {
@@ -5590,7 +5592,7 @@ impl Screen {
                             EXPIRATIONS[index.min(EXPIRATIONS.len() - 1)]
                                 .1
                                 .map(|seconds| {
-                                    use std::time::{SystemTime, UNIX_EPOCH};
+                                    use std::time::UNIX_EPOCH;
                                     let now = horizon_clock::system_now()
                                         .duration_since(UNIX_EPOCH)
                                         .map(|d| d.as_millis() as i64)
@@ -10870,7 +10872,9 @@ impl Screen {
                     // then three lines at contentY+1/+12/+21, the text at contentX + 35.
                     let pixels = self.saves.as_ref().and_then(|saves| {
                         let path = saves.join(&world.folder).join("icon.png");
-                        let modified = std::fs::metadata(&path).and_then(|m| m.modified()).ok()?;
+                        let modified = horizon_fs::metadata(&path)
+                            .and_then(|m| m.modified())
+                            .ok()?;
                         let mut icons = self.world_icons.borrow_mut();
                         let cached = icons
                             .entry(path.clone())
@@ -11871,7 +11875,9 @@ mod tests {
             skin_workers: SkinWorkers {
                 profiles: std::sync::Arc::new(std::sync::Mutex::new(crate::skins::Resolver::new())),
                 downloads: std::sync::Arc::new(std::sync::Mutex::new(
-                    crate::skins::Downloader::new(std::env::temp_dir().join("horizon-test-skins")),
+                    crate::skins::Downloader::new(
+                        horizon_fs::temp_dir().join("horizon-test-skins"),
+                    ),
                 )),
             },
             skin_faces: std::cell::RefCell::new(std::collections::HashMap::new()),
@@ -12363,7 +12369,9 @@ mod tests {
             skin_workers: SkinWorkers {
                 profiles: std::sync::Arc::new(std::sync::Mutex::new(crate::skins::Resolver::new())),
                 downloads: std::sync::Arc::new(std::sync::Mutex::new(
-                    crate::skins::Downloader::new(std::env::temp_dir().join("horizon-test-skins")),
+                    crate::skins::Downloader::new(
+                        horizon_fs::temp_dir().join("horizon-test-skins"),
+                    ),
                 )),
             },
             skin_faces: std::cell::RefCell::new(std::collections::HashMap::new()),
@@ -12767,12 +12775,15 @@ mod tests {
             Some("New World")
         );
         assert!(level.get("singleplayer_uuid").is_none());
-        assert!(!dir.join("players").exists());
-        assert!(dir.join("data/minecraft/world_gen_settings.dat").is_file());
-        assert!(dir.join("data/minecraft/game_rules.dat").is_file());
-        assert!(!dir.join("data/minecraft/weather.dat").exists());
-        assert!(!dir.join("data/minecraft/world_clocks.dat").exists());
-        let _ = std::fs::remove_dir_all(&dir);
+        assert!(!dir.join("players").fs_exists());
+        assert!(
+            dir.join("data/minecraft/world_gen_settings.dat")
+                .fs_is_file()
+        );
+        assert!(dir.join("data/minecraft/game_rules.dat").fs_is_file());
+        assert!(!dir.join("data/minecraft/weather.dat").fs_exists());
+        assert!(!dir.join("data/minecraft/world_clocks.dat").fs_exists());
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     /// `WorldTemplatePaginatedList.isLastPage`: page*size >= total, all three set.

@@ -1,5 +1,5 @@
+use horizon_fs::File;
 use std::collections::HashMap;
-use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;
 

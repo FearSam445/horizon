@@ -13,10 +13,10 @@ use horizon_core::{
     geometry::{Aabb, Vec3},
     position::BlockPos,
 };
+use horizon_fs::File;
 use horizon_world::{chunk::BlockState, registry::BlockStateId};
 use serde_json::Value;
 use std::{
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
     sync::Arc,

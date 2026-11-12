@@ -1,9 +1,9 @@
 //! Transport for anchored provider samples and subsequent random state.
 use horizon_core::random::{LegacyRandom, RandomSource, XoroshiroRandom};
+use horizon_fs as fs;
 use horizon_world::worldgen::{anchor::WorldGenerationContext, height_provider::HeightProvider};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

@@ -3,6 +3,7 @@
 extern crate horizon_client_lib as horizon_client;
 use horizon_client::{Result, models::StateModels, sprites::Sprites};
 use horizon_core::position::BlockPos;
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     chunk::BlockState,
@@ -10,7 +11,7 @@ use horizon_world::{
     registry::{BlockRegistry, BlockStateId},
 };
 use serde_json::{Value, json};
-use std::{collections::BTreeMap, fs, hint::black_box, path::PathBuf};
+use std::{collections::BTreeMap, hint::black_box, path::PathBuf};
 use web_time::Instant;
 
 struct Fixture {
@@ -22,7 +23,7 @@ struct Fixture {
 impl Fixture {
     fn new(target_bytes: usize) -> Result<Self> {
         let root =
-            std::env::temp_dir().join(format!("horizon-model-states-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-model-states-{}", std::process::id()));
         fs::create_dir_all(root.join("assets/minecraft/blockstates"))?;
         fs::create_dir_all(root.join("assets/minecraft/models/block"))?;
         let mut possible = Vec::new();

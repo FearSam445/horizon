@@ -1,8 +1,8 @@
 //! The base's per-state tables, rewritten for the mods' states while
 //! [`build`](super::build) reads the mods' files.
 use super::{JSON_TABLES, NBT_TABLES, Overlay, Plan, Result, read_json};
+use horizon_fs as fs;
 use horizon_world::nbt::{self, Limits};
-use std::fs;
 use std::path::Path;
 
 /// Threads rewriting the tables at once. Each holds a whole table as a tree

@@ -12,9 +12,10 @@ use horizon_client::{
     menu::place::Stacked,
     recipe_book::{Book, BookType, ClientBook, Display, RecipeIndex, Tab},
 };
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
 use serde_json::Value;
-use std::{fmt::Write as _, fs, path::Path};
+use std::{fmt::Write as _, path::Path};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().collect();

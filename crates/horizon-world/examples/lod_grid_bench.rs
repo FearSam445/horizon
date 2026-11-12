@@ -17,14 +17,14 @@ fn main() -> Result<(), Error> {
     let resources = PathBuf::from(args.next().ok_or("usage: lod_grid_bench <resources>")?);
     let (mut seed, mut tiles) = (0i64, 25);
     let mut levels = vec![0u8, 2, 4, 6];
-    let mut dump: Option<std::fs::File> = None;
+    let mut dump: Option<horizon_fs::File> = None;
     let mut approximate = false;
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--seed" => seed = args.next().ok_or("--seed S")?.parse()?,
             "--approximate" => approximate = true,
             "--tiles" => tiles = args.next().ok_or("--tiles N")?.parse()?,
-            "--dump" => dump = Some(std::fs::File::create(args.next().ok_or("--dump PATH")?)?),
+            "--dump" => dump = Some(horizon_fs::File::create(args.next().ok_or("--dump PATH")?)?),
             "--levels" => {
                 levels = args
                     .next()

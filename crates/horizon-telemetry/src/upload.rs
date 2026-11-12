@@ -42,7 +42,7 @@ fn state_path(home: &Path) -> PathBuf {
 }
 
 fn load(home: &Path) -> State {
-    std::fs::read(state_path(home))
+    horizon_fs::read(state_path(home))
         .ok()
         .and_then(|b| serde_json::from_slice(&b).ok())
         .unwrap_or_default()
@@ -95,12 +95,12 @@ pub fn flush(home: &Path, endpoint: &str) -> Flush {
                 state.failures = 0;
                 items += paths.len();
                 batches += 1;
-                paths.iter().for_each(|p| drop(std::fs::remove_file(p)));
+                paths.iter().for_each(|p| drop(horizon_fs::remove_file(p)));
             }
             // Refused for what it is (not for load): sending it again would not help.
             Err(ureq::Error::Status(code, _)) if (400..500).contains(&code) && code != 429 => {
                 state.batches += 1;
-                paths.iter().for_each(|p| drop(std::fs::remove_file(p)));
+                paths.iter().for_each(|p| drop(horizon_fs::remove_file(p)));
             }
             Err(e) => {
                 state.failures = (state.failures + 1).min(16);

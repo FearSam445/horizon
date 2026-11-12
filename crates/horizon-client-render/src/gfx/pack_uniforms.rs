@@ -1328,19 +1328,19 @@ mod tests {
 
     /// A dimension type of `attributes` (JSON), loaded as the game loads one and sampled at noon.
     fn sky_of(name: &str, attributes: &str) -> crate::environment::Sky {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-cloud-height-{}-{name}",
             std::process::id()
         ));
         let dir = root.join("data/minecraft/dimension_type");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(
             dir.join(format!("{name}.json")),
             format!(r#"{{"attributes": {attributes}}}"#),
         )
         .unwrap();
         let environment = crate::environment::Environment::load_dimension(&root, name).unwrap();
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         environment.sample(&crate::environment::Sample {
             day_time: 6000,
             ..Default::default()

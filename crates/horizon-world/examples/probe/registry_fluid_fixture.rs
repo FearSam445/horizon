@@ -2,6 +2,7 @@ use horizon_core::{
     geometry::{Direction, VoxelShape},
     position::BlockPos,
 };
+use horizon_fs as fs;
 use horizon_world::{
     block_support::BlockSupportRegistry,
     dynamic_support::DynamicSupportWorld,
@@ -13,7 +14,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeSet,
-    fs,
     io::{self, Write},
     path::Path,
 };

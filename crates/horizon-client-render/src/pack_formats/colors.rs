@@ -52,10 +52,10 @@ mod tests {
     #[test]
     fn a_pack_recolours_only_what_it_names() {
         // Dyes no other test draws: the table is process-wide.
-        let dir = std::env::temp_dir().join(format!("pack-dyes-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("pack-dyes-{}", std::process::id()));
         let polytone = dir.join("assets/obs/polytone");
-        std::fs::create_dir_all(&polytone).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&polytone).unwrap();
+        horizon_fs::write(
             polytone.join("colors.json"),
             r#"{"dye": {"cyan": {"diffuse": "00ff00", "text": "0000ff"}}, "sheep": {"pink": "2040ff"}, "redstone": {"7": "0x123456"}}"#,
         )
@@ -74,6 +74,6 @@ mod tests {
         assert_eq!(redstone(7), None);
         assert_eq!(diffuse(cyan), 0x169C9C);
         assert_eq!(sheep_wool(pink as u8), 0xB6687F);
-        std::fs::remove_dir_all(&dir).ok();
+        horizon_fs::remove_dir_all(&dir).ok();
     }
 }

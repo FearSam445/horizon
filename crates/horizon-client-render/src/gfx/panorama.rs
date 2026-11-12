@@ -151,7 +151,7 @@ fn load_face(
         if tried.first().is_some_and(|(seen, _)| *seen == path) {
             continue;
         }
-        let read = std::fs::read(&path)
+        let read = horizon_fs::read(&path)
             .map_err(|e| e.to_string())
             .and_then(|file| {
                 let image = decode_bytes(&file).map_err(|e| e.to_string())?;
@@ -413,10 +413,8 @@ mod tests {
             indices
         );
     }
-    use std::{
-        fs,
-        sync::atomic::{AtomicU32, Ordering},
-    };
+    use horizon_fs as fs;
+    use std::sync::atomic::{AtomicU32, Ordering};
 
     /// One resource root: a pack overlay, or the game's own resources.
     struct Fixture(std::path::PathBuf);
@@ -431,7 +429,7 @@ mod tests {
         /// A root with the faces' folder and none of the faces.
         fn bare() -> Self {
             static NEXT: AtomicU32 = AtomicU32::new(0);
-            let root = std::env::temp_dir().join(format!(
+            let root = horizon_fs::temp_dir().join(format!(
                 "horizon-panorama-{}-{}",
                 std::process::id(),
                 NEXT.fetch_add(1, Ordering::Relaxed),

@@ -149,25 +149,25 @@ fn encoding_fixture() -> horizon_client::Result<(BlockRegistry, Biomes)> {
             ),
         ),
     ]))?;
-    let temp = std::env::temp_dir().join(format!("horizon-save-batch-{}", std::process::id()));
+    let temp = horizon_fs::temp_dir().join(format!("horizon-save-batch-{}", std::process::id()));
     let result = (|| {
         let textures = temp.join("assets/minecraft/textures/colormap");
         let biomes = temp.join("data/minecraft/worldgen/biome");
-        std::fs::create_dir_all(&textures)?;
-        std::fs::create_dir_all(&biomes)?;
+        horizon_fs::create_dir_all(&textures)?;
+        horizon_fs::create_dir_all(&biomes)?;
         for name in ["grass", "foliage", "dry_foliage"] {
             let mut encoder = png::Encoder::new(
-                std::fs::File::create(textures.join(format!("{name}.png")))?,
+                horizon_fs::File::create(textures.join(format!("{name}.png")))?,
                 1,
                 1,
             );
             encoder.set_color(png::ColorType::Rgb);
             encoder.write_header()?.write_image_data(&[0, 128, 0])?;
         }
-        std::fs::write(biomes.join("plains.json"), b"{}")?;
+        horizon_fs::write(biomes.join("plains.json"), b"{}")?;
         Biomes::load(&temp)
     })();
-    std::fs::remove_dir_all(&temp)?;
+    horizon_fs::remove_dir_all(&temp)?;
     Ok((registry, result?))
 }
 

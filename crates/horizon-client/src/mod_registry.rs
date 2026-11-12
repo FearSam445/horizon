@@ -11,8 +11,10 @@
 //! game needs. Everything here blocks: the game runs it on a worker
 //! (`game/mod_browser.rs`).
 use crate::mod_browser::Listing;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_mods::index::{self, Index, Kind, Project, Trust, Version};
-use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 
@@ -181,7 +183,7 @@ pub fn install(
     let old_file = ours.and_then(|i| list.entries[i]["file"].as_str().map(str::to_owned));
     if let Some(i) = ours
         && list.entries[i]["version"].as_str() == Some(v.version.as_str())
-        && target.exists()
+        && target.fs_exists()
     {
         return Ok(Done {
             id: id.to_owned(),
@@ -190,8 +192,8 @@ pub fn install(
         });
     }
     // Never over a mod the player put there themselves.
-    let theirs = target.exists() && old_file.as_deref() != Some(relative.as_str());
-    if theirs || home.join(crate::mod_list::DIR).join(id).is_dir() {
+    let theirs = target.fs_exists() && old_file.as_deref() != Some(relative.as_str());
+    if theirs || home.join(crate::mod_list::DIR).join(id).fs_is_dir() {
         return Err(format!(
             "a mod with the id {id} is already in {}: move it away first",
             crate::mod_list::DIR
@@ -318,7 +320,7 @@ impl Installed {
     fn version_of(&self, home: &Path, id: &str) -> Option<String> {
         if let Some(e) = self.position(id).map(|i| &self.entries[i])
             && let (Some(version), Some(file)) = (e["version"].as_str(), e["file"].as_str())
-            && home.join(file).exists()
+            && home.join(file).fs_exists()
         {
             return Some(version.to_owned());
         }

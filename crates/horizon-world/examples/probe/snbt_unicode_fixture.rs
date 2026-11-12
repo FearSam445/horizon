@@ -18,8 +18,8 @@ fn tag(value: &serde_json::Value) -> Tag {
 
 pub fn main() {
     let args: Vec<_> = super::args().collect();
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[2]).unwrap());
-    for line in std::fs::read_to_string(&args[1]).unwrap().lines() {
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[2]).unwrap());
+    for line in horizon_fs::read_to_string(&args[1]).unwrap().lines() {
         let input: serde_json::Value = serde_json::from_str(line).unwrap();
         for unit in to_snbt(&tag(&input)).encode_utf16() {
             write!(out, "{unit:04x}").unwrap();

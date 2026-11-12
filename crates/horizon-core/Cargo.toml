@@ -11,6 +11,8 @@ description = "Horizon simulation foundations for the pinned vanilla Java Editio
 rng-trace = []
 
 [dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
 # std::time, with a clock in the browser build (web/).
 web-time = "1.1"
 libm = "=0.2.16"

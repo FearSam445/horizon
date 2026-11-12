@@ -40,11 +40,11 @@ fn main() -> horizon_client::Result<()> {
         .ok_or("usage: sprite_cache_parity ROOT")?;
     let root = Path::new(&root);
     let assets = Assets::load(root)?;
-    let _ = std::fs::remove_file(root.join("horizon-sprites.cache"));
+    let _ = horizon_fs::remove_file(root.join("horizon-sprites.cache"));
     let start = Instant::now();
     let cold = digest(&assets.reload(root)?);
     let cold_ms = start.elapsed().as_secs_f64() * 1000.;
-    let size = std::fs::metadata(root.join("horizon-sprites.cache"))?.len();
+    let size = horizon_fs::metadata(root.join("horizon-sprites.cache"))?.len();
     let start = Instant::now();
     let warm = digest(&assets.reload(root)?);
     let warm_ms = start.elapsed().as_secs_f64() * 1000.;

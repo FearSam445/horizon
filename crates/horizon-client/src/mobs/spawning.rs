@@ -4,6 +4,8 @@
 //! equipment).
 use super::{Mob, MobWorld, Species, farm::Climate};
 use horizon_core::random::RandomSource;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 /// Biome facts finalizeSpawn and the spawn rules read.
 #[derive(Clone, Copy, Debug, Default)]
@@ -418,7 +420,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return None;
         }
         Some(crate::mobs::MobTypes::load(&root).unwrap())

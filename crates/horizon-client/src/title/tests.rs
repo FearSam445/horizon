@@ -1,9 +1,9 @@
 use super::*;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::Tag;
-use std::{
-    fs,
-    sync::atomic::{AtomicUsize, Ordering},
-};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 struct Fixture {
     root: PathBuf,
@@ -12,7 +12,7 @@ struct Fixture {
 impl Fixture {
     fn new() -> Self {
         static NEXT: AtomicUsize = AtomicUsize::new(0);
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-world-menu-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
@@ -402,7 +402,7 @@ fn edit_layout_disables_missing_icon_and_opens_the_optimize_question() {
             .enabled
     );
     f.click("Reset Icon");
-    assert!(!f.title.saves.join("World/icon.png").exists());
+    assert!(!f.title.saves.join("World/icon.png").fs_exists());
     assert!(
         !f.title
             .buttons(480.0, 262.0)
@@ -448,7 +448,7 @@ fn rename_preserves_unknown_metadata_and_cancel_discards_edits() {
     };
     data.insert("LevelName".into(), Tag::String("Renamed 世界".into()));
     assert_eq!(crate::save::read_dat(&path).unwrap(), expected);
-    assert!(path.with_file_name("level.dat_old").is_file());
+    assert!(path.with_file_name("level.dat_old").fs_is_file());
     assert!(
         matches!(&f.title.mode, Mode::Select { worlds, selected: Some(i) } if worlds[*i].name == "Renamed 世界")
     );
@@ -468,11 +468,11 @@ fn delete_requires_confirmation_and_both_cancel_paths_preserve_world() {
     f.select();
     f.click("Delete");
     assert!(matches!(f.title.mode, Mode::Delete { .. }));
-    assert!(f.title.saves.join("World/level.dat").is_file());
+    assert!(f.title.saves.join("World/level.dat").fs_is_file());
     f.click("Cancel");
     f.click("Delete");
     f.title.escape();
-    assert!(f.title.saves.join("World/level.dat").is_file());
+    assert!(f.title.saves.join("World/level.dat").fs_is_file());
     f.click("Delete");
     let delete = f
         .title
@@ -482,7 +482,7 @@ fn delete_requires_confirmation_and_both_cancel_paths_preserve_world() {
         .unwrap();
     assert_eq!((delete.x, delete.y, delete.w), (88.0, 146.0, 150.0));
     f.click("Delete");
-    assert!(!f.title.saves.join("World").exists());
+    assert!(!f.title.saves.join("World").fs_exists());
     // The last world gone, vanilla opens a fresh Create New World, not an empty list.
     assert!(matches!(&f.title.mode, Mode::Create { name, .. } if name == "New World"));
     f.click("Cancel");
@@ -671,7 +671,7 @@ fn failed_operations_show_error_and_leave_world_intact() {
     assert!(matches!(f.title.mode, Mode::Error { .. }));
     f.click("Back");
     assert!(matches!(f.title.mode, Mode::Edit { .. }));
-    assert!(f.title.saves.join("World").is_dir());
+    assert!(f.title.saves.join("World").fs_is_dir());
     for bad in ["../World", "..", ".", "/World"] {
         assert!(world_management::delete(&f.title.saves, bad).is_err());
     }
@@ -1121,10 +1121,10 @@ fn delete_refuses_an_open_world_then_removes_it_with_its_lock() {
     f.world("World", "World");
     let open = crate::save::SessionLock::acquire(&f.title.saves.join("World")).unwrap();
     assert!(world_management::delete(&f.title.saves, "World").is_err());
-    assert!(f.title.saves.join("World/level.dat").is_file());
+    assert!(f.title.saves.join("World/level.dat").fs_is_file());
     drop(open);
     world_management::delete(&f.title.saves, "World").unwrap();
-    assert!(!f.title.saves.join("World").exists());
+    assert!(!f.title.saves.join("World").fs_exists());
 }
 
 #[cfg(unix)]
@@ -1139,8 +1139,8 @@ fn delete_removes_links_without_following_them() {
     std::os::unix::fs::symlink(&outside, f.title.saves.join("Linked")).unwrap();
     assert!(world_management::delete(&f.title.saves, "Linked").is_err());
     world_management::delete(&f.title.saves, "World").unwrap();
-    assert!(!f.title.saves.join("World").exists());
-    assert!(outside.join("keep.txt").is_file());
+    assert!(!f.title.saves.join("World").fs_exists());
+    assert!(outside.join("keep.txt").fs_is_file());
 }
 
 #[test]
@@ -1435,7 +1435,7 @@ fn create_world_tabs_follow_vanilla_and_their_choices_reach_the_action() {
     let Action::DataPacks { dir, selected } = action else {
         panic!("{action:?}")
     };
-    assert!(sound && dir.is_dir() && selected == ["vanilla"]);
+    assert!(sound && dir.fs_is_dir() && selected == ["vanilla"]);
     f.title
         .set_data_packs(vec!["vanilla".into(), "file/ttm.zip".into()]);
     let Action::Create { options, .. } = f.title.create_action() else {
@@ -1445,7 +1445,7 @@ fn create_world_tabs_follow_vanilla_and_their_choices_reach_the_action() {
     assert_eq!(options.pack_dir.as_ref(), Some(&dir));
     // Cancel removes the folder (removeTempDataPackDir).
     f.title.escape();
-    assert!(!dir.exists());
+    assert!(!dir.fs_exists());
 }
 
 #[test]
@@ -1825,7 +1825,7 @@ fn world_with_unreadable_level_dat_is_listed_and_recovers_from_level_dat_old() {
         Mode::Recovered { success: true, .. }
     ));
     assert_eq!(Level::read_summary(&dir).unwrap().name, "My World");
-    assert!(!dir.join("level.dat_old").exists());
+    assert!(!dir.join("level.dat_old").fs_exists());
     let kept: Vec<_> = fs::read_dir(&dir)
         .unwrap()
         .flatten()
@@ -2826,7 +2826,7 @@ fn a_realms_new_world_uploads_instead_of_creating_locally() {
         screen.subscreen,
         crate::realms::SubScreen::Error { .. }
     ));
-    assert!(!f.title.saves.join("New World").exists());
+    assert!(!f.title.saves.join("New World").fs_exists());
     let _ = fs::remove_dir_all(&f.root);
 }
 

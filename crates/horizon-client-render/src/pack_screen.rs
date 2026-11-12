@@ -2221,7 +2221,7 @@ mod footer_label_tests {
         let atlas = crate::hud::HudAtlas::build(&root).unwrap();
         let m = Measure(&atlas.font);
         let before = lang::code();
-        let mut codes: Vec<String> = std::fs::read_dir(root.join("assets/minecraft/lang"))
+        let mut codes: Vec<String> = horizon_fs::read_dir(root.join("assets/minecraft/lang"))
             .unwrap()
             .filter_map(|e| {
                 let name = e.ok()?.file_name().into_string().ok()?;

@@ -1,5 +1,7 @@
 //! Prepare local worlds without blocking the window's event loop.
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 pub(super) struct WorldRequest {
     pub save_root: PathBuf,
@@ -38,7 +40,7 @@ impl WorldRequest {
         create: Option<&horizon_client::title::WorldOptions>,
     ) -> Result<Self> {
         Ok(Self {
-            save_root: std::env::current_dir()?.join("saves").join(folder),
+            save_root: horizon_fs::current_dir()?.join("saves").join(folder),
             folder: folder.to_owned(),
             name: name.map(str::to_owned),
             seed,
@@ -312,7 +314,7 @@ impl WorldRequest {
         }
 
         // Persist new metadata on the worker too, before publishing the world.
-        if !save_root.join("level.dat").exists() {
+        if !save_root.join("level.dat").fs_exists() {
             level.write(&save_root)?;
         }
         Ok(PreparedWorld {
@@ -465,7 +467,7 @@ pub(super) fn preload_launch_world(
     if !matches!(*preload, Preload::Idle) {
         return;
     }
-    let Ok(dir) = std::env::current_dir() else {
+    let Ok(dir) = horizon_fs::current_dir() else {
         return;
     };
     let world_root = dir.join("saves").join(folder);
@@ -1004,14 +1006,14 @@ mod unused_feature_startup_tests {
         options.resources = resources;
         options.execution_role = execution_role::ExecutionRole::IntegratedServer;
         for (case, height) in [("valid", 0), ("invalid", -1)] {
-            let root = std::env::current_dir().unwrap().join(case);
+            let root = horizon_fs::current_dir().unwrap().join(case);
             let pack = root.join("datapacks/h259");
-            std::fs::create_dir_all(pack.join("data/h259/worldgen/feature")).unwrap();
-            std::fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"H259 unused feature","min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
+            horizon_fs::create_dir_all(pack.join("data/h259/worldgen/feature")).unwrap();
+            horizon_fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"H259 unused feature","min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
             let json = format!(
                 r#"{{"type":"minecraft:fill_layer","height":{height},"state":"minecraft:stone"}}"#
             );
-            std::fs::write(
+            horizon_fs::write(
                 pack.join("data/h259/worldgen/feature/unused_probe.json"),
                 &json,
             )
@@ -1107,15 +1109,15 @@ mod unused_feature_preservation_tests {
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = resources;
         options.execution_role = execution_role::ExecutionRole::IntegratedServer;
-        let root = std::env::current_dir().unwrap().join("preservation");
+        let root = horizon_fs::current_dir().unwrap().join("preservation");
         let pack = root.join("datapacks/h259");
         let entries = pack.join("data/controls/worldgen/feature");
-        std::fs::create_dir_all(&entries).unwrap();
-        std::fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"H259 preservation controls","min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
+        horizon_fs::create_dir_all(&entries).unwrap();
+        horizon_fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"H259 preservation controls","min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
         let leaf = r#"{"type":"minecraft:fill_layer","height":1,"state":"minecraft:stone"}"#;
         let unrelated = r#"{"type":"minecraft:no_op"}"#;
-        std::fs::write(entries.join("another_id.json"), leaf).unwrap();
-        std::fs::write(entries.join("unrelated.json"), unrelated).unwrap();
+        horizon_fs::write(entries.join("another_id.json"), leaf).unwrap();
+        horizon_fs::write(entries.join("unrelated.json"), unrelated).unwrap();
         let mut level = Level {
             seed: 259,
             data_packs: Some((vec!["vanilla".into(), "file/h259".into()], vec![])),

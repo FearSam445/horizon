@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 #[path = "hub/tests/cave_air_tests.rs"]
 mod cave_air_tests;
 #[path = "hub/far_tests.rs"]
@@ -590,17 +592,17 @@ fn sent_tabs(rx: &std::sync::mpsc::Receiver<crate::lan::Out>) -> Vec<Option<Stri
 /// A data folder holding two advancements: `minecraft:root`, a root with a display, and
 /// `minecraft:task`, which hangs off it.
 fn advancement_data() -> std::path::PathBuf {
-    let root = std::env::temp_dir().join(format!(
+    let root = horizon_fs::temp_dir().join(format!(
         "horizon-advancement-tab-{}-{:?}",
         std::process::id(),
         std::thread::current().id()
     ));
     let folder = root.join("data").join("minecraft").join("advancement");
-    std::fs::create_dir_all(&folder).unwrap();
+    horizon_fs::create_dir_all(&folder).unwrap();
     let display = |icon: &str, title: &str| {
         format!(r#"{{"icon":{{"id":"{icon}"}},"title":"{title}","description":"{title}"}}"#)
     };
-    std::fs::write(
+    horizon_fs::write(
         folder.join("root.json"),
         format!(
             r#"{{"display":{},"criteria":{{}}}}"#,
@@ -608,7 +610,7 @@ fn advancement_data() -> std::path::PathBuf {
         ),
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         folder.join("task.json"),
         format!(
             r#"{{"parent":"minecraft:root","display":{},"criteria":{{}}}}"#,
@@ -689,7 +691,7 @@ fn an_advancement_tab_a_guest_opens_is_kept_and_answered() {
         hub.guests[0].selected_tab.as_deref(),
         Some("minecraft:root")
     );
-    let _ = std::fs::remove_dir_all(&data);
+    let _ = horizon_fs::remove_dir_all(&data);
 }
 
 /// `handlePlayerCommand` START_RIDING_JUMP (3) and STOP_RIDING_JUMP (4): the
@@ -782,7 +784,7 @@ fn a_guests_frozen_ticks_go_to_its_client() {
                 .join("../../.local/horizon-client")
                 .join(horizon_core::VANILLA_VERSION)
         });
-    if !root.join("movement-properties.nbt").exists() {
+    if !root.join("movement-properties.nbt").fs_exists() {
         return;
     }
     let assets = crate::assets::Assets::load(&root).unwrap();

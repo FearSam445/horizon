@@ -10,11 +10,9 @@ use horizon_client::{
     hud_overlays,
     worldborder::{BorderStatus, WorldBorder},
 };
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{
-    fs,
-    io::{BufWriter, Write},
-};
+use std::io::{BufWriter, Write};
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 fn floats(v: &[f32]) -> Value {

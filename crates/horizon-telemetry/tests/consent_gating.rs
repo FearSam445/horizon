@@ -59,8 +59,8 @@ fn home(name: &str) -> PathBuf {
     let mut bytes = [0u8; 6];
     getrandom::fill(&mut bytes).unwrap();
     let suffix: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-    let dir = std::env::temp_dir().join(format!("horizon-telemetry-gating-{name}-{suffix}"));
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = horizon_fs::temp_dir().join(format!("horizon-telemetry-gating-{name}-{suffix}"));
+    horizon_fs::create_dir_all(&dir).unwrap();
     dir
 }
 
@@ -89,8 +89,8 @@ fn perf() -> Item {
 /// Puts an item straight into the outbox, as a game from before a withdrawal left it.
 fn leftover(home: &Path, item: &Item, name: &str) {
     let dir = outbox::dir(home);
-    std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join(name), serde_json::to_vec(item).unwrap()).unwrap();
+    horizon_fs::create_dir_all(&dir).unwrap();
+    horizon_fs::write(dir.join(name), serde_json::to_vec(item).unwrap()).unwrap();
 }
 
 #[test]

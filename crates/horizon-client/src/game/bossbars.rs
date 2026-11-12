@@ -13,6 +13,8 @@ use horizon_client::{
     scoreboard_cmd::format_list,
     text::Text,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::packets::play::{self, BossAction, Clientbound as C};
 use horizon_world::{identifier::Identifier, java_hash_map::JavaHashMap, nbt::Tag};
 use std::collections::{HashMap, HashSet};
@@ -109,7 +111,7 @@ impl Game<'_> {
         if !self.bosses.loaded || self.remote.is_some() {
             return;
         }
-        if self.bosses.bars.bars.is_empty() && !self.bossbar_path().exists() {
+        if self.bosses.bars.bars.is_empty() && !self.bossbar_path().fs_exists() {
             return;
         }
         if let Err(e) = save::write_dat(

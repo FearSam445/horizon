@@ -44,7 +44,7 @@ impl Renderer {
         } else if self.surface.is_some()
             && let Some(driver) = &self.hdr_driver
         {
-            let _ = std::fs::write(marker, crate::graphics::hdr_marker_text(driver));
+            let _ = horizon_fs::write(marker, crate::graphics::hdr_marker_text(driver));
             self.hdr_marker = Some(marker.to_owned());
         }
     }
@@ -59,7 +59,7 @@ impl Renderer {
     /// clean exit: only a crash may leave it.
     pub fn drop_hdr_marker(&mut self) {
         if let Some(marker) = self.hdr_marker.take() {
-            let _ = std::fs::remove_file(marker);
+            let _ = horizon_fs::remove_file(marker);
         }
     }
 }

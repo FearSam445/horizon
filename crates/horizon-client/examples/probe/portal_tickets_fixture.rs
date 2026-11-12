@@ -56,11 +56,12 @@ fn snapshot(
 
 pub fn main() {
     let args: Vec<_> = super::args().collect();
-    let input = std::fs::read_to_string(&args[1]).unwrap();
-    let mut out = std::fs::File::create(&args[2]).unwrap();
-    let root = std::env::temp_dir().join(format!("horizon-portal-tickets-{}", std::process::id()));
+    let input = horizon_fs::read_to_string(&args[1]).unwrap();
+    let mut out = horizon_fs::File::create(&args[2]).unwrap();
+    let root =
+        horizon_fs::temp_dir().join(format!("horizon-portal-tickets-{}", std::process::id()));
     for line in input.lines() {
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let case: Value = serde_json::from_str(line).unwrap();
         let (data, _) = parse_snbt(case["saved"].as_str().unwrap()).unwrap();
         let file = root.join("data/minecraft/chunk_tickets.dat");
@@ -96,5 +97,5 @@ pub fn main() {
         }
         writeln!(out, "{}", serde_json::to_string(&trace).unwrap()).unwrap();
     }
-    let _ = std::fs::remove_dir_all(&root);
+    let _ = horizon_fs::remove_dir_all(&root);
 }

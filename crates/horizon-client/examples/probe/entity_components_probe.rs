@@ -10,10 +10,10 @@ use horizon_client::{
         finalize::{species_variant_component, variant_index},
     },
 };
+use horizon_fs::File;
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 

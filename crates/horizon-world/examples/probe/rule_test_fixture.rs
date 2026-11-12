@@ -1,6 +1,7 @@
 //! Differential transport for replacement rules over pinned block identities.
 use crate::support::common::tag;
 use horizon_core::random::{LegacyRandom, RandomSource, XoroshiroRandom};
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     nbt::Tag,
@@ -9,7 +10,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

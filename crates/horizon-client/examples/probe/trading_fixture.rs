@@ -13,9 +13,10 @@ use horizon_client::{
     random_sequences::RandomSequences,
 };
 use horizon_core::random::{LegacyRandom, RandomSource};
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
 use horizon_world::nbt::Tag;
-use std::{collections::HashMap, fmt::Write as _, fs, path::Path};
+use std::{collections::HashMap, fmt::Write as _, path::Path};
 
 const PLAYER: [i32; 4] = [0, 0x1234, 0, 0x5678];
 

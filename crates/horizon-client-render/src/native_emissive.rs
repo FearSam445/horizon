@@ -3,6 +3,8 @@
 //! (OptiFine's `block/stone_e.png` beside `block/stone.png`, the suffix from the pack formats,
 //! [`crate::pack_hooks`]). No extra draw calls or world light changes.
 use crate::sprites::Sprites;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{collections::BTreeMap, path::Path};
 
 /// Overlay pairs the terrain shader reads (`Globals.emissive_layers`, terrain.wgsl).
@@ -23,7 +25,7 @@ pub fn load(root: &Path, sprites: &mut Sprites) {
     names.sort();
     for name in names {
         let file = crate::atlas_sources::texture_path(root, &name, "textures");
-        if std::fs::metadata(file).is_ok_and(|m| m.len() <= 1 << 20) {
+        if horizon_fs::metadata(file).is_ok_and(|m| m.len() <= 1 << 20) {
             let _ = sprites.insert(root, &name);
         }
     }
@@ -76,7 +78,7 @@ pub fn load_overlays(root: &Path, suffix: &str, sprites: &mut Sprites) -> Vec<(S
                 (overlay, file)
             }
         };
-        if !std::fs::metadata(&file).is_ok_and(|m| m.is_file()) {
+        if !horizon_fs::metadata(&file).is_ok_and(|m| m.fs_is_file()) {
             continue;
         }
         if pairs.len() == MAX - NATIVE {
@@ -86,7 +88,7 @@ pub fn load_overlays(root: &Path, suffix: &str, sprites: &mut Sprites) -> Vec<(S
             );
             break;
         }
-        if std::fs::metadata(&file).is_ok_and(|m| m.len() > 1 << 20) {
+        if horizon_fs::metadata(&file).is_ok_and(|m| m.len() > 1 << 20) {
             log::warn!("Horizon: emissive overlay {overlay} is over 1 MiB, skipped");
             continue;
         }
@@ -148,8 +150,8 @@ mod tests {
     /// A 16x16 image of one colour, `shade` its red (images of different shades never share a
     /// sprite layer).
     fn png(path: &Path, shade: u8) {
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        let file = std::io::BufWriter::new(std::fs::File::create(path).unwrap());
+        horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let file = std::io::BufWriter::new(horizon_fs::File::create(path).unwrap());
         let mut encoder = png::Encoder::new(file, 16, 16);
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
@@ -161,8 +163,8 @@ mod tests {
     #[test]
     fn optifine_overlays_pair_with_their_loaded_blocks() {
         let root =
-            std::env::temp_dir().join(format!("horizon-block-emissive-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+            horizon_fs::temp_dir().join(format!("horizon-block-emissive-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&root);
         let block = root.join("assets/minecraft/textures/block");
         let names = [
             "stone",
@@ -181,7 +183,7 @@ mod tests {
         png(&block.join("diorite.png"), 6 * 20);
         png(&block.join("diorite_e.png"), 200);
         // A broken overlay: skipped, not drawn as the missing texture.
-        std::fs::write(block.join("granite_e.png"), b"not a png").unwrap();
+        horizon_fs::write(block.join("granite_e.png"), b"not a png").unwrap();
         png(&root.join("assets/minecraft/textures/item/stick.png"), 210);
         png(
             &root.join("assets/minecraft/textures/item/stick_e.png"),
@@ -249,7 +251,7 @@ mod tests {
                 ),
             ]
         );
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
     }
 
     #[test]

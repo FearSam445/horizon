@@ -10,9 +10,9 @@ use horizon_client::{
     lang,
     text::Text,
 };
+use horizon_fs as fs;
 use serde_json::{Value, json};
 use std::{
-    fs,
     io::{BufWriter, Write},
     path::PathBuf,
 };

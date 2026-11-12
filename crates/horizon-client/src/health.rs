@@ -5,6 +5,9 @@ use crate::{
     Result,
     motion::{MotionEvent, PlayerMotion},
 };
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     attributes::live::LiveAttributes,
     block_landing::LandingDamage,
@@ -21,7 +24,7 @@ use horizon_world::{
     server_player_damage::ServerDamageEnvironment,
     synced_floats::{FloatValue, Observer, SyncedFloats},
 };
-use std::{cell::Cell, fs, io, path::Path, sync::OnceLock};
+use std::{cell::Cell, io, path::Path, sync::OnceLock};
 mod equipment;
 #[doc(hidden)]
 pub use equipment::EquipmentHurt;

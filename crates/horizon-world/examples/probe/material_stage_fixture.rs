@@ -8,6 +8,7 @@ use horizon_core::{
     position::{BlockPos, ChunkPos},
     random::{LegacyRandom, PositionalRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     heightmap::{HeightmapState, HeightmapType},
@@ -42,7 +43,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs,
     io::{self, Write},
     path::Path,
     sync::{Arc, Mutex},

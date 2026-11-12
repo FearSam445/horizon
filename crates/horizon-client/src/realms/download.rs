@@ -9,9 +9,11 @@
 //! (`L`). Nothing is ever extracted outside the new world folder: an entry that does not
 //! sit under `world/`, or climbs above it, is skipped as vanilla's `startsWith` check does.
 use super::client::WorldDownload;
+use horizon_fs::{self as fs, File};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::Tag;
 use sha1::{Digest, Sha1};
-use std::fs::{self, File};
 use std::io::{self, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -260,7 +262,7 @@ pub(super) fn unguessable(prefix: &str, suffix: &str) -> PathBuf {
     let n = NEXT.fetch_add(1, Ordering::Relaxed);
     let mut key = std::collections::hash_map::RandomState::new().build_hasher();
     key.write_u64(n);
-    std::env::temp_dir().join(format!(
+    horizon_fs::temp_dir().join(format!(
         "{prefix}-{}-{n}-{:016x}{suffix}",
         std::process::id(),
         key.finish()
@@ -437,9 +439,9 @@ fn level_ids(saves: &Path) -> Vec<String> {
     entries
         .flatten()
         .filter(|entry| {
-            entry.file_type().is_ok_and(|kind| kind.is_dir())
-                && (entry.path().join("level.dat").is_file()
-                    || entry.path().join("level.dat_old").is_file())
+            entry.file_type().is_ok_and(|kind| kind.fs_is_dir())
+                && (entry.path().join("level.dat").fs_is_file()
+                    || entry.path().join("level.dat_old").fs_is_file())
         })
         .filter_map(|entry| entry.file_name().into_string().ok())
         .collect()
@@ -693,22 +695,22 @@ mod tests {
     fn a_download_never_writes_into_a_file_that_was_there() {
         let path = unguessable("horizon-realms-test", ".bin");
         assert_ne!(path, unguessable("horizon-realms-test", ".bin"));
-        std::fs::write(&path, b"planted").unwrap();
+        horizon_fs::write(&path, b"planted").unwrap();
         assert!(create_private(&path).is_err());
-        std::fs::remove_file(&path).unwrap();
+        horizon_fs::remove_file(&path).unwrap();
         drop(create_private(&path).unwrap());
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+            let mode = horizon_fs::metadata(&path).unwrap().permissions().mode();
             assert_eq!(mode & 0o077, 0, "{mode:o}");
         }
-        std::fs::remove_file(&path).unwrap();
+        horizon_fs::remove_file(&path).unwrap();
     }
     use crate::realms::upload::{UploadProgress, pack_world};
 
     fn scratch(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "realms-download-test-{}-{name}",
             std::process::id()
         ));
@@ -839,7 +841,7 @@ mod tests {
             extract_archive(&archive, "Friends", &saves, &progress),
             Err(DownloadError::Cancelled)
         );
-        assert!(!saves.exists());
+        assert!(!saves.fs_exists());
         let _ = fs::remove_dir_all(&dir);
     }
 
@@ -872,8 +874,8 @@ mod tests {
         let saves = dir.join("saves");
         let world =
             extract_archive(&archive, "Friends", &saves, &DownloadProgress::default()).unwrap();
-        assert!(!saves.join("evil.txt").exists());
-        assert!(!world.join("evil.txt").exists());
+        assert!(!saves.join("evil.txt").fs_exists());
+        assert!(!world.join("evil.txt").fs_exists());
         let _ = fs::remove_dir_all(&dir);
     }
 

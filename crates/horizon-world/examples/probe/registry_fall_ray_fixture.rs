@@ -1,5 +1,6 @@
 use crate::support::common::f64_bits;
 use horizon_core::{geometry::Vec3, position::BlockPos};
+use horizon_fs as fs;
 use horizon_world::{
     entity_obstruction::EntityIdentity,
     fluid::{FluidKind, FluidState},
@@ -12,7 +13,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeSet,
-    fs,
     io::{self, Write},
     path::Path,
 };

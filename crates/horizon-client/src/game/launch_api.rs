@@ -321,9 +321,9 @@ mod tests {
             .join("docs/api/launch-reference.md");
         let want = markdown();
         if std::env::var_os("HORIZON_WRITE_DOCS").is_some() {
-            std::fs::write(&path, &want).unwrap();
+            horizon_fs::write(&path, &want).unwrap();
         }
-        let have = std::fs::read_to_string(&path)
+        let have = horizon_fs::read_to_string(&path)
             .unwrap_or_default()
             .replace("\r\n", "\n");
         assert!(

@@ -5,8 +5,8 @@ use std::io::Write;
 
 pub fn main() {
     let args: Vec<_> = super::args().collect();
-    let input = std::fs::read_to_string(&args[1]).unwrap();
-    let mut out = std::fs::File::create(&args[2]).unwrap();
+    let input = horizon_fs::read_to_string(&args[1]).unwrap();
+    let mut out = horizon_fs::File::create(&args[2]).unwrap();
     for line in input.lines() {
         let values: Vec<String> = serde_json::from_str(line).unwrap();
         let raw = Tag::compound([

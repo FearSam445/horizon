@@ -339,7 +339,7 @@ impl AnimateTables {
             })
             .collect();
         let bundle: BTreeMap<String, String> =
-            serde_json::from_slice(&std::fs::read(root.join("block-tags.json"))?)?;
+            serde_json::from_slice(&horizon_fs::read(root.join("block-tags.json"))?)?;
         let mut definitions = TagDefinitions::default();
         for (name, text) in bundle {
             definitions.apply_json(&name, "vanilla", &text)?;
@@ -357,7 +357,7 @@ impl AnimateTables {
                 .collect()
         };
         let behaviour: serde_json::Value =
-            serde_json::from_slice(&std::fs::read(root.join("block-behaviours.json"))?)?;
+            serde_json::from_slice(&horizon_fs::read(root.join("block-behaviours.json"))?)?;
         let ignite_odds = behaviour["fire"]["igniteOdds"].as_object();
         let burnable = (0..registry.len() as u32)
             .map(|id| {
@@ -377,7 +377,7 @@ impl AnimateTables {
                 "data/minecraft/worldgen/biome/{}.json",
                 name.trim_start_matches("minecraft:")
             ));
-            let Ok(bytes) = std::fs::read(path) else {
+            let Ok(bytes) = horizon_fs::read(path) else {
                 continue;
             };
             let Ok(json) = serde_json::from_slice::<serde_json::Value>(&bytes) else {

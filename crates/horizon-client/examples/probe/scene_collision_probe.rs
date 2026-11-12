@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 use horizon_client::{assets, collisions, world};
 use horizon_core::geometry::{Aabb, Vec3};
+use horizon_fs as fs;
 use horizon_world::{
     collision_context::CollisionContext,
     entity_obstruction::EntityIdentity,
@@ -9,7 +10,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{BufRead, Write},
     path::PathBuf,
 };

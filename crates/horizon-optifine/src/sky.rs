@@ -12,6 +12,8 @@
 //! Written from OptiFine's public documentation of the format (`OptiFineDoc/doc/sky.properties`
 //! and the Custom Sky page of OptiDocs, with its skybox template); no OptiFine code was read.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -363,7 +365,7 @@ impl Skies {
         for ns in ["minecraft"] {
             for top in ["optifine", "mcpatcher"] {
                 let base = format!("assets/{ns}/{top}/sky");
-                let Ok(dirs) = std::fs::read_dir(root.join(&base)) else {
+                let Ok(dirs) = horizon_fs::read_dir(root.join(&base)) else {
                     continue;
                 };
                 for dir in dirs.flatten() {
@@ -394,7 +396,7 @@ impl WorldSky {
     /// The layers and bodies of the folder at resource path `dir`.
     fn scan(root: &Path, dir: &str) -> Self {
         let read = |file: &str| {
-            std::fs::read_to_string(root.join(file))
+            horizon_fs::read_to_string(root.join(file))
                 .ok()
                 .map(|t| Properties::parse(&t))
         };
@@ -414,7 +416,7 @@ impl WorldSky {
             };
             let Some(p) = read(&file) else { continue };
             match SkyLayer::parse(&file, &p) {
-                Some(layer) if root.join(&layer.source).is_file() => layers.push((n, layer)),
+                Some(layer) if root.join(&layer.source).fs_is_file() => layers.push((n, layer)),
                 Some(layer) => log::warn!("{file}: no texture {}", layer.source),
                 None => log::warn!("{file}: unknown blend or bad source; skipped"),
             }
@@ -427,7 +429,7 @@ impl WorldSky {
                 Some(s) => with_png(&resolve(&props, s)?),
                 None => format!("{dir}/{name}.png"),
             };
-            if !root.join(&source).is_file() {
+            if !root.join(&source).fs_is_file() {
                 return None;
             }
             let blend = p
@@ -606,27 +608,27 @@ mod tests {
 
     #[test]
     fn scan_reads_worlds_in_number_order_with_bodies() {
-        let root = std::env::temp_dir().join(format!("horizon-sky-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+        let root = horizon_fs::temp_dir().join(format!("horizon-sky-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("assets/minecraft/optifine/sky/world0");
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         let end = root.join("assets/minecraft/optifine/sky/world1");
-        std::fs::create_dir_all(&end).unwrap();
+        horizon_fs::create_dir_all(&end).unwrap();
         for (name, text) in [
             ("sky10.properties", "blend=alpha"),
             ("sky2.properties", "blend=screen"),
             ("sky3.properties", "blend=add"), // no sky3.png: skipped
             ("sun.properties", "blend=add\nsource=./bright_sun.png"),
         ] {
-            std::fs::write(dir.join(name), text).unwrap();
+            horizon_fs::write(dir.join(name), text).unwrap();
         }
         for png in ["sky10.png", "sky2.png", "bright_sun.png", "moon_phases.png"] {
-            std::fs::write(dir.join(png), b"png").unwrap();
+            horizon_fs::write(dir.join(png), b"png").unwrap();
         }
-        std::fs::write(end.join("sky1.properties"), "").unwrap();
-        std::fs::write(end.join("sky1.png"), b"png").unwrap();
+        horizon_fs::write(end.join("sky1.properties"), "").unwrap();
+        horizon_fs::write(end.join("sky1.png"), b"png").unwrap();
         let skies = Skies::scan(&root);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let o = &skies.worlds[&0];
         assert_eq!(
             o.layers.iter().map(|l| l.blend).collect::<Vec<_>>(),

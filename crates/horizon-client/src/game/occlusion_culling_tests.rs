@@ -3,12 +3,14 @@ use crate::game::entity::RenderEntityBounds;
 use horizon_client::chunk::ColumnLayout;
 use horizon_client::mobs::{Mob, MobData, MobTypes, Species, render};
 use horizon_core::geometry::Vec3;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::Path;
 
 #[test]
 fn vanilla_models_and_animations_stay_inside_the_precheck_envelope() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3");
-    if !root.join("entity-models.json").exists() {
+    if !root.join("entity-models.json").fs_exists() {
         eprintln!("no prepared resources: skipped model coverage");
         return;
     }

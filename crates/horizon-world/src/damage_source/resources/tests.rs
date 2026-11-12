@@ -10,7 +10,7 @@ struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {
         static NEXT: AtomicU64 = AtomicU64::new(0);
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-damage-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)

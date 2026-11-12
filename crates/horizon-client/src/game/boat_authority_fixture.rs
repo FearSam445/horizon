@@ -54,7 +54,7 @@ fn is_player() -> bool {
 impl Game<'_> {
     pub(super) fn run_boat_authority_fixture(&mut self, directory: &Path) -> Result<()> {
         let cases: Vec<Case> =
-            serde_json::from_str(&std::fs::read_to_string(directory.join("inputs.json"))?)?;
+            serde_json::from_str(&horizon_fs::read_to_string(directory.join("inputs.json"))?)?;
         let mut output = Vec::new();
         for case in cases {
             self.boats.clear();
@@ -143,7 +143,7 @@ impl Game<'_> {
             }
             output.push(json!({"name": case.name, "steps": steps}));
         }
-        std::fs::write(directory.join("rust.json"), serde_json::to_vec(&output)?)?;
+        horizon_fs::write(directory.join("rust.json"), serde_json::to_vec(&output)?)?;
         Ok(())
     }
 }

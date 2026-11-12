@@ -1,4 +1,5 @@
 use horizon_core::position::BlockPos;
+use horizon_fs::{File, OpenOptions};
 use horizon_world::{
     chunk::{BlockState, ChunkData},
     compression::Compression,
@@ -8,7 +9,6 @@ use horizon_world::{
 use std::{
     collections::BTreeMap,
     error::Error,
-    fs::{File, OpenOptions},
     io::{Read, Write},
     path::Path,
 };
@@ -39,7 +39,7 @@ fn write_new(path: &str, bytes: &[u8]) -> Result<(), Box<dyn Error>> {
     let mut file = OpenOptions::new().write(true).create_new(true).open(path)?;
     if let Err(error) = file.write_all(bytes).and_then(|_| file.sync_all()) {
         drop(file);
-        let _ = std::fs::remove_file(path);
+        let _ = horizon_fs::remove_file(path);
         return Err(error.into());
     }
     Ok(())

@@ -210,7 +210,7 @@ fn main() -> Result<(), Error> {
             mesh_threads,
             regions.len() as f64 / parallel.as_secs_f64().max(1e-9),
         );
-        std::fs::write(path, json)?;
+        horizon_fs::write(path, json)?;
     }
     Ok(())
 }

@@ -45,7 +45,7 @@ fn check_respawn(check_sea_level: bool) {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-respawn-point-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -53,7 +53,7 @@ fn check_respawn(check_sea_level: bool) {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     let world = [0, 100, 0];
     let personal = [5.5, 101.0, 5.5];
@@ -200,7 +200,7 @@ fn check_respawn(check_sea_level: bool) {
     }
     drop(host);
     drop(game);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }
 
 /// A mod's health 0 for a guest dies as `/kill` does: the death message
@@ -235,7 +235,7 @@ fn a_mods_zero_health_kills_a_guest_as_kill_does() {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-status-death-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -243,7 +243,7 @@ fn a_mods_zero_health_kills_a_guest_as_kill_does() {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.level.world_spawn = Some([0, 100, 0]);
     game.spawn = Some(Vec3::new(0.5, 100.0, 0.5));
@@ -307,5 +307,5 @@ fn a_mods_zero_health_kills_a_guest_as_kill_does() {
     assert!(host.hub.guests[0].dead, "health 0 must kill");
     drop(host);
     drop(game);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }

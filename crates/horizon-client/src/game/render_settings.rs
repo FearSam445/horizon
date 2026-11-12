@@ -1,6 +1,8 @@
 //! The renderer and its settings: building it for the window, applying the video settings and a
 //! shader pack's translucent layers, and the far terrain (LOD) distances.
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 #[derive(Default)]
 pub(super) struct FrameAttempt<K = FrameKey>(Option<K>);
@@ -68,7 +70,7 @@ impl Game<'_> {
             picked,
             shader_packs::dev_pack().is_some(),
         );
-        let available = path.exists()
+        let available = path.fs_exists()
             && path.file_name().is_none_or(|f| {
                 !shader_packs::active_pack(&f.to_string_lossy(), &self.settings.mods).is_empty()
             });

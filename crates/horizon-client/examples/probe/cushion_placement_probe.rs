@@ -3,10 +3,10 @@ use horizon_client::{
     cushion::{self, World},
 };
 use horizon_core::geometry::{Aabb, ShapeOp, Vec3, VoxelShape};
+use horizon_fs::File;
 use serde_json::Value;
 use std::{
     collections::HashMap,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 

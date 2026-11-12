@@ -69,7 +69,7 @@ mod tests {
     /// Added model/I/O control, separate from the connected runtime proof.
     #[test]
     fn personal_respawn_nonzero_pitch_survives_actual_player_file_write_and_read() {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-personal-pitch-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -77,7 +77,7 @@ mod tests {
                 .unwrap()
                 .as_nanos()
         ));
-        std::fs::create_dir_all(&root).unwrap();
+        horizon_fs::create_dir_all(&root).unwrap();
         let file = root.join("player.dat");
         let original = Level {
             respawn_elsewhere: Some((
@@ -99,6 +99,6 @@ mod tests {
         loaded.read_player(&tag);
         assert_eq!(loaded.respawn_elsewhere, original.respawn_elsewhere);
         println!("actual saved personal respawn {:?}", tag.get("respawn"));
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 }

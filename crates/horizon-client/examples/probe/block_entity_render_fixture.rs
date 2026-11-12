@@ -18,12 +18,12 @@ use horizon_client::{
     signs::{DYE_TEXT, SignData, SignText},
     world::World,
 };
+use horizon_fs as fs;
 use horizon_world::registry::{BlockRegistry, BlockStateId};
 use serde_json::{Value, json};
 use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
-    fs,
     io::{BufWriter, Write},
     path::{Path, PathBuf},
     sync::Arc,

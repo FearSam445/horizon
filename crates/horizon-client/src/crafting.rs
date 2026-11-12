@@ -9,6 +9,8 @@ use crate::{
     items::{ItemStack, Items},
     particles::{DYE_FIREWORK_COLORS, FireworkExplosion, FireworkShape},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::{JavaString, Tag};
 use horizon_world::{component_patch::Patch, loot::PackOverlay};
 use serde_json::Value;
@@ -1485,7 +1487,7 @@ impl Recipes {
         }
         for namespace in crate::mod_content::namespaces(root) {
             let dir = root.join(format!("data/{namespace}/recipe"));
-            if dir.is_dir() {
+            if dir.fs_is_dir() {
                 for file in &crate::json_folder::read(&dir)?.files {
                     sources.push((format!("{namespace}:{}", file.name), file.bytes()?.to_vec()));
                 }
@@ -2003,7 +2005,7 @@ impl Recipes {
 mod tests {
     use super::*;
     use crate::banner::BannerLayer;
-    use std::fs;
+    use horizon_fs as fs;
 
     /// ItemStackTemplate.apply applies the result patch after the input patch.
     #[test]
@@ -2096,7 +2098,7 @@ mod tests {
     #[test]
     fn a_neoforge_ingredient_recipe_loads() {
         let root =
-            std::env::temp_dir().join(format!("horizon-neo-ingredient-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-neo-ingredient-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::create_dir_all(root.join("data/mymod/recipe")).unwrap();
@@ -2299,7 +2301,7 @@ mod tests {
     #[test]
     fn custom_recipes_load_by_type_with_pack_override() {
         let root =
-            std::env::temp_dir().join(format!("horizon-custom-recipes-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-custom-recipes-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::create_dir_all(root.join("data/mymod/recipe")).unwrap();
@@ -2390,7 +2392,8 @@ mod tests {
     }
     #[test]
     fn a_shapeless_recipe_makes_the_item_its_bare_result_names() {
-        let root = std::env::temp_dir().join(format!("horizon-bare-result-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-bare-result-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(
@@ -2412,7 +2415,7 @@ mod tests {
     #[test]
     fn recipe_selection_follows_resource_file_order() {
         let root =
-            std::env::temp_dir().join(format!("horizon-recipe-order-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-recipe-order-{}", std::process::id()));
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         let items = Items::for_tests(HashMap::new());
         let crafting = |item: &str| {
@@ -2481,7 +2484,8 @@ mod tests {
     /// silently absent, from the root's own files and a pack's alike.
     #[test]
     fn load_conditions_gate_recipes() {
-        let root = std::env::temp_dir().join(format!("horizon-conditions-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-conditions-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(
@@ -2540,7 +2544,7 @@ mod tests {
     /// in the loaded tables, after the packs are merged.
     #[test]
     fn recipe_filters_remove_and_swap() {
-        let root = std::env::temp_dir().join(format!("horizon-filters-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-filters-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         let crusher = |input: &str| {

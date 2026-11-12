@@ -1,9 +1,9 @@
 use crate::support::shapes::emit;
 use horizon_core::geometry::{Aabb, Direction, ShapeOp, Vec3, VoxelShape};
+use horizon_fs as fs;
 use horizon_world::block_support::SupportType;
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

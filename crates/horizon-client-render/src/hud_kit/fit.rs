@@ -160,7 +160,7 @@ mod tests {
         ]
         .iter()
         .flat_map(|code| {
-            let file = std::fs::read_to_string(lang.join(format!("{code}.json"))).unwrap();
+            let file = horizon_fs::read_to_string(lang.join(format!("{code}.json"))).unwrap();
             let map: serde_json::Map<String, serde_json::Value> =
                 serde_json::from_str(&file).unwrap();
             map.into_values()

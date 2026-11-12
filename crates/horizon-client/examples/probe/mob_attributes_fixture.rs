@@ -4,7 +4,8 @@
 //! usage: mob_attributes_fixture RESOURCES OUTPUT
 use horizon_client::mobs::{Mob, MobTypes};
 use horizon_core::geometry::Vec3;
-use std::{fmt::Write as _, fs, path::Path, sync::Arc};
+use horizon_fs as fs;
+use std::{fmt::Write as _, path::Path, sync::Arc};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().collect();

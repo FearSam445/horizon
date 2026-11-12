@@ -2,6 +2,8 @@
 //! dimension type's attributes, the biome layer, the dimension's timelines and, where it can
 //! have weather, the rain and thunder layers, sampled into the sky state the renderer draws.
 use crate::Result;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::environment_attributes::{
     Attribute, AttributeMap, Entry, Kind, Value, attribute,
 };
@@ -88,16 +90,16 @@ impl PackModifiers {
             root: Some(pack_root.to_path_buf()),
             ..Self::default()
         };
-        let Ok(namespaces) = std::fs::read_dir(pack_root.join("assets")) else {
+        let Ok(namespaces) = horizon_fs::read_dir(pack_root.join("assets")) else {
             return out;
         };
         for namespace in namespaces.flatten() {
             for kind in ["biome_modifiers", "dimension_modifiers"] {
                 let mut stack = vec![namespace.path().join("polytone").join(kind)];
                 while let Some(dir) = stack.pop() {
-                    for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+                    for entry in horizon_fs::read_dir(&dir).into_iter().flatten().flatten() {
                         let path = entry.path();
-                        if path.is_dir() {
+                        if path.fs_is_dir() {
                             stack.push(path);
                             continue;
                         }
@@ -505,7 +507,7 @@ pub(crate) fn polytone_colormap_modifiers(
     pack_root: &Path,
 ) -> Vec<(bool, horizon_polytone::Targets, String)> {
     let mut out = Vec::new();
-    let namespaces = std::fs::read_dir(pack_root.join("assets"))
+    let namespaces = horizon_fs::read_dir(pack_root.join("assets"))
         .into_iter()
         .flatten()
         .flatten();
@@ -513,9 +515,9 @@ pub(crate) fn polytone_colormap_modifiers(
         for (kind, fluid) in [("block_modifiers", false), ("fluid_modifiers", true)] {
             let mut stack = vec![namespace.path().join("polytone").join(kind)];
             while let Some(dir) = stack.pop() {
-                for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+                for entry in horizon_fs::read_dir(&dir).into_iter().flatten().flatten() {
                     let path = entry.path();
-                    if path.is_dir() {
+                    if path.fs_is_dir() {
                         stack.push(path);
                         continue;
                     }
@@ -1044,7 +1046,7 @@ mod tests {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
         root.join("data/minecraft/timeline/day.json")
-            .exists()
+            .fs_exists()
             .then(|| Environment::load(&root).unwrap())
     }
 
@@ -1070,16 +1072,16 @@ mod tests {
 
     fn with_pack_files(pack: &[(&str, &[u8])]) -> Environment {
         static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-env-packs-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
         let write = |path: &str, text: &[u8]| {
             let path = dir.join(path);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(path, text).unwrap();
+            horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+            horizon_fs::write(path, text).unwrap();
         };
         write(
             "world/data/minecraft/dimension_type/overworld.json",
@@ -1106,7 +1108,7 @@ mod tests {
         );
         let env =
             Environment::load_dimension_with(&dir.join("world"), "overworld", &modifiers).unwrap();
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
         env
     }
 

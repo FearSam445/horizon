@@ -10,26 +10,26 @@ struct Fixture(PathBuf);
 
 impl Drop for Fixture {
     fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
+        let _ = horizon_fs::remove_dir_all(&self.0);
     }
 }
 
 fn load(fragment: &str) -> Post {
     static NEXT: AtomicUsize = AtomicUsize::new(0);
-    let fixture = Fixture(std::env::temp_dir().join(format!(
+    let fixture = Fixture(horizon_fs::temp_dir().join(format!(
         "horizon-global-constant-{}-{}",
         std::process::id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     )));
     let shaders = fixture.0.join("shaders");
-    std::fs::create_dir_all(&shaders).unwrap();
-    std::fs::write(
+    horizon_fs::create_dir_all(&shaders).unwrap();
+    horizon_fs::write(
         shaders.join("gbuffers_terrain.vsh"),
         "#version 120\nvarying vec2 texcoord;\nvoid main() {\n\
          gl_Position = ftransform();\ntexcoord = gl_MultiTexCoord0.xy;\n}\n",
     )
     .unwrap();
-    std::fs::write(shaders.join("gbuffers_terrain.fsh"), fragment).unwrap();
+    horizon_fs::write(shaders.join("gbuffers_terrain.fsh"), fragment).unwrap();
     let pack = Pack::open(&fixture.0).unwrap();
     let mut macros = Macros::standard();
     macros.define_renderer(4);

@@ -182,6 +182,6 @@ mod parity {
             rows.push(serde_json::json!({"case":name,"health":m.health,"velocity":[m.velocity.x,m.velocity.y,m.velocity.z],"revenge":m.ai.last_hurt_by==Some(Who::Mob(99))}));
         }
         let path = std::env::var_os("HORIZON_DRAGON_CONTACT_OUTPUT").expect("parity output path");
-        std::fs::write(path, serde_json::to_vec_pretty(&rows).unwrap()).unwrap();
+        horizon_fs::write(path, serde_json::to_vec_pretty(&rows).unwrap()).unwrap();
     }
 }

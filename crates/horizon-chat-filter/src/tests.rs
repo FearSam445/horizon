@@ -181,8 +181,8 @@ fn thresholds_are_configurable() {
 
 #[test]
 fn mutes_survive_a_restart_and_unmute_lifts_them() {
-    let dir = std::env::temp_dir().join(format!("chat-filter-test-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = horizon_fs::temp_dir().join(format!("chat-filter-test-{}", std::process::id()));
+    horizon_fs::create_dir_all(&dir).unwrap();
     let now = now_millis();
     let (mut g, problem) = Guard::load(Config::default(), &dir);
     assert_eq!(problem, None);
@@ -211,7 +211,7 @@ fn mutes_survive_a_restart_and_unmute_lifts_them() {
         (None, Some("Op"), Some("spam"))
     );
     assert_eq!(reloaded.mutes(now + MIN).len(), 1);
-    std::fs::remove_dir_all(&dir).unwrap();
+    horizon_fs::remove_dir_all(&dir).unwrap();
 }
 
 #[test]

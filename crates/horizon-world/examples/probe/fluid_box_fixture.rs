@@ -1,8 +1,8 @@
 use horizon_core::geometry::{Aabb, Vec3};
+use horizon_fs as fs;
 use horizon_world::fluid_box::{self, BoatFluidBoxWorld, FluidBoxWorld};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

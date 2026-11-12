@@ -21,11 +21,11 @@ mod command_exploration_map_tests {
         game.build_registries();
         game.set_allow_commands(true);
         // A world of its own under the temporary folder, removed at the end.
-        game.world_root = std::env::temp_dir().join(format!(
+        game.world_root = horizon_fs::temp_dir().join(format!(
             "horizon-command-exploration-map-{}",
             std::process::id()
         ));
-        let _ = std::fs::remove_dir_all(&game.world_root);
+        let _ = horizon_fs::remove_dir_all(&game.world_root);
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let terrain = horizon_client::vanillagen::VanillaTerrain::new(
             &root.join("worldgen"),
@@ -145,13 +145,13 @@ mod added_preservation_tests {
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap()).join(label);
         let pack = game.world_root.join("datapacks/mapcmd");
         let tag = pack.join("data/mapcmd/tags/worldgen/structure/empty.json");
-        std::fs::create_dir_all(tag.parent().unwrap()).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(tag.parent().unwrap()).unwrap();
+        horizon_fs::write(
             pack.join("pack.mcmeta"),
             r#"{"pack":{"description":"Map command controls"}}"#,
         )
         .unwrap();
-        std::fs::write(tag, r#"{"values":[]}"#).unwrap();
+        horizon_fs::write(tag, r#"{"values":[]}"#).unwrap();
         game.build_registries();
         game.set_allow_commands(true);
         game.reload_datapacks(false);
@@ -223,7 +223,7 @@ mod added_preservation_tests {
         let path = game
             .world_root
             .join("datapacks/mapcmd/data/mapcmd/item_modifier");
-        std::fs::create_dir_all(&path).unwrap();
+        horizon_fs::create_dir_all(&path).unwrap();
         let first = json!({"type":"minecraft:set_count","count":2});
         let second = json!({"type":"minecraft:set_count","count":1,"add":true});
         let ordered = json!([
@@ -240,7 +240,7 @@ mod added_preservation_tests {
             ("second", &second),
             ("ordered", &ordered),
         ] {
-            std::fs::write(
+            horizon_fs::write(
                 path.join(format!("{name}.json")),
                 serde_json::to_vec(body).unwrap(),
             )
@@ -282,6 +282,6 @@ mod added_preservation_tests {
         assert!(game.maps.data.is_empty());
         assert!(game.maps.last_id.is_none());
         assert_eq!(game.world.game_time, 0);
-        let _ = std::fs::remove_dir_all(&game.world_root);
+        let _ = horizon_fs::remove_dir_all(&game.world_root);
     }
 }

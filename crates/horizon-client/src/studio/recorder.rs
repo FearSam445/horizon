@@ -6,8 +6,10 @@
 use super::mcpr::{McprWriter, Metadata, TimestampedPacket};
 use crate::net::PacketRecorder;
 pub use crate::net::RecorderStatus;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::{buf::Reader, crypto::generate_secret, packets::play};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 use std::{
     io,
     path::{Path, PathBuf},
@@ -303,9 +305,9 @@ pub fn generate_recording_filename(name: Option<&str>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use horizon_fs as fs;
     use horizon_protocol::packets::configuration as cfg;
     use horizon_world::nbt::Tag;
-    use std::fs;
 
     #[test]
     fn studio_recording_drops_packets_with_direct_player_identity_or_private_text() {
@@ -473,7 +475,7 @@ mod tests {
 
     #[test]
     fn test_studio_recorder_lifecycle() {
-        let temp_dir = std::env::temp_dir().join(format!(
+        let temp_dir = horizon_fs::temp_dir().join(format!(
             "studio_rec_{}_{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -497,7 +499,7 @@ mod tests {
 
         let finished = recorder.stop().unwrap();
         assert_eq!(finished, mcpr_path);
-        assert!(mcpr_path.exists());
+        assert!(mcpr_path.fs_exists());
 
         // Verify with reader
         let mut reader = super::super::mcpr::McprReader::open(&mcpr_path).unwrap();

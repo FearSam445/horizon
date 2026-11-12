@@ -1405,9 +1405,9 @@ mod tests {
     #[test]
     fn mod_category_mapping_validates_ids_icons_and_conflicts() {
         let root =
-            std::env::temp_dir().join(format!("horizon-book-categories-{}", std::process::id()));
-        std::fs::create_dir_all(&root).unwrap();
-        std::fs::write(
+            horizon_fs::temp_dir().join(format!("horizon-book-categories-{}", std::process::id()));
+        horizon_fs::create_dir_all(&root).unwrap();
+        horizon_fs::write(
             root.join("items.json"),
             r#"{"minecraft:stone":{},"mymod:crusher":{},"minecraft:air":{}}"#,
         )
@@ -1476,7 +1476,7 @@ mod tests {
         assert!(mod_categories(Vec::new(), &recipes, &items).is_empty());
         let vanilla = Recipes::from_sources(&root, &items, &PackOverlay::NONE, Vec::new()).unwrap();
         assert!(mod_categories(vec![crusher], &vanilla, &items).is_empty());
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     fn ing(items: &[&str]) -> Ingredient {
@@ -1484,9 +1484,10 @@ mod tests {
     }
     #[test]
     fn the_index_knows_each_recipes_toast_station_and_result() {
-        let root = std::env::temp_dir().join(format!("horizon-toast-index-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-toast-index-{}", std::process::id()));
         let dir = root.join("data/minecraft/recipe");
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         for (name, json) in [
             (
                 "stick",
@@ -1509,10 +1510,10 @@ mod tests {
                 r#"{"type":"minecraft:smithing_trim","pattern":"minecraft:coast"}"#,
             ),
         ] {
-            std::fs::write(dir.join(format!("{name}.json")), json).unwrap();
+            horizon_fs::write(dir.join(format!("{name}.json")), json).unwrap();
         }
         let index = RecipeIndex::load(&root, &PackOverlay::NONE);
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let toast = |id: &str| (index.toast_station(id), index.result(id));
         assert_eq!(
             toast("minecraft:stick"),
@@ -1535,7 +1536,7 @@ mod tests {
     }
     #[test]
     fn content_namespace_recipes_have_display_ids() {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-mod-recipe-index-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -1545,31 +1546,31 @@ mod tests {
         ));
         let vanilla = root.join("data/minecraft/recipe");
         let content = root.join("data/recipe_pilot/recipe");
-        std::fs::create_dir_all(&vanilla).unwrap();
-        std::fs::create_dir_all(&content).unwrap();
+        horizon_fs::create_dir_all(&vanilla).unwrap();
+        horizon_fs::create_dir_all(&content).unwrap();
         for marker in [
             horizon_items::content_namespaces::MARKER,
             horizon_items::content_namespaces::MOD_IDS_MARKER,
         ] {
-            std::fs::write(root.join(marker), br#"["recipe_pilot"]"#).unwrap();
+            horizon_fs::write(root.join(marker), br#"["recipe_pilot"]"#).unwrap();
         }
-        std::fs::write(
+        horizon_fs::write(
             vanilla.join("control.json"),
             br#"{"type":"minecraft:crafting_shapeless","result":{"id":"minecraft:stick"}}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             content.join("flint_to_echo_shard.json"),
             br#"{"type":"minecraft:crafting_shapeless","ingredients":["minecraft:flint"],"result":{"id":"minecraft:echo_shard","count":2}}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             content.join("gated.json"),
             br#"{"type":"minecraft:crafting_shapeless","neoforge:conditions":[{"type":"neoforge:mod_loaded","modid":"absent"}],"result":{"id":"minecraft:diamond"}}"#,
         )
         .unwrap();
         let index = RecipeIndex::load(&root, &PackOverlay::NONE);
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let id = "recipe_pilot:flint_to_echo_shard";
         let display = index
             .first_display(id)
@@ -1692,11 +1693,11 @@ mod tests {
     #[test]
     fn a_knowledge_book_unlocks_its_recipes_and_is_used_up() {
         let root =
-            std::env::temp_dir().join(format!("horizon-knowledge-book-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-knowledge-book-{}", std::process::id()));
         let dir = root.join("data/minecraft/recipe");
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         for name in ["stick", "crafting_table", "torch"] {
-            std::fs::write(
+            horizon_fs::write(
                 dir.join(format!("{name}.json")),
                 format!(
                     r#"{{"type":"minecraft:crafting_shaped","result":{{"id":"minecraft:{name}"}}}}"#
@@ -1705,7 +1706,7 @@ mod tests {
             .unwrap();
         }
         let index = RecipeIndex::load(&root, &PackOverlay::NONE);
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let book = |recipes: &[&str], count: u32| {
             let ids = recipes.iter().map(|id| Tag::String((*id).into())).collect();
             let mut stack = ItemStack::new("minecraft:knowledge_book", count);
@@ -1762,19 +1763,19 @@ mod tests {
     #[test]
     fn display_ids_follow_registration_order() {
         let root =
-            std::env::temp_dir().join(format!("horizon-display-order-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-display-order-{}", std::process::id()));
         let dir = root.join("data/minecraft/recipe");
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         let recipe = r#"{"type":"minecraft:crafting_shapeless","result":{"id":"minecraft:stick"}}"#;
         for name in ["z_pick", "prefix", "prefix-early"] {
-            std::fs::write(dir.join(format!("{name}.json")), recipe).unwrap();
+            horizon_fs::write(dir.join(format!("{name}.json")), recipe).unwrap();
         }
         let packs = [(
             "recipe/parity:a_pick".to_owned(),
             vec![recipe.as_bytes().to_vec()],
         )];
         let index = RecipeIndex::load(&root, &PackOverlay { files: &packs });
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let ids = [
             "parity:a_pick",
             "minecraft:prefix-early",
@@ -1797,12 +1798,12 @@ mod tests {
     #[test]
     fn synced_recipes_number_their_displays_as_the_server_does() {
         let root =
-            std::env::temp_dir().join(format!("horizon-synced-order-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-synced-order-{}", std::process::id()));
         let dir = root.join("data/minecraft/recipe");
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         let recipe = r#"{"type":"minecraft:crafting_shapeless","ingredients":["minecraft:stick"],"result":{"id":"minecraft:stick"}}"#;
         for name in ["acacia_boat", "copper_axe", "fishing_rod"] {
-            std::fs::write(dir.join(format!("{name}.json")), recipe).unwrap();
+            horizon_fs::write(dir.join(format!("{name}.json")), recipe).unwrap();
         }
         let pack: serde_json::Value = serde_json::from_str(recipe).unwrap();
         let packs = [(
@@ -1811,7 +1812,7 @@ mod tests {
         )];
         let server = RecipeIndex::load(&root, &PackOverlay { files: &packs });
         let own = crate::crafting::Recipes::sources(&root, &PackOverlay::NONE).unwrap();
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let client = RecipeIndex::load_from_sources(&own);
         let mut synced = own;
         synced.push(("braid:cauldron_from_copper".to_owned(), pack));

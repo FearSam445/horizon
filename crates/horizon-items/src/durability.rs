@@ -37,9 +37,9 @@ mod tests {
     use super::*;
     use crate::item_data::{command_components, decode_components, encode_components_with_items};
     use crate::item_nbt::{item_from_nbt, item_to_nbt};
+    use horizon_fs as fs;
     use horizon_world::loot::PackOverlay;
     use horizon_world::nbt::Tag;
-    use std::fs;
 
     /// A normally non-durable item type becomes damageable when the stack
     /// supplies DAMAGE as well: `ItemStack.isDamageableItem` asks for the
@@ -48,7 +48,8 @@ mod tests {
     /// saving.
     #[test]
     fn a_non_durable_stack_can_carry_its_own_durability() {
-        let root = std::env::temp_dir().join(format!("horizon-durability-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-durability-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
         fs::write(

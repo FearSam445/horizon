@@ -7,7 +7,8 @@ use horizon_client::{
     biome::Biomes,
     environment::{Environment, Sample},
 };
-use std::{collections::HashMap, fmt::Write as _, fs, path::Path};
+use horizon_fs as fs;
+use std::{collections::HashMap, fmt::Write as _, path::Path};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().collect();

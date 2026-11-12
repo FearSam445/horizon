@@ -3,15 +3,18 @@
 //! `datafix_world IN_WORLD OUT_WORLD [TARGET]` (used by tools/test_datafix_parity.py).
 //! With a TARGET DataVersion only the data fixes up to it run, on a world in the
 //! layout of before 1.16.
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::datafix::files;
-use std::{fs, io, path::Path, process::ExitCode};
+use std::{io, path::Path, process::ExitCode};
 
 fn copy(from: &Path, to: &Path) -> io::Result<()> {
     fs::create_dir_all(to)?;
     for entry in fs::read_dir(from)? {
         let entry = entry?;
         let target = to.join(entry.file_name());
-        if entry.file_type()?.is_dir() {
+        if entry.file_type()?.fs_is_dir() {
             copy(&entry.path(), &target)?;
         } else if entry.file_name() != "session.lock" {
             fs::copy(entry.path(), target)?;
@@ -32,7 +35,7 @@ pub fn main() -> ExitCode {
     };
     let output = Path::new(output);
     let result = (|| {
-        if output.exists() {
+        if output.fs_exists() {
             fs::remove_dir_all(output)?;
         }
         copy(Path::new(input), output)?;

@@ -17,7 +17,7 @@ use std::{cell::RefCell, collections::HashMap, path::Path};
 /// (`key:value` lines), so vanilla's options file stays exactly as vanilla
 /// writes it.
 pub fn preference(dir: &Path, key: &str) -> Option<String> {
-    let text = std::fs::read_to_string(dir.join("horizon.txt")).ok()?;
+    let text = horizon_fs::read_to_string(dir.join("horizon.txt")).ok()?;
     text.lines().find_map(|l| {
         let (k, v) = l.split_once(':')?;
         (k.trim() == key).then(|| v.trim().to_owned())
@@ -25,7 +25,7 @@ pub fn preference(dir: &Path, key: &str) -> Option<String> {
 }
 /// Set (or with None remove) one preference, keeping the others.
 pub(crate) fn set_preference(dir: &Path, key: &str, value: Option<&str>) {
-    let text = std::fs::read_to_string(dir.join("horizon.txt")).unwrap_or_default();
+    let text = horizon_fs::read_to_string(dir.join("horizon.txt")).unwrap_or_default();
     let mut lines: Vec<String> = text
         .lines()
         .filter(|l| l.split_once(':').is_none_or(|(k, _)| k.trim() != key))
@@ -36,7 +36,7 @@ pub(crate) fn set_preference(dir: &Path, key: &str, value: Option<&str>) {
     }
     let mut out = lines.join("\n");
     out.push('\n');
-    let _ = std::fs::write(dir.join("horizon.txt"), out);
+    let _ = horizon_fs::write(dir.join("horizon.txt"), out);
 }
 
 /// The overlays' palette (`menu_style`) in the HUD's colour encoding, plus the
@@ -899,12 +899,12 @@ mod tests {
 
     #[test]
     fn a_private_use_glyph_geist_lacks_is_the_packs_bitmap() {
-        let root = std::env::temp_dir().join(format!("hz-ui-pua-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("hz-ui-pua-{}", std::process::id()));
         let font = root.join("assets/minecraft/font");
         let tex = root.join("assets/minecraft/textures/font");
-        std::fs::create_dir_all(&font).unwrap();
-        std::fs::create_dir_all(&tex).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&font).unwrap();
+        horizon_fs::create_dir_all(&tex).unwrap();
+        horizon_fs::write(
             font.join("default.json"),
             r#"{"providers":[{"type":"bitmap","file":"minecraft:font/icon.png","ascent":7,"chars":[""]}]}"#,
         )
@@ -917,10 +917,10 @@ mod tests {
             .unwrap()
             .write_image_data(&[255; 256])
             .unwrap();
-        std::fs::write(tex.join("icon.png"), png).unwrap();
+        horizon_fs::write(tex.join("icon.png"), png).unwrap();
         reset_atlas();
         let atlas = HudAtlas::build(&root).unwrap();
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let icon = atlas.font.glyph('\u{e238}');
         let uv = icon
             .rect

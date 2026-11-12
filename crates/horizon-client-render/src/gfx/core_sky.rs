@@ -313,14 +313,14 @@ mod tests {
     fn a_pack_sky_shader_paints_the_disc_above_the_horizon() {
         let root = resources();
         let Ok(vertex) =
-            std::fs::read_to_string(root.join("assets/minecraft/shaders/core/sky.vsh"))
+            horizon_fs::read_to_string(root.join("assets/minecraft/shaders/core/sky.vsh"))
         else {
             eprintln!("skipping: no prepared resources at {}", root.display());
             return;
         };
         let include = |id: &str| {
             let (namespace, path) = id.split_once(':')?;
-            std::fs::read_to_string(root.join(format!("assets/{namespace}/{path}"))).ok()
+            horizon_fs::read_to_string(root.join(format!("assets/{namespace}/{path}"))).ok()
         };
         let fragment = "#version 330\n#include <minecraft:dynamictransforms.glsl>\n\
             layout(location = 0) out vec4 fragColor;\n\

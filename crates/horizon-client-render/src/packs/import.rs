@@ -1,5 +1,8 @@
 //! `PackSelectionScreen.copyPacks`: copy a dropped pack without replacing an existing one.
-use std::{fs, io, path::Path};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
+use std::{io, path::Path};
 
 fn invalid() -> io::Error {
     io::Error::new(io::ErrorKind::InvalidInput, "not a regular resource pack")
@@ -12,12 +15,12 @@ fn copy_tree(from: &Path, to: &Path) -> io::Result<()> {
             let entry = entry?;
             let kind = entry.file_type()?;
             let target = to.join(entry.file_name());
-            if kind.is_symlink() {
+            if kind.fs_is_symlink() {
                 return Err(invalid());
-            } else if kind.is_dir() {
+            } else if kind.fs_is_dir() {
                 fs::create_dir(&target)?;
                 directories.push((entry.path(), target));
-            } else if kind.is_file() {
+            } else if kind.fs_is_file() {
                 fs::copy(entry.path(), target)?;
             } else {
                 return Err(invalid());
@@ -31,14 +34,14 @@ fn copy_tree(from: &Path, to: &Path) -> io::Result<()> {
 /// never overwritten; a failed copy removes only the destination this call created.
 pub fn copy_pack(from: &Path, dir: &Path) -> io::Result<()> {
     let kind = fs::symlink_metadata(from)?.file_type();
-    if kind.is_symlink() {
+    if kind.fs_is_symlink() {
         return Err(invalid());
     }
-    if kind.is_dir() {
-        if !from.join("pack.mcmeta").is_file() {
+    if kind.fs_is_dir() {
+        if !from.join("pack.mcmeta").fs_is_file() {
             return Err(invalid());
         }
-    } else if !kind.is_file()
+    } else if !kind.fs_is_file()
         || !from
             .extension()
             .is_some_and(|e| e.eq_ignore_ascii_case("zip"))
@@ -49,11 +52,11 @@ pub fn copy_pack(from: &Path, dir: &Path) -> io::Result<()> {
     let name = from.file_name().ok_or_else(invalid)?;
     fs::create_dir_all(dir)?;
     // A folder dropped onto its own descendant must not recursively copy itself.
-    if kind.is_dir() && dir.canonicalize()?.starts_with(from.canonicalize()?) {
+    if kind.fs_is_dir() && dir.fs_canonicalize()?.starts_with(from.fs_canonicalize()?) {
         return Err(invalid());
     }
     let target = dir.join(name);
-    let result = if kind.is_dir() {
+    let result = if kind.fs_is_dir() {
         fs::create_dir(&target)?;
         copy_tree(from, &target)
     } else {
@@ -65,7 +68,7 @@ pub fn copy_pack(from: &Path, dir: &Path) -> io::Result<()> {
         io::copy(&mut source, &mut output).map(|_| ())
     };
     if result.is_err() {
-        let cleanup = if kind.is_dir() {
+        let cleanup = if kind.fs_is_dir() {
             fs::remove_dir_all(&target)
         } else {
             fs::remove_file(&target)
@@ -86,7 +89,8 @@ mod tests {
     use std::io::Write;
 
     fn scratch(name: &str) -> std::path::PathBuf {
-        let root = std::env::temp_dir().join(format!("horizon-drop-{name}-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-drop-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).unwrap();
         root
@@ -160,7 +164,7 @@ mod tests {
         assert!(copy_pack(&root.join("empty"), &dir).is_err());
         assert_eq!(fs::read_dir(&dir).unwrap().count(), 1);
         assert!(copy_pack(&pack, &pack.join("nested")).is_err());
-        assert!(!pack.join("nested/Pack").exists());
+        assert!(!pack.join("nested/Pack").fs_exists());
         fs::remove_dir_all(root).unwrap();
     }
 
@@ -173,8 +177,8 @@ mod tests {
         std::os::unix::fs::symlink(&pack, pack.join("loop")).unwrap();
         let dir = root.join("resourcepacks");
         assert!(copy_pack(&pack, &dir).is_err());
-        assert!(!dir.join("Pack").exists());
-        assert!(pack.join("pack.mcmeta").exists());
+        assert!(!dir.join("Pack").fs_exists());
+        assert!(pack.join("pack.mcmeta").fs_exists());
         std::os::unix::fs::symlink(&pack, root.join("linked")).unwrap();
         assert!(copy_pack(&root.join("linked"), &dir).is_err());
         fs::remove_dir_all(root).unwrap();

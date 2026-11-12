@@ -1,11 +1,11 @@
 use horizon_core::geometry::Direction;
+use horizon_fs as fs;
 use horizon_world::{
     block_support::{CachedBlockSupportRegistry, SupportType},
     nbt::{self, Limits, Tag},
     registry::{BlockRegistry, BlockStateId},
 };
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

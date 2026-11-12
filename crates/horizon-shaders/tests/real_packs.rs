@@ -2,6 +2,8 @@
 //! horizon-shaders --release -- --ignored --nocapture`. The folder (and its subfolders) holds
 //! pack zips or folders, which are never committed; this prints what was read and how long it took.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::Path;
 use web_time::Instant;
 
@@ -18,8 +20,8 @@ fn real_packs_read() {
     let dir = std::env::var_os("HORIZON_TEST_SHADER_PACKS").expect("HORIZON_TEST_SHADER_PACKS");
     let dir = Path::new(&dir);
     let mut found = discover(dir);
-    for sub in std::fs::read_dir(dir).unwrap().flatten() {
-        if sub.path().is_dir() {
+    for sub in horizon_fs::read_dir(dir).unwrap().flatten() {
+        if sub.path().fs_is_dir() {
             found.extend(discover(&sub.path()));
         }
     }

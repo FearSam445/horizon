@@ -1,10 +1,10 @@
 use crate::support::common::f64_bits;
 use horizon_core::{geometry::Vec3, position::BlockPos};
+use horizon_fs as fs;
 use horizon_world::fall_damage::FallDamageWorld;
 use horizon_world::living_landing::{LivingLandingWorld, check_living_fall_damage};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

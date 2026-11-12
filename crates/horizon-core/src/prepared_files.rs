@@ -21,8 +21,10 @@
 //!   pool, data offset (u64, from the start of the file) and length (u64);
 //! - the name pool: `/`-separated paths from the root;
 //! - the files' bytes.
+use horizon_fs::{self as fs, File};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
-    fs::{self, File},
     io::{self, BufWriter, Read, Write},
     path::{Path, PathBuf},
     sync::{
@@ -109,11 +111,11 @@ impl PreparedFiles {
     fn open(root: &Path) -> io::Result<Option<Self>> {
         let path = root.join(FILE_NAME);
         // A mirror's link to another root's file.
-        if fs::symlink_metadata(&path)?.file_type().is_symlink() {
+        if fs::symlink_metadata(&path)?.file_type().fs_is_symlink() {
             return Ok(None);
         }
         let mut file = File::open(&path)?;
-        let size = file.metadata()?.len();
+        let size = file.fs_metadata()?.len();
         let mut header = [0; HEADER];
         file.read_exact(&mut header)?;
         let u32_at = |at: usize| u32::from_le_bytes(header[at..at + 4].try_into().unwrap());
@@ -419,7 +421,7 @@ fn walk(dir: &Path, name: &str, out: &mut Vec<(String, PathBuf, u64)>) -> io::Re
         };
         let child = format!("{name}/{file_name}");
         let meta = fs::metadata(&path)?;
-        if meta.is_dir() {
+        if meta.fs_is_dir() {
             walk(&path, &child, out)?;
         } else if holds_file(&child) {
             out.push((child, path, meta.len()));
@@ -472,7 +474,7 @@ mod tests {
 
     /// A prepared root with a few files, as `horizon-prepare` leaves it.
     fn root(tag: &str) -> PathBuf {
-        let root = std::env::temp_dir().join(format!("hz-prepared-{tag}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("hz-prepared-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         for (name, bytes) in [
             (SOURCE, &b"{\"client_sha256\":\"a\"}"[..]),
@@ -505,8 +507,8 @@ mod tests {
         fs::write(&left, b"cut short").unwrap();
         fs::write(&other, b"not ours").unwrap();
         write(&root).unwrap();
-        assert!(!left.exists());
-        assert!(other.exists());
+        assert!(!left.fs_exists());
+        assert!(other.fs_exists());
         assert!(PreparedFiles::open(&root).unwrap().is_some());
         fs::remove_dir_all(&root).unwrap();
     }
@@ -605,7 +607,7 @@ mod tests {
         // A mirror of the root (a resource pack's, a content mod's) holding a
         // copy of its file and its horizon-resources.json.
         let mirror =
-            std::env::temp_dir().join(format!("hz-prepared-mirror-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("hz-prepared-mirror-{}", std::process::id()));
         let _ = fs::remove_dir_all(&mirror);
         fs::create_dir_all(&mirror).unwrap();
         fs::copy(&bin, mirror.join(FILE_NAME)).unwrap();

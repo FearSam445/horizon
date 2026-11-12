@@ -7,9 +7,9 @@
 //!
 //! usage: chest_pair_fixture INPUT OUTPUT
 use horizon_client::containers::{ChestHalf, is_chest_block};
+use horizon_fs as fs;
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::fs;
 
 /// `minecraft:chest[facing=north,type=left]` as its name and properties.
 fn parse(state: &str) -> Option<(&str, BTreeMap<&str, &str>)> {

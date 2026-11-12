@@ -1,8 +1,8 @@
 //! Persistent enchantment components and their displayed names.
+use horizon_fs::File;
 use horizon_items::{enchant::Enchantments, item_nbt::item_from_nbt};
 use horizon_world::nbt::parse_snbt;
 use std::{
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
     sync::Arc,

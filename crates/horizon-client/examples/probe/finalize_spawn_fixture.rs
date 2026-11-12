@@ -23,8 +23,9 @@ use horizon_core::{
     geometry::{Aabb, Vec3},
     random::{LegacyRandom, RandomSource},
 };
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
-use std::{collections::HashMap, fmt::Write as _, fs, path::Path, sync::Arc};
+use std::{collections::HashMap, fmt::Write as _, path::Path, sync::Arc};
 
 struct Level<'a> {
     types: &'a MobTypes,

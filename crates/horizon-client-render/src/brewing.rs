@@ -7,6 +7,8 @@ use crate::{
     items::{ItemStack, Items},
     providers::Providers,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::loot::PackOverlay;
 use serde_json::Value;
 use std::{collections::HashSet, path::Path};
@@ -750,7 +752,7 @@ mod tests {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("assets/minecraft/lang/ru_ru.json").exists() {
+        if !root.join("assets/minecraft/lang/ru_ru.json").fs_exists() {
             return;
         }
         let ru = crate::lang::Language::load(&[&root], "ru_ru");

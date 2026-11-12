@@ -1,5 +1,7 @@
 //! Microsoft sessions handed over by the launcher; offline split profiles belong to the instance.
 use horizon_client::auth::AuthSession;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::sync::Arc;
 
 /// The launcher's other signed-in accounts (`HORIZON_ACCOUNT_SESSIONS`: name, uuid and a session
@@ -72,37 +74,38 @@ mod tests {
 
     #[test]
     fn mismatched_account_sessions_are_consumed_and_refused() {
-        let dir = std::env::temp_dir().join(format!("hz-split-account-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("hz-split-account-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let file = dir.join("session.json");
-        std::fs::write(&file, r#"{"name":"Ann","uuid":"00000000000000000000000000000001","access_token":"unused","user_type":"msa"}"#).unwrap();
+        horizon_fs::write(&file, r#"{"name":"Ann","uuid":"00000000000000000000000000000001","access_token":"unused","user_type":"msa"}"#).unwrap();
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o600)).unwrap();
+            horizon_fs::set_permissions(&file, horizon_fs::Permissions::from_mode(0o600)).unwrap();
         }
         let json = serde_json::json!([{"name":"Ann", "uuid":"00000000000000000000000000000002", "file":file}]).to_string();
         let (sessions, unavailable) = parse(&json);
         assert!(sessions.is_empty());
         assert_eq!(unavailable, ["Ann"]);
         assert!(
-            !file.exists(),
+            !file.fs_exists(),
             "session files are read once even when mismatched"
         );
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn every_listed_session_file_is_consumed() {
-        let dir = std::env::temp_dir().join(format!("hz-split-consumed-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("hz-split-consumed-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let file = |n: &str| {
             let file = dir.join(format!("session-{n}.json"));
-            std::fs::write(&file, r#"{"name":"Bea","uuid":"00000000000000000000000000000002","access_token":"not-a-real-token","user_type":"msa"}"#).unwrap();
+            horizon_fs::write(&file, r#"{"name":"Bea","uuid":"00000000000000000000000000000002","access_token":"not-a-real-token","user_type":"msa"}"#).unwrap();
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(&file, std::fs::Permissions::from_mode(0o600)).unwrap();
+                horizon_fs::set_permissions(&file, horizon_fs::Permissions::from_mode(0o600))
+                    .unwrap();
             }
             file
         };
@@ -119,8 +122,8 @@ mod tests {
         assert_eq!((sessions[0].name.as_str(), sessions[0].uuid), ("Bea", 2));
         assert!(unavailable.is_empty());
         for f in [bad_name, no_name, good] {
-            assert!(!f.exists(), "{} left on disk", f.display());
+            assert!(!f.fs_exists(), "{} left on disk", f.display());
         }
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 }

@@ -1,11 +1,11 @@
 //! Original comparison transport for biome temperatures and ordered caches.
 use horizon_core::position::BlockPos;
+use horizon_fs as fs;
 use horizon_world::worldgen::biome_temperature::{
     BiomeTemperature, BiomeTemperatureSettings, Precipitation, TemperatureModifier,
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

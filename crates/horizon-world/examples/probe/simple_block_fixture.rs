@@ -3,6 +3,7 @@ use horizon_core::{
     geometry::{Direction, VoxelShape},
     random::{LegacyRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::{
     block_collision::{BlockCollisionRegistry, DynamicCollisionWorld, ShulkerCollisionState},
     block_placement::BlockPlacementBindings,
@@ -33,7 +34,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     io::{self, BufRead, Write},
     path::Path,
     sync::Arc,

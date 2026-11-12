@@ -7,6 +7,8 @@
 //!
 //! WORK is a `horizon-port-pack` work folder: `oracle/facts.json` and
 //! `mods/<id>/carry/`. The root is built in `WORK/horizon-root`.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 extern crate horizon_client_lib as horizon_client;
 use horizon_client::{
     Result,
@@ -19,10 +21,11 @@ use horizon_client::{
     stations::StationRecipes,
 };
 use horizon_core::{geometry::Axis, random::LegacyRandom};
+use horizon_fs as fs;
 use horizon_world::chunk::BlockState;
 use horizon_world::loot::PackOverlay;
 use serde_json::{Map, Value, json};
-use std::{collections::BTreeMap, fs, path::Path};
+use std::{collections::BTreeMap, path::Path};
 
 fn boxes(list: impl IntoIterator<Item = [f64; 6]>) -> Value {
     let mut v: Vec<[f64; 6]> = list.into_iter().collect();
@@ -61,7 +64,7 @@ fn equipment_textures(root: &Path, asset: &str) -> Value {
             let file = root.join(format!(
                 "assets/{tns}/textures/entity/equipment/{kind}/{tpath}.png"
             ));
-            out.insert(kind.into(), json!(file.exists().then_some(file)));
+            out.insert(kind.into(), json!(file.fs_exists().then_some(file)));
         }
     }
     Value::Object(out)
@@ -78,7 +81,7 @@ fn main() -> Result<()> {
     for entry in fs::read_dir(work.join("mods"))?.flatten() {
         let id = entry.file_name().to_string_lossy().into_owned();
         let dir = entry.path().join("carry");
-        if !(wanted.is_empty() || wanted.contains(&id)) || !dir.is_dir() {
+        if !(wanted.is_empty() || wanted.contains(&id)) || !dir.fs_is_dir() {
             continue;
         }
         let package = horizon_mods::Package::read(&dir)?;

@@ -4,8 +4,8 @@ use std::io::Write;
 
 pub fn main() {
     let args: Vec<_> = super::args().collect();
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[2]).unwrap());
-    for line in std::fs::read_to_string(&args[1]).unwrap().lines() {
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[2]).unwrap());
+    for line in horizon_fs::read_to_string(&args[1]).unwrap().lines() {
         let (kind, bits) = line.split_once(' ').unwrap();
         if kind == "f" {
             let bits = u32::from_str_radix(bits, 16).unwrap();

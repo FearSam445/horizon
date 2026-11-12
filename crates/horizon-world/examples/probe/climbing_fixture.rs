@@ -1,4 +1,5 @@
 use horizon_core::position::BlockPos;
+use horizon_fs as fs;
 use horizon_world::{
     climbing::{ClimbingRegistry, ClimbingWorld, on_climbable},
     nbt::{self, Limits},
@@ -7,7 +8,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeSet,
-    fs,
     io::{self, Write},
     path::Path,
 };

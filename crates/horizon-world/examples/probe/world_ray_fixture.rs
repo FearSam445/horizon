@@ -3,10 +3,10 @@ use horizon_core::{
     geometry::{Aabb, ShapeOp, Vec3, VoxelShape},
     position::BlockPos,
 };
+use horizon_fs as fs;
 use horizon_world::{entity_obstruction::EntityIdentity, world_ray::*};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

@@ -3,11 +3,9 @@ use horizon_client::{
     Result,
     sprint::{Conditions, Keys, SprintState},
 };
+use horizon_fs::File;
 use serde_json::Value;
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 fn keys(mask: u64) -> Keys {
     Keys {
         forward: mask & 1 != 0,

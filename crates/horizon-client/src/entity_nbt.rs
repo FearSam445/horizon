@@ -16,6 +16,8 @@ use crate::{
     },
 };
 use horizon_core::geometry::Vec3;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     chunk::BlockState,
     nbt::{Compound, Tag},
@@ -5128,7 +5130,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -6392,7 +6394,7 @@ mod axolotl_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let types: HashMap<_, _> = crate::mobs::MobTypes::load(&root)
@@ -6448,7 +6450,7 @@ mod axolotl_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -6484,7 +6486,7 @@ mod axolotl_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -6658,7 +6660,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -6690,7 +6692,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -6767,7 +6769,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -6810,7 +6812,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -6838,7 +6840,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -6870,7 +6872,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -6920,7 +6922,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let types: HashMap<String, Arc<MobType>> = crate::mobs::MobTypes::load(&root)
@@ -6950,7 +6952,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let types: HashMap<String, Arc<MobType>> = crate::mobs::MobTypes::load(&root)
@@ -6983,7 +6985,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -7088,7 +7090,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -7118,7 +7120,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -7161,7 +7163,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -7201,7 +7203,7 @@ mod sheep_nbt_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -7211,7 +7213,7 @@ mod sheep_nbt_tests {
             .map(|(k, v)| (k.clone(), Arc::new(v.clone())))
             .collect();
         let registry = horizon_world::registry::BlockRegistry::from_facts_json(
-            std::fs::File::open(root.join("facts.json")).unwrap(),
+            horizon_fs::File::open(root.join("facts.json")).unwrap(),
         )
         .unwrap();
         let new = |kind: &str| Mob::new(1, types[kind].clone(), Vec3::new(0.0, 4.0, 0.0), 0.0);
@@ -7458,7 +7460,7 @@ mod item_component_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -7520,7 +7522,7 @@ mod item_component_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -7564,7 +7566,7 @@ mod item_component_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -7627,7 +7629,7 @@ mod item_component_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -8252,7 +8254,7 @@ mod neutral_anger_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -8633,7 +8635,7 @@ mod held_item_name_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();
@@ -8670,7 +8672,7 @@ mod held_item_name_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let data = crate::mobs::MobTypes::load(&root).unwrap();

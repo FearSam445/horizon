@@ -1,12 +1,12 @@
 use crate::support::common::f32_bits;
 use horizon_core::geometry::Vec3;
+use horizon_fs as fs;
 use horizon_world::{
     blocking_rules::{BlockingRules, DamageReduction, ItemDamageFunction, TypeMatchWorld},
     item_blocking::{self, ItemBlockingWorld},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
     sync::Arc,

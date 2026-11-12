@@ -13,8 +13,9 @@ use horizon_client::{
     lang,
     screen_draw::Measure,
 };
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{fmt::Write as _, fs, path::PathBuf};
+use std::{fmt::Write as _, path::PathBuf};
 use winit::keyboard::KeyCode as K;
 #[path = "chat_screen_fixture/registries.rs"]
 mod registries;

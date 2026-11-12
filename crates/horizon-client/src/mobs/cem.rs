@@ -22,6 +22,8 @@
 //! new geometry.
 
 use super::{Mob, MobType, Part, Polygon, Species};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_optifine::cem::{
     files::{atlas_name, jem_files, load_jem},
     model::{Bone, EntityModel, MAX_BYTES},
@@ -208,11 +210,11 @@ fn set_rule_species(species: Vec<String>) {
 /// A pack file's text, None when it's missing or larger than a model may read: its size is
 /// checked before anything is read.
 fn read_small(path: &Path) -> Option<String> {
-    let len = std::fs::metadata(path).ok()?.len();
+    let len = horizon_fs::metadata(path).ok()?.len();
     if len > MAX_BYTES as u64 {
         return None;
     }
-    std::fs::read_to_string(path).ok()
+    horizon_fs::read_to_string(path).ok()
 }
 
 /// One `optifine/cem/<name>.properties` random-model rule: `models.<n>` selects the model
@@ -758,7 +760,7 @@ impl Legacy {
             .copied()
             .filter(|(_, old)| {
                 root.join(format!("assets/minecraft/textures/{old}.png"))
-                    .is_file()
+                    .fs_is_file()
             })
             .collect();
         let adult = format!("{}#main", self.model);
@@ -896,7 +898,7 @@ fn part(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
+    use horizon_fs as fs;
 
     fn plane(name: &str, children: Vec<Part>) -> Part {
         Part {
@@ -1030,7 +1032,7 @@ mod tests {
 
     #[test]
     fn files_reshape_their_layers_and_babies_fall_back() {
-        let root = std::env::temp_dir().join(format!("horizon-cem-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-cem-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let cem = root.join("assets/minecraft/optifine/cem");
         fs::create_dir_all(cem.join("zombie")).unwrap();
@@ -1164,7 +1166,8 @@ mod tests {
 
     /// A fresh pack folder for the test `test` holding `files` (paths under `assets/minecraft/`).
     fn pack(test: &str, files: &[(&str, &str)]) -> std::path::PathBuf {
-        let root = std::env::temp_dir().join(format!("horizon-cem-{test}-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-cem-{test}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         for (path, text) in files {
             let path = root.join("assets/minecraft").join(path);

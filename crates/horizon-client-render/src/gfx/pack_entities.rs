@@ -1779,16 +1779,16 @@ mod velocity_translate_tests {
     /// previous view and last frame's vertices) and with the hand's (which read zero).
     #[test]
     fn a_pack_reading_at_velocity_translates_for_entities_and_the_hand() {
-        let dir = std::env::temp_dir().join(format!("hz-at-velocity-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("hz-at-velocity-{}", std::process::id()));
         let shaders = dir.join("shaders");
-        std::fs::create_dir_all(&shaders).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&shaders).unwrap();
+        horizon_fs::write(
             shaders.join("gbuffers_entities.vsh"),
             "#version 120\nattribute vec3 at_velocity;\nvarying vec3 v;\n\
              void main() {\n    gl_Position = ftransform();\n    v = at_velocity;\n}\n",
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             shaders.join("gbuffers_entities.fsh"),
             "#version 120\nvarying vec3 v;\nvoid main() {\n    gl_FragData[0] = vec4(v, 1.0);\n}\n",
         )
@@ -1819,7 +1819,7 @@ mod velocity_translate_tests {
                 "{who}: previous view in the block"
             );
         }
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }
 
@@ -1828,16 +1828,16 @@ mod tier_translate_tests {
     /// A pack's entity and hand programs may read `horizonTier`, the overlay's HDR tier.
     #[test]
     fn a_pack_reading_horizon_tier_translates_for_entities_and_the_hand() {
-        let dir = std::env::temp_dir().join(format!("hz-entity-tier-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("hz-entity-tier-{}", std::process::id()));
         let shaders = dir.join("shaders");
-        std::fs::create_dir_all(&shaders).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&shaders).unwrap();
+        horizon_fs::write(
             shaders.join("gbuffers_entities.vsh"),
             "#version 120\nattribute float horizonTier;\nvarying float t;\n\
              void main() {\n    gl_Position = ftransform();\n    t = horizonTier;\n}\n",
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             shaders.join("gbuffers_entities.fsh"),
             "#version 120\nvarying float t;\nvoid main() {\n    gl_FragData[0] = vec4(t);\n}\n",
         )
@@ -1860,7 +1860,7 @@ mod tier_translate_tests {
             )
             .unwrap_or_else(|e| panic!("{who}: {e:?}"));
         }
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }
 

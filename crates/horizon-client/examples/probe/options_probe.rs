@@ -5,7 +5,8 @@ use horizon_client::{
     Result, keybinds,
     options_file::{OptionsFile, V},
 };
-use std::{fs, io::Write};
+use horizon_fs as fs;
+use std::io::Write;
 
 pub fn main() -> Result<()> {
     let args: Vec<_> = crate::args().skip(1).collect();

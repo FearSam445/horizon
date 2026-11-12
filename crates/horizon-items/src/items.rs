@@ -3,12 +3,14 @@
 //! for the condition, entry and modifier types used by block drops).
 use crate::{Result, blocks::BlockFacts};
 use horizon_core::random::RandomSource;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::loot::PackOverlay;
 use horizon_world::registry::{BlockRegistry, BlockStateId};
 use serde_json::Value;
 use std::{
     collections::{HashMap, HashSet},
-    fs,
     path::Path,
     sync::Arc,
 };
@@ -586,7 +588,7 @@ pub(crate) fn load_tag_lists(
     // Vanilla's tags; with content mods also the convention (`c`) tags and the mods' own.
     for namespace in crate::content_namespaces::tag_namespaces(root) {
         let dir = root.join(format!("data/{namespace}/tags/{kind}"));
-        if dir.exists() {
+        if dir.fs_exists() {
             walk(&dir, &namespace, &mut raw)?;
         }
     }
@@ -2913,7 +2915,7 @@ mod bucket_use_tests {
 pub(crate) fn prepared_items() -> Option<Items> {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client/26.3");
-    if !root.join("items.json").exists() {
+    if !root.join("items.json").fs_exists() {
         return None;
     }
     let (registry, _) =
@@ -3001,7 +3003,7 @@ mod tests {
 
     #[test]
     fn weapon_disable_blocking_comes_from_the_stack() {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-weapon-disable-blocking-{}",
             std::process::id()
         ));
@@ -3054,7 +3056,7 @@ mod tests {
 
     #[test]
     fn loot_table_ids_list_the_roots_and_the_packs_tables() {
-        let root = std::env::temp_dir().join(format!("horizon-loot-ids-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-loot-ids-{}", std::process::id()));
         fs::create_dir_all(root.join("data/mymod/loot_table/rooms")).unwrap();
         fs::write(root.join("items.json"), "{}").unwrap();
         fs::write(
@@ -3077,7 +3079,7 @@ mod tests {
     /// a root without the mods' marker reads `minecraft` only.
     #[test]
     fn content_mod_songs_load_under_their_namespace() {
-        let root = std::env::temp_dir().join(format!("horizon-songs-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-songs-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         for ns in ["minecraft", "mymod"] {
             fs::create_dir_all(root.join(format!("data/{ns}/jukebox_song"))).unwrap();
@@ -3151,7 +3153,7 @@ mod tests {
     #[test]
     fn admitted_tool_rules_override_defaults_and_removals_survive_saving() {
         let root =
-            std::env::temp_dir().join(format!("horizon-tool-components-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-tool-components-{}", std::process::id()));
         fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
         fs::write(root.join("items.json"), r#"{"minecraft:stick":{},"minecraft:diamond_pickaxe":{"minecraft:max_damage":1561,"minecraft:tool":{"rules":[{"blocks":"minecraft:stone","speed":8.0,"correct_for_drops":true}],"damage_per_block":1}}}"#).unwrap();
         let items = Items::catalog(&root, &PackOverlay::NONE).unwrap();
@@ -3577,11 +3579,12 @@ mod tests {
     #[test]
     fn entity_target_context_reuses_the_loaded_matcher_only_for_this() {
         use horizon_world::loot::{LootData, LootEntity};
-        let root = std::env::temp_dir().join(format!("h036-items-matcher-{}", std::process::id()));
-        std::fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
-        std::fs::write(root.join("items.json"), "{}").unwrap();
+        let root =
+            horizon_fs::temp_dir().join(format!("h036-items-matcher-{}", std::process::id()));
+        horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
+        horizon_fs::write(root.join("items.json"), "{}").unwrap();
         let data = LootData::load(&root, &PackOverlay::NONE).unwrap();
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let matcher = |p: &Value, e: &LootEntity| data.entity_matches(p, Some(e));
         let mut items = Items::for_tests(HashMap::new());
         for who in ["this", "attacker"] {
@@ -4024,7 +4027,7 @@ mod tests {
     #[test]
     fn mod_items_take_their_crafting_remainders() {
         let root =
-            std::env::temp_dir().join(format!("horizon-craft-remainders-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-craft-remainders-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
         let items = r#"{"minecraft:bowl": {}, "minecraft:milk_bucket": {}, "ruby:stew": {}}"#;

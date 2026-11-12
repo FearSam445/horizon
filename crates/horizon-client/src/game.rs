@@ -7643,7 +7643,7 @@ impl Game<'_> {
         lan::forget_sync_data();
         self.title = Some(
             Title::new(
-                std::env::current_dir()?.join("saves"),
+                horizon_fs::current_dir()?.join("saves"),
                 &self.options.resources,
             )
             .with_user(|| self.options.player_name()),
@@ -11362,7 +11362,7 @@ impl<'a> Game<'a> {
         streaming.paused = true;
         let level = Level::default();
         let save = Arc::new(SaveDir::new(
-            std::env::current_dir()?
+            horizon_fs::current_dir()?
                 .join("saves")
                 .join(".horizon-title"),
             horizon_client::save::LevelShape::OVERWORLD,
@@ -11722,7 +11722,7 @@ impl<'a> Game<'a> {
             text_display_vertices: 0,
             skin_downloads: RefCell::new({
                 let mut downloads = horizon_client::skins::Downloader::new(
-                    std::env::current_dir()
+                    horizon_fs::current_dir()
                         .unwrap_or_default()
                         .join("assets/skins"),
                 );
@@ -11839,7 +11839,7 @@ impl<'a> Game<'a> {
             debug_keys: Default::default(),
             debug_charts: Default::default(),
             debug_entries: horizon_client::debug_entries::DebugEntries::load(
-                &std::env::current_dir().unwrap_or_default(),
+                &horizon_fs::current_dir().unwrap_or_default(),
             ),
             debug_options: None,
             memory_meter: Default::default(),
@@ -12349,7 +12349,7 @@ pub fn run_with() -> Result<()> {
     activity::client_started(&options);
     // Snapshots of derived tables live in the game folder, never beside the
     // shared resources.
-    Behaviours::set_cache_dir(std::env::current_dir()?.join(".horizon-cache"));
+    Behaviours::set_cache_dir(horizon_fs::current_dir()?.join(".horizon-cache"));
     if !synchronous_startup(&options) {
         return run_loading(options, early_settings, vanilla_root, None, started);
     }

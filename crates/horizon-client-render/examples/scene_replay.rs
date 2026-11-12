@@ -561,9 +561,9 @@ fn section_keys(dir: &Path) -> Result<Vec<[i32; 3]>, Box<dyn std::error::Error>>
     struct Key {
         key: [i32; 3],
     }
-    let records: Vec<Key> = serde_json::from_reader(std::io::BufReader::new(std::fs::File::open(
-        dir.join("sections.json"),
-    )?))?;
+    let records: Vec<Key> = serde_json::from_reader(std::io::BufReader::new(
+        horizon_fs::File::open(dir.join("sections.json"))?,
+    ))?;
     Ok(records.into_iter().map(|r| r.key).collect())
 }
 
@@ -604,7 +604,7 @@ fn remesh(
         );
         0
     });
-    let options = std::fs::read_to_string("options.txt").unwrap_or_default();
+    let options = horizon_fs::read_to_string("options.txt").unwrap_or_default();
     let option = |key: &str| {
         options
             .lines()

@@ -1,5 +1,6 @@
 use crate::support::common::position;
 use horizon_core::{geometry::Vec3, position::BlockPos};
+use horizon_fs as fs;
 use horizon_world::movement_support::{self as support, MovementLocation};
 use horizon_world::{
     movement_properties::{
@@ -12,7 +13,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

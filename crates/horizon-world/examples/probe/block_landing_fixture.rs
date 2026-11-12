@@ -4,6 +4,7 @@ use horizon_core::{
     geometry::{Aabb, Vec3, VoxelShape},
     position::BlockPos,
 };
+use horizon_fs as fs;
 use horizon_world::{
     block_entity_push::BlockPushWorld,
     block_landing::*,
@@ -16,7 +17,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     io::{self, Write},
     path::Path,
 };

@@ -1,4 +1,5 @@
 use crate::support::common::f64_hex;
+use horizon_fs as fs;
 use horizon_world::{
     attribute_map::AttributeMap,
     attributes::{AttributeError, Definition, Instance, Modifier, Observer, Operation},
@@ -7,7 +8,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

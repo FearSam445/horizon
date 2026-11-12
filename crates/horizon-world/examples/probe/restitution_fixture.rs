@@ -1,12 +1,12 @@
 use crate::support::common::f64_bits;
 use horizon_core::{geometry::Vec3, position::BlockPos};
+use horizon_fs as fs;
 use horizon_world::{
     movement_restitution::{RestitutionInput, RestitutionWorld, restitute_movement},
     registry::BlockStateId,
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

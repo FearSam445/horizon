@@ -7,7 +7,8 @@
 //! refused with "You logged in from another location". The generated name is
 //! kept in `horizon-player.txt` next to `options.txt` so the same player gets
 //! the same offline UUID (and inventory on a friend's world) every time.
-use std::{fs, path::Path};
+use horizon_fs as fs;
+use std::path::Path;
 
 pub const FILE: &str = "horizon-player.txt";
 const KEY: &str = "name:";
@@ -63,7 +64,7 @@ mod tests {
     use super::*;
 
     fn dir(name: &str) -> std::path::PathBuf {
-        let d = std::env::temp_dir().join(format!(
+        let d = horizon_fs::temp_dir().join(format!(
             "horizon-offline-name-{name}-{}",
             std::process::id()
         ));

@@ -3,6 +3,7 @@ use horizon_core::{
     geometry::{Aabb, ShapeOp, Vec3, VoxelShape},
     position::{BlockPos, ChunkPos},
 };
+use horizon_fs as fs;
 use horizon_world::{
     block_collision_scan::{BlockCollisionScan, BlockCollisionWorld, CollisionBlock},
     collision_context::{CollisionContext, CollisionEntity, EntityContextKind},
@@ -13,7 +14,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     cell::RefCell,
-    fs,
     io::{self, Write},
     path::Path,
     rc::Rc,

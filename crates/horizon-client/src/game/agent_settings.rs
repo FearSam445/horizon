@@ -111,7 +111,7 @@ impl Game<'_> {
     /// and an MCP client's config for this game.
     pub(super) fn agent_details(&self) -> String {
         let socket = self.agent_socket_path();
-        let ctl = std::env::current_exe()
+        let ctl = horizon_fs::current_exe()
             .unwrap_or_default()
             .with_file_name(if cfg!(windows) {
                 "horizon-ctl.exe"

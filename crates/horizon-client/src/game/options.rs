@@ -9,6 +9,8 @@ use horizon_client::{
     options_ui::{Event, Page},
     window::{FrameContext, InactivityFpsLimit, framerate_limit},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde_json::{Value, json};
 use winit::{event::MouseButton, keyboard::KeyCode, window::Fullscreen};
 
@@ -100,7 +102,7 @@ impl Game<'_> {
     }
     /// The game folder (the working directory): what its players share, saves, packs, mods.
     pub(super) fn game_dir() -> std::path::PathBuf {
-        std::env::current_dir().unwrap_or_default()
+        horizon_fs::current_dir().unwrap_or_default()
     }
     /// `shaderpacks/` in the game folder.
     pub(super) fn shader_packs_dir() -> std::path::PathBuf {
@@ -153,12 +155,12 @@ impl Game<'_> {
             return;
         }
         let signature: Vec<(String, u64, Option<std::time::SystemTime>)> =
-            std::fs::read_dir(super::packs::packs_dir())
+            horizon_fs::read_dir(super::packs::packs_dir())
                 .into_iter()
                 .flatten()
                 .flatten()
                 .map(|e| {
-                    let meta = e.metadata().ok();
+                    let meta = e.fs_metadata().ok();
                     (
                         e.file_name().to_string_lossy().into_owned(),
                         meta.as_ref().map_or(0, |m| m.len()),
@@ -416,7 +418,7 @@ impl Game<'_> {
                 }
                 Event::OpenPackFolder => {
                     let dir = super::packs::packs_dir();
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     super::packs::open_folder(&dir);
                 }
                 Event::ImportPacks(paths) => {
@@ -445,12 +447,12 @@ impl Game<'_> {
                     }
                 }
                 Event::OpenDataPackFolder(dir) => {
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     super::packs::open_folder(&dir);
                 }
                 Event::OpenModFolder => {
                     let dir = Self::game_dir().join(horizon_client::mod_list::DIR);
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     super::packs::open_folder(&dir);
                 }
                 Event::BrowseMods => {
@@ -486,7 +488,7 @@ impl Game<'_> {
                 }
                 Event::OpenShaderPackFolder => {
                     let dir = Self::shader_packs_dir();
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     super::packs::open_folder(&dir);
                 }
                 Event::NativeSettings(i) => self.native_settings_refresh(i),
@@ -507,7 +509,7 @@ impl Game<'_> {
                 }
                 Event::OpenStudioFolder => {
                     let dir = std::path::PathBuf::from("recordings");
-                    let _ = std::fs::create_dir_all(&dir);
+                    let _ = horizon_fs::create_dir_all(&dir);
                     super::packs::open_folder(&dir);
                 }
             }

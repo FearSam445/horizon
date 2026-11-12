@@ -7,6 +7,8 @@ license = "MIT"
 description = "The benchmark report format (docs/benchmark-report.md), shared by the game, the launcher and the upload"
 
 [dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
 # SystemTime::now, also in the browser build (web/).
 horizon-clock = { path = "../../web/clock" }
 # std::time, with a clock in the browser build (web/).

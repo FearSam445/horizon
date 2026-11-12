@@ -2,6 +2,8 @@
 //! takes over (`App`), and the checks a start makes first: missing or damaged prepared files,
 //! an unclean last exit, a fullscreen the window system could not show.
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 /// The window system ended the event loop with a failure (on Linux, a compositor dropping the
 /// connection after a protocol error) while fullscreen was on: the next start opens windowed, so a
@@ -478,7 +480,7 @@ pub(super) fn missing_resources(
     get: Option<horizon_hooks::GetTheGame>,
 ) -> Option<String> {
     let shown = std::path::absolute(root).unwrap_or_else(|_| root.to_path_buf());
-    if !root.join("horizon-resources.json").is_file() {
+    if !root.join("horizon-resources.json").fs_is_file() {
         let launcher = get.map_or(String::new(), |get| {
             format!(
                 "Horizon is started from its launcher: download it at {} (Download). It needs \
@@ -507,19 +509,19 @@ pub(super) fn missing_resources(
 /// beats serde's bare "expected value at line 1 column 1".
 pub(super) fn damaged_prepared(root: &std::path::Path) -> Option<String> {
     let manifest = root.join("horizon-resources.json");
-    let bytes = std::fs::read(&manifest).ok()?;
+    let bytes = horizon_fs::read(&manifest).ok()?;
     if bytes.iter().all(u8::is_ascii_whitespace) {
         return Some("horizon-resources.json is empty".into());
     }
     if serde_json::from_slice::<serde_json::Value>(&bytes).is_err() {
         return Some("horizon-resources.json is not valid JSON".into());
     }
-    for entry in std::fs::read_dir(root).ok()?.flatten() {
+    for entry in horizon_fs::read_dir(root).ok()?.flatten() {
         let path = entry.path();
         if path.extension() != Some(std::ffi::OsStr::new("json")) {
             continue;
         }
-        if std::fs::metadata(&path).is_ok_and(|meta| meta.len() == 0) {
+        if horizon_fs::metadata(&path).is_ok_and(|meta| meta.len() == 0) {
             return Some(format!("{} is empty", entry.file_name().to_string_lossy()));
         }
     }

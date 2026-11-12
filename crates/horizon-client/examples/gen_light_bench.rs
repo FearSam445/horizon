@@ -246,7 +246,7 @@ fn main() -> Result<(), Error> {
     // The pool is made once per process with its size: one process per
     // worker count and repeat, each given the same flags but one count.
     if threads.len() > 1 || repeat > 1 {
-        let exe = std::env::current_exe()?;
+        let exe = horizon_fs::current_exe()?;
         let mut rest = Vec::new();
         let mut i = 1;
         while i < args.len() {

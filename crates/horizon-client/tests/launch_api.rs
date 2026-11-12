@@ -2,15 +2,17 @@
 //! the real program: `--launch-api` prints JSON and exits 0, a refused command line exits 2
 //! without a crash report, and an error exits 1 with the report's path as the last stderr line,
 //! with `--home` and `--game-dir` taken relative to where the game was started.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
 /// A scratch folder of its own, with a space in its name as launchers' instance folders have.
 fn scratch(name: &str) -> PathBuf {
     let dir =
-        std::env::temp_dir().join(format!("horizon-launch-api {name}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::temp_dir().join(format!("horizon-launch-api {name}-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
+    horizon_fs::create_dir_all(&dir).unwrap();
     dir
 }
 
@@ -54,8 +56,11 @@ fn launch_api_prints_json_and_runs_nothing_else() {
     for name in ["--resources", "--game-dir", "--home", "--session-stdin"] {
         assert!(names.contains(&name), "{name} not in {names:?}");
     }
-    assert!(!dir.join("env home").exists(), "--launch-api opened a log");
-    std::fs::remove_dir_all(dir).unwrap();
+    assert!(
+        !dir.join("env home").fs_exists(),
+        "--launch-api opened a log"
+    );
+    horizon_fs::remove_dir_all(dir).unwrap();
 }
 
 #[test]
@@ -72,10 +77,10 @@ fn a_refused_command_line_exits_2_without_a_crash_report() {
             !last_stderr_line(&output).starts_with("Horizon: crash report saved to "),
             "{args:?}"
         );
-        assert!(!dir.join("home/crash-reports").exists(), "{args:?}");
+        assert!(!dir.join("home/crash-reports").fs_exists(), "{args:?}");
     }
-    assert!(!dir.join("saves").exists());
-    std::fs::remove_dir_all(dir).unwrap();
+    assert!(!dir.join("saves").fs_exists());
+    horizon_fs::remove_dir_all(dir).unwrap();
 }
 
 /// A control socket no system would bind: refused before the game folder, the start marker in its
@@ -100,16 +105,16 @@ fn a_control_socket_path_too_long_is_a_refused_command_line() {
     assert_eq!(output.status.code(), Some(2));
     let line = last_stderr_line(&output);
     assert!(line.contains("too long"), "last stderr line: {line}");
-    assert!(!dir.join("home/crash-reports").exists());
-    assert!(!dir.join("game").exists());
-    std::fs::remove_dir_all(dir).unwrap();
+    assert!(!dir.join("home/crash-reports").fs_exists());
+    assert!(!dir.join("game").fs_exists());
+    horizon_fs::remove_dir_all(dir).unwrap();
 }
 
 #[test]
 fn an_error_exits_1_and_names_the_crash_report_under_home() {
     let dir = scratch("error");
     let start = dir.join("start");
-    std::fs::create_dir_all(&start).unwrap();
+    horizon_fs::create_dir_all(&start).unwrap();
     // No prepared resources: the game stops on an error once its folders are set up.
     let output = run(
         &start,
@@ -129,12 +134,15 @@ fn an_error_exits_1_and_names_the_crash_report_under_home() {
         .strip_prefix("Horizon: crash report saved to ")
         .unwrap_or_else(|| panic!("last stderr line: {line}"));
     let report = Path::new(report);
-    assert!(report.is_file(), "{}", report.display());
+    assert!(report.fs_is_file(), "{}", report.display());
     assert_eq!(
-        std::fs::canonicalize(report.parent().unwrap()).unwrap(),
-        std::fs::canonicalize(dir.join("my home/crash-reports")).unwrap()
+        horizon_fs::canonicalize(report.parent().unwrap()).unwrap(),
+        horizon_fs::canonicalize(dir.join("my home/crash-reports")).unwrap()
     );
-    assert!(dir.join("my game").is_dir(), "--game-dir was not created");
-    assert!(!start.join("saves").exists() && !start.join("options.txt").exists());
-    std::fs::remove_dir_all(dir).unwrap();
+    assert!(
+        dir.join("my game").fs_is_dir(),
+        "--game-dir was not created"
+    );
+    assert!(!start.join("saves").fs_exists() && !start.join("options.txt").fs_exists());
+    horizon_fs::remove_dir_all(dir).unwrap();
 }

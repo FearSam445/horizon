@@ -12,8 +12,9 @@ use horizon_client::{
     screen_draw::{Draw, Measure},
     text::Text,
 };
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{fmt::Write as _, fs, path::PathBuf, sync::Arc};
+use std::{fmt::Write as _, path::PathBuf, sync::Arc};
 
 /// Styled runs: [text, rgb or null, bold, italic, underlined, strikethrough, obfuscated].
 pub fn runs(t: &Text) -> Value {

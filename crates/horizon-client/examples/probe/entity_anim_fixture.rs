@@ -14,8 +14,9 @@ use horizon_client::mobs::{
     render, shulker, sniffer, species, tame,
 };
 use horizon_core::geometry::Vec3;
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{collections::BTreeMap, fs, path::PathBuf, sync::Arc};
+use std::{collections::BTreeMap, path::PathBuf, sync::Arc};
 
 fn walk(part: &Part, path: &str, poses: &Poses, out: &mut BTreeMap<String, Value>) {
     let p = poses.pose(part);

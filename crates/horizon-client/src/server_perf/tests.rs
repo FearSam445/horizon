@@ -1,6 +1,8 @@
 use super::*;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_perf_format::v1::{Capture, Kind as K, Side as S, StopReason as R};
-use std::fs;
 
 mod timeline_capture;
 
@@ -8,7 +10,8 @@ struct Scratch(PathBuf);
 
 impl Scratch {
     fn new(tag: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("hz-server-perf-{tag}-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("hz-server-perf-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         Self(dir)
@@ -252,7 +255,7 @@ fn finishing_removes_the_oldest_capture_beyond_thirty_and_keeps_a_renamed_one() 
     run(&mut perf, 0, 1, 20, &[]);
     let saved = stop(&mut perf, 1.0, R::Normal).unwrap().unwrap();
     assert_eq!(saved.deleted, [old[0].clone()]);
-    assert!(saved.path.exists() && renamed.exists() && old[1].exists());
+    assert!(saved.path.fs_exists() && renamed.fs_exists() && old[1].fs_exists());
     let line = files::saved_line(&saved.path);
     assert!(line.contains(saved.path.to_str().unwrap()), "{line}");
 }

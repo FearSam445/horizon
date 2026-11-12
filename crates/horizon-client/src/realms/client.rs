@@ -1704,8 +1704,8 @@ impl RealmsClient {
             if cancel.load(Ordering::Relaxed) {
                 return Err(UploadFailure::Cancelled);
             }
-            let file =
-                std::fs::File::open(archive).map_err(|e| UploadFailure::Failed(e.to_string()))?;
+            let file = horizon_fs::File::open(archive)
+                .map_err(|e| UploadFailure::Failed(e.to_string()))?;
             let counted = CountingReader {
                 inner: file,
                 written,
@@ -1724,7 +1724,7 @@ impl RealmsClient {
                 .set("Content-Type", "application/octet-stream")
                 .set(
                     "Content-Length",
-                    &std::fs::metadata(archive)
+                    &horizon_fs::metadata(archive)
                         .map(|m| m.len())
                         .unwrap_or(0)
                         .to_string(),

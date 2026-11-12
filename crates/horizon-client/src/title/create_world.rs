@@ -69,7 +69,7 @@ impl WorldOptions {
     /// A fresh Create New World in the game folder (the working directory): the defaults, with
     /// the packs this game folder gives every new world.
     pub(super) fn for_new_world() -> Self {
-        let seeded = std::env::current_dir()
+        let seeded = horizon_fs::current_dir()
             .ok()
             .and_then(|dir| crate::datapack::seed_create_world(&dir));
         let mut options = Self::default();

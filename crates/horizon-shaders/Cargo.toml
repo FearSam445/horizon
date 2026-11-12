@@ -7,6 +7,8 @@ rust-version.workspace = true
 description = "Shader packs (the shaders/ folder format): reading packs, their .properties and .lang files, and later their GLSL"
 
 [dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
 # std::time, with a clock in the browser build (web/).
 web-time = "1.1"
 horizon-core = { path = "../horizon-core" }

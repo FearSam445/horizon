@@ -12,6 +12,8 @@ use crate::{
     registry::{BlockRegistry, BlockStateId, BlockTable},
 };
 use horizon_core::geometry::{Axis, VoxelShape};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{collections::HashMap, io};
 
 /// `PipeBlock`'s shape for `size` pixels across (`makeShapes`): the core
@@ -397,7 +399,7 @@ mod pipe_tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("cached-collision.nbt").exists() {
+        if !root.join("cached-collision.nbt").fs_exists() {
             eprintln!("skipping: no resources at {}", root.display());
             return;
         }

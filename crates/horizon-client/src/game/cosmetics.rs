@@ -118,7 +118,7 @@ fn account() -> Option<(
 )> {
     let session = horizon_client::auth::current()?;
     let uuid = format!("{:032x}", session.uuid);
-    Some((session, uuid, std::env::current_dir().ok()?))
+    Some((session, uuid, horizon_fs::current_dir().ok()?))
 }
 
 /// Asks the service whether the signed-in account owns a cosmetic and keeps the answer in the
@@ -237,7 +237,7 @@ impl Cosmetics {
             .unwrap_or_else(|_| horizon_cosmetics::API.to_owned());
         let agent = format!("Horizon/{}", env!("CARGO_PKG_VERSION"));
         // Beside the downloaded skins (`assets/skins` in the game folder).
-        let cache = std::env::current_dir()
+        let cache = horizon_fs::current_dir()
             .unwrap_or_default()
             .join("assets/cosmetics");
         let http = horizon_cosmetics::Http::new(&api, &agent);

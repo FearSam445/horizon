@@ -15,7 +15,7 @@ struct Scratch(PathBuf);
 
 impl Drop for Scratch {
     fn drop(&mut self) {
-        std::fs::remove_dir_all(&self.0).ok();
+        horizon_fs::remove_dir_all(&self.0).ok();
     }
 }
 
@@ -23,11 +23,11 @@ impl Drop for Scratch {
 fn write_base(root: &std::path::Path) -> Biomes {
     let maps = root.join("assets/minecraft/textures/colormap");
     let biome_dir = root.join("data/minecraft/worldgen/biome");
-    std::fs::create_dir_all(&maps).unwrap();
-    std::fs::create_dir_all(&biome_dir).unwrap();
-    std::fs::write(root.join("registries.json"), "{}").unwrap();
+    horizon_fs::create_dir_all(&maps).unwrap();
+    horizon_fs::create_dir_all(&biome_dir).unwrap();
+    horizon_fs::write(root.join("registries.json"), "{}").unwrap();
     for name in ["grass", "foliage", "dry_foliage"] {
-        let file = std::fs::File::create(maps.join(format!("{name}.png"))).unwrap();
+        let file = horizon_fs::File::create(maps.join(format!("{name}.png"))).unwrap();
         let mut png = png::Encoder::new(file, 1, 1);
         png.set_color(png::ColorType::Rgb);
         png.set_depth(png::BitDepth::Eight);
@@ -35,14 +35,14 @@ fn write_base(root: &std::path::Path) -> Biomes {
         writer.write_image_data(&[1, 2, 3]).unwrap();
     }
     for name in ["plains", "river"] {
-        std::fs::write(biome_dir.join(format!("{name}.json")), "{}").unwrap();
+        horizon_fs::write(biome_dir.join(format!("{name}.json")), "{}").unwrap();
     }
     Biomes::load(root).unwrap()
 }
 
 #[test]
 fn a_pack_biome_is_sent_with_its_data_and_read_back_by_a_client() {
-    let root = std::env::temp_dir().join(format!("horizon-sync-biomes-{}", std::process::id()));
+    let root = horizon_fs::temp_dir().join(format!("horizon-sync-biomes-{}", std::process::id()));
     let _scratch = Scratch(root.clone());
     let base = write_base(&root);
     let pack: Value = serde_json::from_str(r##"{"effects":{"grass_color":"#123456"}}"##).unwrap();
@@ -105,7 +105,8 @@ fn a_pack_biome_is_sent_with_its_data_and_read_back_by_a_client() {
 
 #[test]
 fn recolouring_twice_starts_from_the_biome_files_each_time() {
-    let root = std::env::temp_dir().join(format!("horizon-recolor-biomes-{}", std::process::id()));
+    let root =
+        horizon_fs::temp_dir().join(format!("horizon-recolor-biomes-{}", std::process::id()));
     let _scratch = Scratch(root.clone());
     let base = write_base(&root);
     let grass = |b: &Biomes| b.get(b.id("minecraft:plains")).grass;

@@ -28,6 +28,8 @@ use horizon_client::{
     vanillagen::VanillaTerrain,
     world::World,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::level::{LevelEvent, Ticks};
 use std::{collections::HashMap, sync::Arc};
 use web_time::{Duration, Instant};
@@ -1223,7 +1225,7 @@ mod tests {
         let home = std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap()).join("h260");
         let world = home.join("saves/h260");
         // A new world each run: a border saved by the last one would already be 50.
-        let _ = std::fs::remove_dir_all(&home);
+        let _ = horizon_fs::remove_dir_all(&home);
         {
             let mut game = open_game(&root, &home, &world);
             // A server ticks before it saves.
@@ -1262,7 +1264,7 @@ mod tests {
         let home = std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap())
             .join("h260-controls");
         // A new world each run, as the first open expects.
-        let _ = std::fs::remove_dir_all(&home);
+        let _ = horizon_fs::remove_dir_all(&home);
         let world = home.join("saves/h260");
         let sizes = |game: &mut Game<'_>| {
             assert!(game.run_command("execute in minecraft:overworld run worldborder get"));
@@ -1336,13 +1338,13 @@ mod tests {
         let world = home.join("saves/h078");
         let source = std::path::PathBuf::from(std::env::var_os("H077_OLD_WORLD").unwrap());
         fn copy(from: &std::path::Path, to: &std::path::Path) {
-            std::fs::create_dir_all(to).unwrap();
-            for entry in std::fs::read_dir(from).unwrap().flatten() {
+            horizon_fs::create_dir_all(to).unwrap();
+            for entry in horizon_fs::read_dir(from).unwrap().flatten() {
                 let target = to.join(entry.file_name());
-                if entry.file_type().unwrap().is_dir() {
+                if entry.file_type().unwrap().fs_is_dir() {
                     copy(&entry.path(), &target);
                 } else if entry.file_name() != "session.lock" {
-                    std::fs::copy(entry.path(), target).unwrap();
+                    horizon_fs::copy(entry.path(), target).unwrap();
                 }
             }
         }
@@ -1397,13 +1399,13 @@ mod tests {
         let world = home.join("saves/h077");
         let source = std::path::PathBuf::from(std::env::var_os("H077_OLD_WORLD").unwrap());
         fn copy(from: &std::path::Path, to: &std::path::Path) {
-            std::fs::create_dir_all(to).unwrap();
-            for entry in std::fs::read_dir(from).unwrap().flatten() {
+            horizon_fs::create_dir_all(to).unwrap();
+            for entry in horizon_fs::read_dir(from).unwrap().flatten() {
                 let target = to.join(entry.file_name());
-                if entry.file_type().unwrap().is_dir() {
+                if entry.file_type().unwrap().fs_is_dir() {
                     copy(&entry.path(), &target);
                 } else if entry.file_name() != "session.lock" {
-                    std::fs::copy(entry.path(), target).unwrap();
+                    horizon_fs::copy(entry.path(), target).unwrap();
                 }
             }
         }
@@ -1496,13 +1498,13 @@ mod tests {
         let world = home.join("saves/h077");
         let source = std::path::PathBuf::from(std::env::var_os("H077_OLD_WORLD").unwrap());
         fn copy(from: &std::path::Path, to: &std::path::Path) {
-            std::fs::create_dir_all(to).unwrap();
-            for entry in std::fs::read_dir(from).unwrap().flatten() {
+            horizon_fs::create_dir_all(to).unwrap();
+            for entry in horizon_fs::read_dir(from).unwrap().flatten() {
                 let target = to.join(entry.file_name());
-                if entry.file_type().unwrap().is_dir() {
+                if entry.file_type().unwrap().fs_is_dir() {
                     copy(&entry.path(), &target);
                 } else if entry.file_name() != "session.lock" {
-                    std::fs::copy(entry.path(), target).unwrap();
+                    horizon_fs::copy(entry.path(), target).unwrap();
                 }
             }
         }

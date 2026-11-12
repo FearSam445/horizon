@@ -1,9 +1,9 @@
 //! Original transport for native chunk biome fill order and failure state.
 use horizon_core::position::ChunkPos;
+use horizon_fs as fs;
 use horizon_world::{retrogen::RetrogenBiomeResolver, worldgen::biome_chunk::BiomeChunk};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

@@ -1265,7 +1265,7 @@ pub(crate) fn in_own_process(name: &str, body: impl FnOnce()) {
     if std::env::var_os(OWN_PROCESS).is_some_and(|v| v == name) {
         return body();
     }
-    let out = std::process::Command::new(std::env::current_exe().unwrap())
+    let out = std::process::Command::new(horizon_fs::current_exe().unwrap())
         .args([name, "--exact", "--include-ignored", "--test-threads=1"])
         .env(OWN_PROCESS, name)
         .output()

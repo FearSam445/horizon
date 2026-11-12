@@ -12,7 +12,7 @@ impl Game<'_> {
         if self.title.is_none() {
             self.title = Some(
                 Title::new(
-                    std::env::current_dir()?.join("saves"),
+                    horizon_fs::current_dir()?.join("saves"),
                     &self.options.resources,
                 )
                 .with_user(|| self.options.player_name()),

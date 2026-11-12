@@ -75,7 +75,7 @@ pub fn note_display(window: &winit::window::Window) {
 /// This machine, with the GPU and the screen once the renderer knows them. The drive is the one
 /// under the game folder (the current folder).
 pub fn system() -> System {
-    let home = std::env::current_dir().ok();
+    let home = horizon_fs::current_dir().ok();
     let mut system = System::detect_in(home.as_deref());
     if let Some(gpu) = crate::gfx::adapter() {
         system.vram_mb = match gpu.kind.as_str() {
@@ -279,7 +279,7 @@ impl Session {
 /// The game's resident memory: the peak on Linux, what it uses now elsewhere.
 fn peak_ram_mb() -> u32 {
     let kib = if cfg!(target_os = "linux") {
-        std::fs::read_to_string("/proc/self/status")
+        horizon_fs::read_to_string("/proc/self/status")
             .ok()
             .and_then(|t| {
                 t.lines()
@@ -312,12 +312,12 @@ mod tests {
     use horizon_telemetry::{Choices, Consent, Kind};
 
     fn home(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-client-telemetry-{name}-{}",
             std::process::id()
         ));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
+        let _ = horizon_fs::remove_dir_all(&dir);
+        horizon_fs::create_dir_all(&dir).unwrap();
         dir
     }
 

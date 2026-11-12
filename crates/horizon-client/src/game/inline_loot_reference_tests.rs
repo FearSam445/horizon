@@ -57,25 +57,25 @@ fn game() -> Game<'static> {
     // One folder per fixture: the tests run in parallel.
     static FIXTURES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let n = FIXTURES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let dir = std::env::temp_dir().join(format!(
+    let dir = horizon_fs::temp_dir().join(format!(
         "horizon-inline-loot-ref-{}-{n}",
         std::process::id()
     ));
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
     let tables = dir.join("datapacks/il/data/parity/loot_table");
-    std::fs::create_dir_all(&tables).unwrap();
-    std::fs::write(
+    horizon_fs::create_dir_all(&tables).unwrap();
+    horizon_fs::write(
         dir.join("datapacks/il/pack.mcmeta"),
         r#"{"pack":{"description":"fixture"}}"#,
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         tables.join("il_one.json"),
         r#"{"pools":[{"rolls":1,"entries":[{"type":"minecraft:item","name":"minecraft:diamond"}]}]}"#,
     )
     .unwrap();
-    std::fs::write(tables.join("il_empty.json"), r#"{"pools":[]}"#).unwrap();
-    std::fs::write(
+    horizon_fs::write(tables.join("il_empty.json"), r#"{"pools":[]}"#).unwrap();
+    horizon_fs::write(
         dir.join("datapacks.json"),
         r#"{"enabled":["file/il"],"disabled":[]}"#,
     )
@@ -192,18 +192,18 @@ fn inline_references_follow_the_codec_and_the_reloaded_registry() {
     assert_eq!((ok, r, s, d), (false, 31, 31, 0), "before /reload");
     // The pack gains the table and two functions; /reload refreshes both.
     let pack = game.world_root.join("datapacks/il/data/parity");
-    std::fs::write(
+    horizon_fs::write(
         pack.join("loot_table/il_late.json"),
         r#"{"pools":[{"rolls":1,"entries":[{"type":"minecraft:item","name":"minecraft:diamond"}]}]}"#,
     )
     .unwrap();
-    std::fs::create_dir_all(pack.join("function")).unwrap();
-    std::fs::write(
+    horizon_fs::create_dir_all(pack.join("function")).unwrap();
+    horizon_fs::write(
         pack.join("function/il_bad.mcfunction"),
         format!("loot give @s loot {}\n", reference("\"parity:il_none\"")),
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         pack.join("function/il_good.mcfunction"),
         format!("loot give @s loot {late}\n"),
     )

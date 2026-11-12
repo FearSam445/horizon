@@ -13,11 +13,11 @@ fn actual_holder_detach_does_not_reaward_the_held_lead_criterion() {
     game.level.health = 20.0;
     game.creative = false;
     // A world of its own under the temporary folder, never the cwd.
-    game.world_root = std::env::temp_dir().join(format!(
+    game.world_root = horizon_fs::temp_dir().join(format!(
         "horizon-leash-criterion-world-{}",
         std::process::id()
     ));
-    let _ = std::fs::remove_dir_all(&game.world_root);
+    let _ = horizon_fs::remove_dir_all(&game.world_root);
     game.build_registries();
     game.set_allow_commands(true);
     assert!(game.run_command("reload"));
@@ -81,5 +81,5 @@ fn actual_holder_detach_does_not_reaward_the_held_lead_criterion() {
         !game.adv.progress.has(ADV, CRITERION),
         "holder detach is a without-item success, not a second held-lead use"
     );
-    let _ = std::fs::remove_dir_all(&game.world_root);
+    let _ = horizon_fs::remove_dir_all(&game.world_root);
 }

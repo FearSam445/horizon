@@ -1543,7 +1543,7 @@ impl Game<'_> {
             sibling: bool,
         }
         let cases: Vec<Case> =
-            serde_json::from_str(&std::fs::read_to_string(directory.join("inputs.json"))?)?;
+            serde_json::from_str(&horizon_fs::read_to_string(directory.join("inputs.json"))?)?;
         let mut output = Vec::new();
         for case in cases {
             self.dropped.clear();
@@ -1585,7 +1585,7 @@ impl Game<'_> {
             }
             output.push(serde_json::json!({"name": case.name, "steps": steps}));
         }
-        std::fs::write(directory.join("rust.json"), serde_json::to_vec(&output)?)?;
+        horizon_fs::write(directory.join("rust.json"), serde_json::to_vec(&output)?)?;
         Ok(())
     }
 }

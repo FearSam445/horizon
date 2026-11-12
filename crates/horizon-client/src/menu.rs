@@ -14,6 +14,8 @@ use crate::{
     crafting::Recipes,
     items::{ItemStack, Items},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::sync::Arc;
 
 mod bundle;
@@ -3475,7 +3477,7 @@ pub(crate) mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let items = Items::catalog(&root, &PackOverlay::NONE).unwrap();
@@ -3941,12 +3943,12 @@ pub(crate) mod tests {
     #[test]
     fn a_cancelled_anvil_craft_leaves_the_menu_as_it_was() {
         let root =
-            std::env::temp_dir().join(format!("horizon-anvil-cancel-{}", std::process::id()));
-        std::fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
+            horizon_fs::temp_dir().join(format!("horizon-anvil-cancel-{}", std::process::id()));
+        horizon_fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         let items = Items::for_tests(Default::default());
         let recipes = Recipes::load(&root, &items, &PackOverlay::NONE).unwrap();
         let brewing = Brewing::load(&root, &items, &PackOverlay::NONE);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let (banners, station_recipes) = (Banners::default(), Default::default());
         let (enchantments, names) = (Default::default(), Default::default());
         let env = &Env {
@@ -4020,12 +4022,12 @@ pub(crate) mod tests {
     #[test]
     fn a_mod_menu_result_is_take_only() {
         // No game data: an item table of no items, each stacking to 64.
-        let root = std::env::temp_dir().join(format!("horizon-mod-menu-{}", std::process::id()));
-        std::fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
+        let root = horizon_fs::temp_dir().join(format!("horizon-mod-menu-{}", std::process::id()));
+        horizon_fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         let items = Items::for_tests(Default::default());
         let recipes = Recipes::load(&root, &items, &PackOverlay::NONE).unwrap();
         let brewing = Brewing::load(&root, &items, &PackOverlay::NONE);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let (banners, station_recipes) = (Banners::default(), Default::default());
         let (enchantments, names) = (Default::default(), Default::default());
         let env = &Env {

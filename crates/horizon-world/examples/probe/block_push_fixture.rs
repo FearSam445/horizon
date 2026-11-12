@@ -4,6 +4,7 @@ use horizon_core::{
     geometry::{Aabb, ShapeOp, Vec3, VoxelShape},
     position::BlockPos,
 };
+use horizon_fs as fs;
 use horizon_world::{
     block_entity_push::{BlockPushWorld, push_entities_up},
     entity_obstruction::EntityIdentity,
@@ -11,7 +12,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

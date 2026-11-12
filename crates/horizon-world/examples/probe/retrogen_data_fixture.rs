@@ -1,9 +1,7 @@
+use horizon_fs as fs;
 use horizon_world::{nbt::Tag, retrogen::BelowZeroRetrogen};
 use serde_json::Value;
-use std::{
-    fs,
-    io::{self, Write},
-};
+use std::io::{self, Write};
 fn tag(row: &Value) -> Tag {
     let value = &row[1];
     match row[0].as_str().unwrap() {

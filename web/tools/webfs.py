@@ -20,7 +20,7 @@ from webtime import split_top  # noqa: E402
 METHODS = ["exists", "try_exists", "is_file", "is_dir", "is_symlink", "metadata",
            "symlink_metadata", "canonicalize", "read_dir"]
 GROUP = re.compile(r"use std::\{")
-IMPORT = "use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};"
+IMPORT = "#[allow(unused_imports)]\nuse horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};"
 
 
 def fix_groups(src):
@@ -45,7 +45,7 @@ def fix_groups(src):
         news = []
         for it in fsed:
             it = it.strip()
-            news.append("use horizon_fs as fs;" if it == "fs" else "use horizon_fs::" + it[len("fs::"):].strip() + ";")
+            news.append("use horizon_fs as fs;" if it == "fs" else "use horizon_fs::" + re.sub(r"\bself\b(?!\s+as)", "self as fs", it[len("fs::"):].strip()) + ";")
         if rest:
             if len(rest) == 1 and "{" not in rest[0]:
                 head = f"use std::{rest[0].strip()};"
@@ -72,6 +72,8 @@ def fix(src):
             continue
         line = re.sub(r"\buse std::fs;", "use horizon_fs as fs;", line)
         line = re.sub(r"(?<![\w:])(::)?std::fs::", "horizon_fs::", line)
+        # The folders the page doesn't have: std's temp_dir panics on wasm32.
+        line = re.sub(r"(?<![\w:])(?:(?:::)?std::)?env::(temp_dir|current_dir|current_exe|set_current_dir)\(", r"horizon_fs::\1(", line)
         new = METHOD_RE.sub(lambda m: ".fs_" + m.group(1) + "()", line)
         if new != line:
             uses_ext = True

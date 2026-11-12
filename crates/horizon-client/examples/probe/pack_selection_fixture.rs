@@ -4,9 +4,9 @@
 //! every action, and the committed selection.
 #![forbid(unsafe_code)]
 use horizon_client::packs::{Position, Selectable, SelectionModel};
+use horizon_fs as fs;
 use serde_json::{Value, json};
 use std::{
-    fs,
     io::{BufWriter, Write},
     path::PathBuf,
 };

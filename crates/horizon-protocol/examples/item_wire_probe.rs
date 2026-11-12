@@ -24,8 +24,8 @@ fn hex(s: &str) -> Option<Vec<u8>> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
-    let input = std::fs::read_to_string(args.get(1).ok_or("usage: item_wire_probe IN OUT")?)?;
-    let mut out = std::io::BufWriter::new(std::fs::File::create(
+    let input = horizon_fs::read_to_string(args.get(1).ok_or("usage: item_wire_probe IN OUT")?)?;
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(
         args.get(2).ok_or("usage: item_wire_probe IN OUT")?,
     )?);
     for line in input.lines().filter(|l| !l.trim().is_empty()) {

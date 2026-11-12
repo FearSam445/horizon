@@ -3,6 +3,8 @@
 //! properties form joins with dots (`{"text": {"xpbar": ...}}` is `text.xpbar`); a value is a
 //! number or a hex string.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -72,16 +74,16 @@ impl FluidFogs {
     /// colormap id or an expression isn't read (a warning names it).
     pub fn read(root: &Path) -> Self {
         let mut fogs = Self::default();
-        for namespace in std::fs::read_dir(root.join("assets"))
+        for namespace in horizon_fs::read_dir(root.join("assets"))
             .into_iter()
             .flatten()
             .flatten()
         {
             let mut stack = vec![namespace.path().join("polytone/fluid_modifiers")];
             while let Some(dir) = stack.pop() {
-                for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+                for entry in horizon_fs::read_dir(&dir).into_iter().flatten().flatten() {
                     let path = entry.path();
-                    if path.is_dir() {
+                    if path.fs_is_dir() {
                         stack.push(path);
                     } else if path.extension().is_some_and(|e| e == "json") {
                         fogs.add(root, &path);
@@ -93,7 +95,7 @@ impl FluidFogs {
     }
 
     fn add(&mut self, root: &Path, path: &Path) {
-        let Ok(text) = std::fs::read_to_string(path) else {
+        let Ok(text) = horizon_fs::read_to_string(path) else {
             return;
         };
         let Ok(json) = serde_json::from_str::<Json>(&text) else {
@@ -162,7 +164,7 @@ impl PackColors {
     /// `color.properties` in the same namespace).
     pub fn read(root: &Path) -> Self {
         let mut colors = Self::default();
-        let mut namespaces: Vec<_> = std::fs::read_dir(root.join("assets"))
+        let mut namespaces: Vec<_> = horizon_fs::read_dir(root.join("assets"))
             .into_iter()
             .flatten()
             .flatten()
@@ -171,10 +173,10 @@ impl PackColors {
         namespaces.sort();
         for namespace in namespaces {
             let polytone = namespace.join("polytone");
-            if let Ok(text) = std::fs::read_to_string(polytone.join("color.properties")) {
+            if let Ok(text) = horizon_fs::read_to_string(polytone.join("color.properties")) {
                 colors.add_properties(&text);
             }
-            if let Ok(text) = std::fs::read_to_string(polytone.join("colors.json")) {
+            if let Ok(text) = horizon_fs::read_to_string(polytone.join("colors.json")) {
                 match serde_json::from_str::<Json>(&text) {
                     Ok(json) => colors.add_json("", &json),
                     Err(e) => log::warn!("{}: {e}", polytone.join("colors.json").display()),
@@ -478,16 +480,16 @@ mod tests {
 
     #[test]
     fn fluid_modifiers_give_water_and_lava_their_fog() {
-        let root = std::env::temp_dir().join(format!("fluid-fog-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("fluid-fog-{}", std::process::id()));
         let dir = root.join("assets/minecraft/polytone/fluid_modifiers");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(
             dir.join("water.json"),
             r#"{"targets": ["minecraft:water", "minecraft:flowing_water"], "fog_colormap": "ff0000", "fog_radius": 0.3}"#,
         )
         .unwrap();
-        std::fs::write(dir.join("lava.json"), r#"{"fog_fade": "0"}"#).unwrap();
-        std::fs::write(dir.join("honey.json"), r#"{"colormap": "foliage_color"}"#).unwrap();
+        horizon_fs::write(dir.join("lava.json"), r#"{"fog_fade": "0"}"#).unwrap();
+        horizon_fs::write(dir.join("honey.json"), r#"{"colormap": "foliage_color"}"#).unwrap();
         let fogs = FluidFogs::read(&root);
         let fog = |color, radius, fade| {
             Some(FluidFog {
@@ -498,7 +500,7 @@ mod tests {
         };
         assert_eq!(fogs.water, fog(Some(0xff0000), 0.3, 1.0));
         assert_eq!(fogs.lava, fog(None, 1.0, 0.0));
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
     }
 
     #[test]

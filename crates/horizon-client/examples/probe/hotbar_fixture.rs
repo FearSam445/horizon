@@ -5,11 +5,12 @@
 //!
 //! usage: hotbar_fixture RESOURCES CASES OUTPUT
 use horizon_client::{hotbar, item_data::canon_stack, items::Items};
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
 use horizon_world::nbt::{Tag, parse_snbt};
 use serde_json::Value;
+use std::fmt::Write as _;
 use std::path::Path;
-use std::{fmt::Write as _, fs};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().collect();

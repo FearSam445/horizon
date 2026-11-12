@@ -116,15 +116,15 @@ impl Game<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use horizon_fs as fs;
     use serde_json::json;
-    use std::fs;
     use std::path::PathBuf;
 
     struct Folder(PathBuf);
 
     impl Folder {
         fn new(name: &str) -> Self {
-            let dir = std::env::temp_dir().join(format!(
+            let dir = horizon_fs::temp_dir().join(format!(
                 "horizon-reload-listeners-{name}-{}",
                 std::process::id()
             ));

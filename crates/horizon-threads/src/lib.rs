@@ -199,7 +199,7 @@ fn performance_cores() -> Option<usize> {
     let mut cpu_idx = 0;
     loop {
         let path = format!("/sys/devices/system/cpu/cpu{cpu_idx}/cpufreq/cpuinfo_max_freq");
-        match std::fs::read_to_string(path) {
+        match horizon_fs::read_to_string(path) {
             Ok(content) => {
                 if let Ok(freq) = content.trim().parse::<u64>() {
                     max_freq = max_freq.max(freq);
@@ -677,8 +677,8 @@ pub fn junction(target: &std::path::Path, at: &std::path::Path) -> std::io::Resu
         .encode_wide()
         .collect();
     let buffer = mount_point_buffer(&name)?;
-    std::fs::create_dir(at)?;
-    let set = std::fs::OpenOptions::new()
+    horizon_fs::create_dir(at)?;
+    let set = horizon_fs::OpenOptions::new()
         .write(true)
         .custom_flags(FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS)
         .open(at)
@@ -704,7 +704,7 @@ pub fn junction(target: &std::path::Path, at: &std::path::Path) -> std::io::Resu
             }
         });
     if set.is_err() {
-        let _ = std::fs::remove_dir(at);
+        let _ = horizon_fs::remove_dir(at);
     }
     set
 }

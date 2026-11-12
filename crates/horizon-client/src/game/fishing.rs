@@ -2014,7 +2014,7 @@ mod tests {
         let resources = std::env::var_os("HORIZON_FISHING_RESOURCES").unwrap();
         let path = std::env::var_os("HORIZON_FISHING_REFERENCE").unwrap();
         let rows: Vec<serde_json::Value> =
-            serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+            serde_json::from_slice(&horizon_fs::read(path).unwrap()).unwrap();
         assert_eq!(rows.len(), 5, "missing vanilla retrieval cases");
         let loot = LootData::load(std::path::Path::new(&resources), &PackOverlay::NONE).unwrap();
         for row in rows {
@@ -2064,7 +2064,7 @@ mod tests {
             );
         }
         let casts: Vec<serde_json::Value> = serde_json::from_slice(
-            &std::fs::read(std::env::var_os("HORIZON_FISHING_CAST_REFERENCE").unwrap()).unwrap(),
+            &horizon_fs::read(std::env::var_os("HORIZON_FISHING_CAST_REFERENCE").unwrap()).unwrap(),
         )
         .unwrap();
         assert_eq!(casts.len(), 5, "missing vanilla cast cases");
@@ -2131,10 +2131,10 @@ mod tests {
     fn breeze_hook_parity_fixture() {
         use super::{EntityCollision, Hook, State};
         use std::io::Write;
-        let input =
-            std::fs::read_to_string(std::env::var("HORIZON_BREEZE_HOOK_INPUT").unwrap()).unwrap();
+        let input = horizon_fs::read_to_string(std::env::var("HORIZON_BREEZE_HOOK_INPUT").unwrap())
+            .unwrap();
         let mut out =
-            std::fs::File::create(std::env::var("HORIZON_BREEZE_HOOK_OUTPUT").unwrap()).unwrap();
+            horizon_fs::File::create(std::env::var("HORIZON_BREEZE_HOOK_OUTPUT").unwrap()).unwrap();
         for line in input.lines() {
             let parts: Vec<_> = line.split_whitespace().collect();
             let mut hook = Hook::remote(1, Vec3::ZERO);

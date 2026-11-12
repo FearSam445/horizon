@@ -93,20 +93,20 @@ fn fixture() -> (BlockRegistry, crate::blocks::BlockFacts, Tag) {
     ]);
     let registry = BlockRegistry::from_nbt(&registry_tag).unwrap();
     static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-    let root = std::env::temp_dir().join(format!(
+    let root = horizon_fs::temp_dir().join(format!(
         "horizon-shulker-space-{}-{}",
         std::process::id(),
         NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
     ));
-    std::fs::create_dir(&root).unwrap();
+    horizon_fs::create_dir(&root).unwrap();
     // Original minimal facts: air identity and generic sturdy flags, deliberately
     // distinct from the soul sand's lower collision shape.
     let facts = serde_json::json!({"states":(0..names.len()).map(|id|serde_json::json!({"id":id})).collect::<Vec<_>>()});
-    std::fs::write(root.join("gameplay-facts.json"), facts.to_string()).unwrap();
+    horizon_fs::write(root.join("gameplay-facts.json"), facts.to_string()).unwrap();
     let behaviours = serde_json::json!({"states":[[0,0],[63,0],[63,0],[0,0],[1,0]],"blocks":names.iter().map(|name|serde_json::json!({"name":format!("minecraft:{name}"),"class":["Block"]})).collect::<Vec<_>>()});
     let facts =
         crate::blocks::BlockFacts::load_with_behaviour_json(&root, &registry, &behaviours).unwrap();
-    std::fs::remove_dir_all(root).unwrap();
+    horizon_fs::remove_dir_all(root).unwrap();
     let box_shape =
         |height| VoxelShape::from_box(Aabb::new(Vec3::ZERO, Vec3::new(1.0, height, 1.0))).unwrap();
     let shapes = [
@@ -181,9 +181,9 @@ fn scaffolding_uses_the_shulkers_current_height_before_and_after_teleport() {
 fn shulker_space_parity_fixture() {
     use std::io::Write;
     let input =
-        std::fs::read_to_string(std::env::var("HORIZON_SHULKER_SPACE_INPUT").unwrap()).unwrap();
+        horizon_fs::read_to_string(std::env::var("HORIZON_SHULKER_SPACE_INPUT").unwrap()).unwrap();
     let mut output =
-        std::fs::File::create(std::env::var("HORIZON_SHULKER_SPACE_OUTPUT").unwrap()).unwrap();
+        horizon_fs::File::create(std::env::var("HORIZON_SHULKER_SPACE_OUTPUT").unwrap()).unwrap();
     for line in input.lines() {
         let row: serde_json::Value = serde_json::from_str(line).unwrap();
         let current = &row["current"];

@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 #[test]
 #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
 fn held_durability_retains_the_stack_hand_and_explicit_break_slot() {
@@ -118,7 +120,7 @@ fn mod_sign_constructor_prioritizes_templates_over_suffixes() {
         std::env::var_os("HORIZON_TEST_RESOURCES")
             .expect("set HORIZON_TEST_RESOURCES to prepared resources"),
     );
-    let root = std::env::temp_dir().join(format!(
+    let root = horizon_fs::temp_dir().join(format!(
         "horizon-sign-constructor-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -205,7 +207,7 @@ fn mod_sign_constructor_prioritizes_templates_over_suffixes() {
         game.new_block_entity("minecraft:white_banner"),
         Some(super::BlockEntity::Banner(_))
     ));
-    let _ = std::fs::remove_dir_all(&root);
+    let _ = horizon_fs::remove_dir_all(&root);
 }
 
 /// A mod's own screen opens only over the world, never over another
@@ -606,11 +608,11 @@ fn catalog_matches_hook_points() {
     let mut hooks = catalog["hooks"].as_array().unwrap().clone();
     let fragments =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/native-hook-fragments");
-    for entry in std::fs::read_dir(fragments).unwrap() {
+    for entry in horizon_fs::read_dir(fragments).unwrap() {
         let path = entry.unwrap().path();
         if path.extension().is_some_and(|ext| ext == "json") {
             let fragment: serde_json::Value =
-                serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+                serde_json::from_slice(&horizon_fs::read(path).unwrap()).unwrap();
             hooks.extend(
                 fragment["hooks"]
                     .as_array()
@@ -850,14 +852,14 @@ fn config_dir_is_config_in_the_game_folder() {
     // Callable without a game, from any hook.
     let _: fn() -> Result<std::path::PathBuf, String> = super::Game::native_config_dir;
     use super::config_dir;
-    let root = std::env::temp_dir().join(format!("horizon-config-dir-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&root);
-    assert!(!root.join("config").exists());
+    let root = horizon_fs::temp_dir().join(format!("horizon-config-dir-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&root);
+    assert!(!root.join("config").fs_exists());
     let dir = config_dir(&root).unwrap();
     assert_eq!(dir, root.join("config"));
-    assert!(dir.is_dir());
+    assert!(dir.fs_is_dir());
     assert_eq!(config_dir(&root).unwrap(), dir);
-    let _ = std::fs::remove_dir_all(&root);
+    let _ = horizon_fs::remove_dir_all(&root);
 }
 
 /// Vanilla's F3 draws a column in each top corner (`extractLines`, left

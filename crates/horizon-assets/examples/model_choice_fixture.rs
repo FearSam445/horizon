@@ -3,11 +3,9 @@ use horizon_assets::blockstate::{
     choice::CompiledChoices,
 };
 use horizon_core::random::{LegacyRandom, RandomSource, XoroshiroRandom};
+use horizon_fs::File;
 use serde_json::{Value, json};
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 fn choice(value: &Value, index: usize) -> VariantSet {
     let variant = |suffix| Variant {
         model: format!("horizon:part{index}_{suffix}"),

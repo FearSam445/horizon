@@ -12,11 +12,11 @@ use horizon_client::{
     models,
 };
 use horizon_core::biome::BiomeZoom;
+use horizon_fs as fs;
 use horizon_world::registry::BlockStateId;
 use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
-    fs,
     io::{BufRead, BufReader, BufWriter, Write},
     path::PathBuf,
     sync::Arc,

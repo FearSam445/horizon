@@ -2,6 +2,8 @@
 //! for live requested heap bytes; leave it unset for latency measurements.
 //! cargo run --profile fast -p horizon-client --example model_library_bench -- ROOT [--parity]
 //! Run fresh processes, warm up twice, then compare multiple alternating baseline/candidate runs.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 extern crate horizon_client_lib as horizon_client;
 use horizon_client::{assets::Assets, item_render::ItemRenderer};
 use std::{
@@ -91,17 +93,17 @@ fn main() -> horizon_client::Result<()> {
             }
         }
         let mut names = Vec::new();
-        for ns in std::fs::read_dir(root.join("assets"))? {
+        for ns in horizon_fs::read_dir(root.join("assets"))? {
             let ns = ns?;
             let base = ns.path().join("models");
             let mut stack = vec![base.clone()];
             while let Some(dir) = stack.pop() {
-                let Ok(entries) = std::fs::read_dir(dir) else {
+                let Ok(entries) = horizon_fs::read_dir(dir) else {
                     continue;
                 };
                 for entry in entries {
                     let path = entry?.path();
-                    if path.is_dir() {
+                    if path.fs_is_dir() {
                         stack.push(path);
                     } else if path.extension().is_some_and(|e| e == "json") {
                         names.push(format!(

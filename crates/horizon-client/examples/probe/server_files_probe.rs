@@ -8,6 +8,8 @@ use horizon_client::server::{
     properties::{DIFFICULTIES, GAME_MODES, ServerProperties, SystemEntropy},
     user_lists::{BanEntry, BanList, IpBanList, NameAndId, OpEntry, OpList, WhiteEntry, WhiteList},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::crypto::uuid_string;
 use std::{fmt::Write as _, path::Path};
 
@@ -15,9 +17,9 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = crate::args().skip(1);
     let root = std::path::PathBuf::from(args.next().ok_or("CASES OUTPUT")?);
     let output = args.next().ok_or("OUTPUT")?;
-    let mut cases: Vec<_> = std::fs::read_dir(&root)?
+    let mut cases: Vec<_> = horizon_fs::read_dir(&root)?
         .filter_map(|e| e.ok().map(|e| e.path()))
-        .filter(|p| p.is_dir())
+        .filter(|p| p.fs_is_dir())
         .collect();
     cases.sort();
     let mut out = String::new();
@@ -25,7 +27,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         writeln!(out, "== {}", dir.file_name().unwrap().to_string_lossy())?;
         run_case(&dir, &mut out)?;
     }
-    std::fs::write(output, out)?;
+    horizon_fs::write(output, out)?;
     Ok(())
 }
 
@@ -51,16 +53,16 @@ fn has_key(text: &str, key: &str) -> bool {
 }
 
 fn work(dir: &Path) -> std::io::Result<std::path::PathBuf> {
-    let w = std::env::temp_dir().join(format!(
+    let w = horizon_fs::temp_dir().join(format!(
         "server-files-{}-{}",
         std::process::id(),
         dir.file_name().unwrap().to_string_lossy()
     ));
-    let _ = std::fs::remove_dir_all(&w);
-    std::fs::create_dir_all(&w)?;
-    for e in std::fs::read_dir(dir)? {
+    let _ = horizon_fs::remove_dir_all(&w);
+    horizon_fs::create_dir_all(&w)?;
+    for e in horizon_fs::read_dir(dir)? {
         let e = e?;
-        std::fs::copy(e.path(), w.join(e.file_name()))?;
+        horizon_fs::copy(e.path(), w.join(e.file_name()))?;
     }
     Ok(w)
 }
@@ -68,8 +70,8 @@ fn work(dir: &Path) -> std::io::Result<std::path::PathBuf> {
 fn run_case(dir: &Path, out: &mut String) -> Result<(), Box<dyn std::error::Error>> {
     let w = work(dir)?;
     let props = w.join("server.properties");
-    if dir.join("server.properties").exists() || dir.join("properties.default").exists() {
-        let before = std::fs::read(&props)
+    if dir.join("server.properties").fs_exists() || dir.join("properties.default").fs_exists() {
+        let before = horizon_fs::read(&props)
             .map(|b| latin1(&b))
             .unwrap_or_default();
         match ServerProperties::from_file(&props, &mut SystemEntropy::default()) {
@@ -77,7 +79,7 @@ fn run_case(dir: &Path, out: &mut String) -> Result<(), Box<dyn std::error::Erro
                 print_properties(&p, &before, out)?;
                 p.store(&props)?;
                 writeln!(out, "stored:")?;
-                for (i, line) in lines(&std::fs::read_to_string(&props)?)
+                for (i, line) in lines(&horizon_fs::read_to_string(&props)?)
                     .into_iter()
                     .enumerate()
                 {
@@ -99,11 +101,11 @@ fn run_case(dir: &Path, out: &mut String) -> Result<(), Box<dyn std::error::Erro
             }
         }
     }
-    if dir.join("eula.txt").exists() || dir.join("eula.missing").exists() {
+    if dir.join("eula.txt").fs_exists() || dir.join("eula.missing").fs_exists() {
         let path = w.join("eula.txt");
         let agreed = eula::agreed(&path).unwrap_or(false);
         writeln!(out, "eula agreed={agreed}")?;
-        if let Ok(bytes) = std::fs::read(&path) {
+        if let Ok(bytes) = horizon_fs::read(&path) {
             for (i, line) in lines(&latin1(&bytes)).into_iter().enumerate() {
                 if i == 1 && line.starts_with('#') {
                     writeln!(out, "#DATE")?;
@@ -120,7 +122,7 @@ fn run_case(dir: &Path, out: &mut String) -> Result<(), Box<dyn std::error::Erro
     let mut any = false;
     macro_rules! load {
         ($list:expr, $name:literal) => {
-            if $list.file.exists() {
+            if $list.file.fs_exists() {
                 any = true;
                 if let Err(_) = $list.load() {
                     writeln!(
@@ -136,7 +138,7 @@ fn run_case(dir: &Path, out: &mut String) -> Result<(), Box<dyn std::error::Erro
     load!(white, "whitelist");
     load!(bans, "banned-players");
     load!(ips, "banned-ips");
-    if let Ok(actions) = std::fs::read_to_string(dir.join("actions.txt")) {
+    if let Ok(actions) = horizon_fs::read_to_string(dir.join("actions.txt")) {
         any = true;
         for line in actions.lines().filter(|l| !l.trim().is_empty()) {
             let a: Vec<&str> = line.split('\t').collect();
@@ -206,7 +208,7 @@ fn run_case(dir: &Path, out: &mut String) -> Result<(), Box<dyn std::error::Erro
         names.sort_by(|a, b| a.encode_utf16().cmp(b.encode_utf16()));
         writeln!(out, "white users {}", names.join(","))?;
     }
-    let _ = std::fs::remove_dir_all(&w);
+    let _ = horizon_fs::remove_dir_all(&w);
     Ok(())
 }
 

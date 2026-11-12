@@ -5,8 +5,9 @@
 //!
 //! usage: team_rules_fixture INPUTS OUTPUT
 use horizon_client::scoreboard::{self as sb, CollisionRule, NameView, Scoreboard, Visibility};
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{fs, io::Write};
+use std::io::Write;
 
 pub fn main() {
     let args: Vec<String> = crate::args().collect();

@@ -655,8 +655,8 @@ mod tests {
             .block_entities
             .insert((1, 64, 1), BlockEntity::Sign(sign));
 
-        let dir = std::env::temp_dir().join(format!("hz-privacy-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+        let dir = horizon_fs::temp_dir().join(format!("hz-privacy-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         let mut perf = server_perf::ServerPerf::new(0.0, 250.0);
         let horizon = server_perf::horizon_options(12, 0, true);
         let plan = Plan {
@@ -701,7 +701,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        let gz = std::fs::read(&saved.path).unwrap();
+        let gz = horizon_fs::read(&saved.path).unwrap();
         let mut bytes = Vec::new();
         flate2::read::GzDecoder::new(&gz[..])
             .read_to_end(&mut bytes)
@@ -737,6 +737,6 @@ mod tests {
                 .all(|ch| matches!(ch, 'a'..='z' | '0'..='9' | '_' | '.' | ':' | '/' | '-'));
             assert!(plain || s.text == "Server thread", "{}", s.text);
         }
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }

@@ -250,14 +250,14 @@ mod tests {
 
     fn write(root: &Path, path: &str, json: serde_json::Value) {
         let file = root.join(path);
-        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
-        std::fs::write(file, json.to_string()).unwrap();
+        horizon_fs::create_dir_all(file.parent().unwrap()).unwrap();
+        horizon_fs::write(file, json.to_string()).unwrap();
     }
 
     fn root() -> std::path::PathBuf {
         static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        std::env::temp_dir().join(format!("horizon-particle-model-{}-{n}", std::process::id()))
+        horizon_fs::temp_dir().join(format!("horizon-particle-model-{}-{n}", std::process::id()))
     }
 
     #[test]
@@ -297,7 +297,7 @@ mod tests {
             ]
         );
         assert_eq!(quad.uv, [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]]);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     #[test]
@@ -326,6 +326,6 @@ mod tests {
         assert_eq!(model.quads[0].corners[2], Vec3::new(0.5, 0.0, 0.5));
         assert_eq!(model.quads[0].uv[2], [1.0, 1.0]);
         assert!(ParticleModel::read(&root, "fx:missing").is_none());
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 }

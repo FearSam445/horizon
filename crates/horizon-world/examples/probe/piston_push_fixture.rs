@@ -7,10 +7,10 @@ use horizon_core::{
     geometry::{Aabb, Direction, Vec3},
     position::BlockPos,
 };
+use horizon_fs as fs;
 use horizon_world::{level::data::PushReaction, piston_push, piston_shape::MovingPistonState};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, BufWriter, Write},
     path::Path,
 };

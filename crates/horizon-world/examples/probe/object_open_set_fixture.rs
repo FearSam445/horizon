@@ -1,7 +1,7 @@
+use horizon_fs as fs;
 use horizon_world::object_open_set::{CursorError, ObjectKey, ObjectOpenSet};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

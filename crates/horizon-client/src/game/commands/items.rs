@@ -9,6 +9,8 @@ use horizon_client::{
     scoreboard_cmd::{Holder, Tracker},
     text::Text,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::Tag;
 
 mod contents;
@@ -1778,7 +1780,7 @@ mod stand_equip_event_tests {
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
         options.game_dir =
-            Some(std::env::temp_dir().join(format!("horizon-h130-unit-{}", std::process::id())));
+            Some(horizon_fs::temp_dir().join(format!("horizon-h130-unit-{}", std::process::id())));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,
@@ -1911,8 +1913,8 @@ mod mob_equipment_command_tests {
                 .join("enchantment-catalog-world");
             let pack = game.world_root.join("datapacks/catalog");
             let definitions = pack.join("data/wpenchant/enchantment");
-            std::fs::create_dir_all(&definitions).unwrap();
-            std::fs::write(
+            horizon_fs::create_dir_all(&definitions).unwrap();
+            horizon_fs::write(
                 pack.join("pack.mcmeta"),
                 r#"{"pack":{"description":"World enchantment catalog fixture"}}"#,
             )
@@ -1925,19 +1927,19 @@ mod mob_equipment_command_tests {
                 "anvil_cost": 1, "slots": ["mainhand"],
                 "effects": {"minecraft:damage": [{"effect": {"type": "minecraft:add", "value": 2.0}}]}
             });
-            std::fs::write(
+            horizon_fs::write(
                 definitions.join("loaded.json"),
                 serde_json::to_vec(&definition).unwrap(),
             )
             .unwrap();
-            std::fs::write(
+            horizon_fs::write(
                 game.world_root.join("datapacks.json"),
                 r#"{"enabled":["file/catalog"]}"#,
             )
             .unwrap();
             let functions = pack.join("data/wpenchant/function");
-            std::fs::create_dir_all(&functions).unwrap();
-            std::fs::write(functions.join("ready.mcfunction"), "return 1\n").unwrap();
+            horizon_fs::create_dir_all(&functions).unwrap();
+            horizon_fs::write(functions.join("ready.mcfunction"), "return 1\n").unwrap();
             game.reload_datapacks(false);
             assert!(game.fns.store.functions.contains_key("wpenchant:ready"));
             game.reload_world_tables();
@@ -2496,7 +2498,8 @@ mod builtin_component_delivery_tests {
         let clock = game.world.game_time;
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let registries: serde_json::Value =
-            serde_json::from_slice(&std::fs::read(root.join("registries.json")).unwrap()).unwrap();
+            serde_json::from_slice(&horizon_fs::read(root.join("registries.json")).unwrap())
+                .unwrap();
         let id = |registry: &str, name: &str| {
             registries[registry]["entries"][name]["protocol_id"]
                 .as_i64()
@@ -2638,16 +2641,16 @@ mod registered_slot_source_read_tests {
         let mut game = crate::game::native_machines::tests::server_game();
         game.build_registries();
         game.set_allow_commands(true);
-        let root = std::env::current_dir()
+        let root = horizon_fs::current_dir()
             .unwrap()
             .join("registered-slot-read-world");
-        assert!(!root.exists());
+        assert!(!root.fs_exists());
         let pack = root.join("datapacks/parity");
-        std::fs::create_dir_all(pack.join("data/parity/slot_source")).unwrap();
+        horizon_fs::create_dir_all(pack.join("data/parity/slot_source")).unwrap();
         let meta = r#"{"pack":{"description":"parity slots","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#;
         let definition = r#"{"type":"minecraft:limit_slots","limit":3,"slot_source":{"type":"minecraft:slot_range","slots":"container.*"}}"#;
-        std::fs::write(pack.join("pack.mcmeta"), meta).unwrap();
-        std::fs::write(
+        horizon_fs::write(pack.join("pack.mcmeta"), meta).unwrap();
+        horizon_fs::write(
             pack.join("data/parity/slot_source/first_three.json"),
             definition,
         )
@@ -2733,15 +2736,15 @@ mod registered_slot_source_preservation_tests {
         let mut game = crate::game::native_machines::tests::server_game();
         game.build_registries();
         game.set_allow_commands(true);
-        let root = std::env::current_dir().unwrap().join(name);
-        assert!(!root.exists());
+        let root = horizon_fs::current_dir().unwrap().join(name);
+        assert!(!root.fs_exists());
         let mut high = std::path::PathBuf::new();
         for (pack, limit) in [("a-low", 1), ("parity", 3)] {
             let dir = root.join("datapacks").join(pack);
-            std::fs::create_dir_all(dir.join("data/parity/slot_source")).unwrap();
-            std::fs::write(dir.join("pack.mcmeta"), r#"{"pack":{"description":"slot snapshot","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
+            horizon_fs::create_dir_all(dir.join("data/parity/slot_source")).unwrap();
+            horizon_fs::write(dir.join("pack.mcmeta"), r#"{"pack":{"description":"slot snapshot","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
             let path = dir.join("data/parity/slot_source/first_three.json");
-            std::fs::write(&path, serde_json::json!({"type":"minecraft:limit_slots","limit":limit,"slot_source":{"type":"minecraft:slot_range","slots":"container.*"}}).to_string()).unwrap();
+            horizon_fs::write(&path, serde_json::json!({"type":"minecraft:limit_slots","limit":limit,"slot_source":{"type":"minecraft:slot_range","slots":"container.*"}}).to_string()).unwrap();
             high = path;
         }
         game.world_root = root;
@@ -2766,11 +2769,11 @@ mod registered_slot_source_preservation_tests {
         let before = game.block_entity_nbt([0, 100, 0]).unwrap();
         let clock = game.world.game_time;
         count(&mut game, 3); // Higher-priority pack overrides the same id.
-        std::fs::write(&file, r#"{"type":"minecraft:limit_slots","limit":2,"slot_source":{"type":"minecraft:slot_range","slots":"container.*"}}"#).unwrap();
+        horizon_fs::write(&file, r#"{"type":"minecraft:limit_slots","limit":2,"slot_source":{"type":"minecraft:slot_range","slots":"container.*"}}"#).unwrap();
         count(&mut game, 3); // Disk edits do not change the loaded snapshot.
         game.reload_datapacks(true);
         count(&mut game, 2);
-        std::fs::write(file, "{").unwrap();
+        horizon_fs::write(file, "{").unwrap();
         game.reload_datapacks(true);
         count(&mut game, 1); // Existing policy: invalid higher JSON is skipped.
         assert!(!game.run_command("execute if slots block 0 100 0 first_three"));

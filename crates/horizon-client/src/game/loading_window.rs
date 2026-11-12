@@ -338,7 +338,7 @@ pub(super) fn start_game<'a>(
                 vsync: false,
                 fps_cap: None,
                 offscreen: game.options.offscreen,
-                game_dir: std::env::current_dir()?,
+                game_dir: horizon_fs::current_dir()?,
                 set: game.options.benchmark_set.clone(),
                 profile: game.options.benchmark_profile,
             },
@@ -396,7 +396,7 @@ pub(super) fn start_game<'a>(
                 // same responsive initialization path as the title screen.
                 game.title = Some(
                     Title::new(
-                        std::env::current_dir()?.join("saves"),
+                        horizon_fs::current_dir()?.join("saves"),
                         &game.options.resources,
                     )
                     .with_user(|| game.options.player_name()),
@@ -413,7 +413,7 @@ pub(super) fn start_game<'a>(
         None if handoff => {}
         None => {
             let mut title = Title::new(
-                std::env::current_dir()?.join("saves"),
+                horizon_fs::current_dir()?.join("saves"),
                 &game.options.resources,
             )
             .with_user(|| game.options.player_name());

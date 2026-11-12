@@ -9,10 +9,10 @@ use horizon_client::{
         swing_duration,
     },
 };
+use horizon_fs::File;
 use serde_json::Value;
 use std::{
     collections::HashMap,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 

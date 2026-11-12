@@ -7,6 +7,8 @@ use super::{Foil, ItemQuad, ItemRenderer, ItemSink, SpecialHost, argb};
 use crate::{block_entity_render::ModelPart, hud::Rect, mobs::EntityModelDocument};
 use glam::{Mat4, Quat, Vec3};
 use horizon_assets::item_model::{SpecialKind, SpecialModel};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde_json::Value;
 use std::{collections::HashMap, f32::consts::PI, path::Path};
 
@@ -49,7 +51,7 @@ const COPPER_GOLEM_LAYERS: [(&str, &str); 4] = [
 ];
 
 pub(super) fn load_parts(root: &Path) -> HashMap<String, ModelPart> {
-    let Ok(all) = std::fs::read(root.join("entity-models.json"))
+    let Ok(all) = horizon_fs::read(root.join("entity-models.json"))
         .map_err(|_| ())
         .and_then(|b| serde_json::from_slice::<Value>(&b).map_err(|_| ()))
     else {
@@ -749,10 +751,10 @@ mod tests {
     #[test]
     fn an_enchanted_banner_shield_keeps_its_patterns_under_the_glint() {
         let root =
-            std::env::temp_dir().join(format!("horizon-shield-glint-{}", std::process::id()));
-        std::fs::create_dir_all(&root).unwrap();
-        std::fs::write(root.join("items.json"), "{}").unwrap();
-        std::fs::write(
+            horizon_fs::temp_dir().join(format!("horizon-shield-glint-{}", std::process::id()));
+        horizon_fs::create_dir_all(&root).unwrap();
+        horizon_fs::write(root.join("items.json"), "{}").unwrap();
+        horizon_fs::write(
             root.join("entity-models.json"),
             serde_json::json!({"minecraft:shield#main": {
                 "pose": [0, 0, 0, 0, 0, 0, 1, 1, 1],
@@ -765,7 +767,7 @@ mod tests {
         .unwrap();
         let library = crate::model_library::ParsedModels::default().into_item_library();
         let renderer = ItemRenderer::load_with_library(&root, library).unwrap();
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let textures = [
             "entity/shield/shield_base",
             "entity/shield/shield_base_nopattern",
@@ -851,7 +853,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let renderer = ItemRenderer::load(&root).unwrap();

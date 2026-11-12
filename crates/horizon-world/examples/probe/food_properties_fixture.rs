@@ -2,13 +2,13 @@ use horizon_core::{
     geometry::Vec3,
     random::{LegacyRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::{
     food::FoodData,
     food_properties::{ConsumptionSound, FoodConsumptionWorld, FoodProperties, SoundCategory},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

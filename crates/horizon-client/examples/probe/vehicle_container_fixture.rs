@@ -7,7 +7,7 @@
 //!
 //! usage: vehicle_container_fixture INPUT OUTPUT
 use horizon_client::containers::{vehicle_menu, vehicle_menu_name};
-use std::fs;
+use horizon_fs as fs;
 
 fn case(entity_type: &str) -> Option<String> {
     let entity_type = entity_type.trim();

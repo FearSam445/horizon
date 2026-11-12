@@ -3,16 +3,19 @@
 //! and High Contrast packs, `pack.mcmeta` metadata and format compatibility,
 //! and an overlay resource root that layers the enabled packs over the
 //! vanilla resources (later packs win), so every loader sees one tree.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 mod cache;
 mod import;
 use crate::text::Style;
 use crate::{text::Text, zip::Zip};
 pub use horizon_client_core::pattern;
+use horizon_fs as fs;
 pub use import::copy_pack;
 use pattern::Pattern;
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs, io,
+    io,
     path::{Path, PathBuf},
 };
 
@@ -641,7 +644,7 @@ pub fn discover(resources: &Path, packs_dir: &Path) -> Vec<Pack> {
         ("high_contrast", "resourcePack.high_contrast.name"),
     ] {
         let z = resources.join(format!("assets/minecraft/resourcepacks/{id}.zip"));
-        if z.exists()
+        if z.fs_exists()
             && let Some(p) = pack(id.into(), Text::translate(key, &[]), Source::Zip(z))
         {
             out.push(p);
@@ -660,7 +663,7 @@ pub fn folder(dir: &Path, format: (i64, i64)) -> Vec<Pack> {
         .filter_map(|e| {
             let path = e.path();
             let name = e.file_name().to_string_lossy().into_owned();
-            let source = if path.is_dir() {
+            let source = if path.fs_is_dir() {
                 Source::Dir(path)
             } else if path
                 .extension()
@@ -696,7 +699,7 @@ fn pack_files(pack: &Pack) -> io::Result<BTreeMap<String, Provided>> {
                     };
                     for e in entries.flatten() {
                         let p = e.path();
-                        if p.is_dir() {
+                        if p.fs_is_dir() {
                             stack.push(p);
                         } else if let Ok(rel) = p.strip_prefix(&base) {
                             let rel = rel.to_string_lossy().replace('\\', "/");
@@ -736,7 +739,7 @@ fn link(target: &Path, at: &Path) -> io::Result<()> {
 }
 #[cfg(not(unix))]
 fn link(target: &Path, at: &Path) -> io::Result<()> {
-    if target.is_dir() {
+    if target.fs_is_dir() {
         Ok(())
     } else {
         // The mirror only reads these files, and unix links them: a hardlink gives
@@ -768,7 +771,7 @@ fn build_overlay_uncached(
     out: &Path,
     dependencies: &mut cache::Dependencies,
 ) -> io::Result<()> {
-    if out.exists() {
+    if out.fs_exists() {
         fs::remove_dir_all(out)?;
     }
     fs::create_dir_all(out)?;
@@ -948,7 +951,7 @@ fn build_overlay_uncached(
                 }
             } else if filters.is_empty()
                 && !touched.contains(&child)
-                && vanilla.join(&child).is_dir()
+                && vanilla.join(&child).fs_is_dir()
                 && junction(&vanilla.join(&child), &out.join(&child)).is_ok()
             {
                 // Linked whole, like the unix symlink: no file in it is visited or copied.
@@ -957,7 +960,7 @@ fn build_overlay_uncached(
                 // above), so an untouched one has to be mirrored: skipping it hid textures/font
                 // and the title panorama from the overlay, and a font json that names those
                 // sheets then failed to load (#1688).
-                || (vanilla.join(&child).is_dir() && (cfg!(not(unix)) || !filters.is_empty()))
+                || (vanilla.join(&child).fs_is_dir() && (cfg!(not(unix)) || !filters.is_empty()))
             {
                 mirror(
                     &child,
@@ -975,7 +978,7 @@ fn build_overlay_uncached(
                 // Hidden by a pack's filter.
             } else {
                 #[cfg(not(unix))]
-                if vanilla.join(&child).is_file() {
+                if vanilla.join(&child).fs_is_file() {
                     dependencies.file(&vanilla.join(&child));
                 }
                 link(&vanilla.join(&child), &out.join(&child))?;
@@ -1443,7 +1446,7 @@ mod tests {
 
     #[test]
     fn mcmeta_with_utf8_bom_is_read() {
-        let dir = std::env::temp_dir().join(format!("horizon-bom-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-bom-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let mut meta = b"\xEF\xBB\xBF".to_vec();
         meta.extend_from_slice(br#"{"pack":{"description":"d","pack_format":97}}"#);
@@ -1619,7 +1622,7 @@ mod tests {
     #[test]
     fn a_sound_entry_whose_polytone_condition_fails_is_left_out() {
         let base =
-            std::env::temp_dir().join(format!("horizon-packs-sound-cond-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-packs-sound-cond-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let (vanilla, dir, out) = (base.join("vanilla"), base.join("pack"), base.join("out"));
         fs::create_dir_all(vanilla.join("assets/minecraft")).unwrap();
@@ -1772,7 +1775,7 @@ mod tests {
     #[test]
     fn companion_maps_follow_the_winning_colour_or_a_higher_map_only_pack() {
         let root =
-            std::env::temp_dir().join(format!("horizon-material-owner-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-material-owner-{}", std::process::id()));
         let vanilla = root.join("vanilla");
         let relative = "assets/minecraft/textures/block";
         fs::create_dir_all(vanilla.join(relative)).unwrap();
@@ -1814,20 +1817,20 @@ mod tests {
             fs::read(out.join(relative).join("stone.png")).unwrap(),
             b"colour"
         );
-        assert!(!out.join(relative).join("stone_n.png").exists());
-        assert!(!out.join(relative).join("stone_s.png").exists());
+        assert!(!out.join(relative).join("stone_n.png").fs_exists());
+        assert!(!out.join(relative).join("stone_s.png").fs_exists());
         build_overlay(&vanilla, &order(&["low", "colour", "maps"]), &out).unwrap();
         assert_eq!(
             fs::read(out.join(relative).join("stone_n.png")).unwrap(),
             b"maps"
         );
-        assert!(!out.join(relative).join("stone_s.png").exists());
+        assert!(!out.join(relative).join("stone_s.png").fs_exists());
         fs::remove_dir_all(root).unwrap();
     }
     #[test]
     fn overlay_layers_packs_over_vanilla() {
         // `&` would split an unquoted `cmd /C mklink` line.
-        let base = std::env::temp_dir().join(format!("horizon-packs-&{}", std::process::id()));
+        let base = horizon_fs::temp_dir().join(format!("horizon-packs-&{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();
@@ -1901,14 +1904,15 @@ mod tests {
             fs::symlink_metadata(out.join("assets/minecraft/textures/font"))
                 .unwrap()
                 .file_type()
-                .is_symlink()
+                .fs_is_symlink()
         );
         let _ = fs::remove_dir_all(base);
     }
     #[test]
     fn every_file_of_a_big_stack_comes_from_its_top_pack() {
         use std::io::Write as _;
-        let base = std::env::temp_dir().join(format!("horizon-pack-stack-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-pack-stack-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         // Folders whose names start alike (`item`, `item_extra`, `item2`) and files beside
@@ -1958,7 +1962,7 @@ mod tests {
         fn walk(dir: &Path, root: &Path, out: &mut BTreeMap<String, Vec<u8>>) {
             for entry in fs::read_dir(dir).unwrap().flatten() {
                 let path = entry.path();
-                if path.is_dir() {
+                if path.fs_is_dir() {
                     walk(&path, root, out);
                 } else {
                     let name = path.strip_prefix(root).unwrap().to_string_lossy();
@@ -1974,7 +1978,7 @@ mod tests {
     #[test]
     fn a_pack_that_unpacks_past_its_budget_fails_and_leaves_nothing() {
         use std::io::Write as _;
-        let base = std::env::temp_dir().join(format!("horizon-pack-bomb-{}", std::process::id()));
+        let base = horizon_fs::temp_dir().join(format!("horizon-pack-bomb-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();
@@ -2020,7 +2024,7 @@ mod tests {
         let error = build_overlay(&vanilla, &packs, &out).unwrap_err();
         assert_eq!(error.kind(), io::ErrorKind::FileTooLarge, "{error}");
         assert!(
-            !out.exists(),
+            !out.fs_exists(),
             "what was unpacked before the budget ran out stays"
         );
         // The same files within the budget unpack whole.
@@ -2045,7 +2049,8 @@ mod tests {
     #[test]
     fn zip_entries_never_leave_the_overlay() {
         use std::io::Write as _;
-        let base = std::env::temp_dir().join(format!("horizon-pack-escape-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-pack-escape-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();
@@ -2088,14 +2093,15 @@ mod tests {
             "work/escaped_lang.json",
             "work/escaped_backslash.txt",
         ] {
-            assert!(!base.join(escaped).exists(), "{escaped} was written");
+            assert!(!base.join(escaped).fs_exists(), "{escaped} was written");
         }
         let _ = fs::remove_dir_all(base);
     }
     #[test]
     fn built_in_and_folder_packs_give_their_pack_png() {
         use std::io::Write as _;
-        let base = std::env::temp_dir().join(format!("horizon-pack-icons-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-pack-icons-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let meta = br#"{"pack":{"description":"d","pack_format":97}}"#;
         let built_in = base.join("vanilla/assets/minecraft/resourcepacks");
@@ -2134,7 +2140,7 @@ mod tests {
     #[test]
     fn polytone_conditions_turn_overlays_on_from_the_packs_configs() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-packs-polytone-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-packs-polytone-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         let configs = dir.join("assets/mypack/polytone/config_entries");
         fs::create_dir_all(&configs).unwrap();
@@ -2179,7 +2185,7 @@ mod tests {
             {"formats":97,"directory":"C:"},
             {"formats":97,"directory":"ok_1.21-x"}]}}"#);
         assert_eq!(overlays_of(&meta, &Default::default()), ["ok_1.21-x"]);
-        let base = std::env::temp_dir().join(format!("horizon-packs-ov-{}", std::process::id()));
+        let base = horizon_fs::temp_dir().join(format!("horizon-packs-ov-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();
@@ -2222,7 +2228,7 @@ mod tests {
         );
         assert!(
             !out.join("assets/minecraft/textures/block/dirt.png")
-                .exists()
+                .fs_exists()
         );
         let _ = fs::remove_dir_all(base);
     }

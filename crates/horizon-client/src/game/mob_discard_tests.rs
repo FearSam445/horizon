@@ -121,7 +121,7 @@ fn discarded_mob_leaves_selectors_and_saves_while_frozen() {
         "removed": game.mobs[0].removed,
     });
     if let Some(path) = std::env::var_os("HORIZON_DISCARD_REPORT") {
-        std::fs::write(path, serde_json::to_vec(&report).unwrap()).unwrap();
+        horizon_fs::write(path, serde_json::to_vec(&report).unwrap()).unwrap();
     }
     // Removing another mob during its death animation also hides UUID lookup
     // immediately. No dead/alive predicate was added to general lookup.

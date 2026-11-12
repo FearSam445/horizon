@@ -1,4 +1,5 @@
 use crate::support::common::tag;
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     fluid::{FluidBlockBindings, FluidHeightWorld, FluidKind, FluidState, FluidStateTable},
@@ -7,7 +8,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

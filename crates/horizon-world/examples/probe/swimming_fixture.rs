@@ -1,8 +1,8 @@
 use horizon_core::position::BlockPos;
+use horizon_fs as fs;
 use horizon_world::swimming::{self, PlayerSwimmingWorld, SwimmingWorld};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

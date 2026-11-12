@@ -3,8 +3,8 @@ use horizon_core::{
     biome::{BiomeZoom, noise_quart_at_block, noise_quart_at_position, obfuscate_seed},
     position::BlockPos,
 };
+use horizon_fs as fs;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

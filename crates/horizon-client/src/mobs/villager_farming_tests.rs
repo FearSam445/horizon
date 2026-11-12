@@ -10,7 +10,7 @@ fn resources() -> &'static std::path::Path {
     ROOT.get_or_init(|| {
         let base = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        let scratch = std::env::temp_dir().join(format!("fresh-farming-{}", std::process::id()));
+        let scratch = horizon_fs::temp_dir().join(format!("fresh-farming-{}", std::process::id()));
         let dir = scratch.join("mod");
         let mut files = vec![(
             "horizon-mod.toml".to_owned(),
@@ -35,8 +35,8 @@ fn resources() -> &'static std::path::Path {
         ));
         for (name, text) in files {
             let path = dir.join(name);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(path, text).unwrap();
+            horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+            horizon_fs::write(path, text).unwrap();
         }
         let package = horizon_mods::Package::read(&dir).unwrap();
         let content = horizon_mods::Content::read(&dir, &package.manifest).unwrap();
@@ -283,7 +283,7 @@ fn farming_uses_the_first_tagged_block_item_and_consumes_one_seed() {
 #[ignore = "tools/test_villager_farming_parity.py supplies the vanilla oracle"]
 fn vanilla_farming_classification_matches_the_oracle() {
     let path = std::env::var_os("HORIZON_FARMING_ORACLE").expect("vanilla oracle output");
-    let rows: Vec<(u32, Vec<bool>)> = std::fs::read_to_string(path)
+    let rows: Vec<(u32, Vec<bool>)> = horizon_fs::read_to_string(path)
         .unwrap()
         .lines()
         .map(|line| {

@@ -8,12 +8,12 @@ use std::{collections::BTreeMap, path::PathBuf};
 struct Scratch(PathBuf);
 impl Drop for Scratch {
     fn drop(&mut self) {
-        std::fs::remove_dir_all(&self.0).unwrap();
+        horizon_fs::remove_dir_all(&self.0).unwrap();
     }
 }
 
 fn fixture() -> (Scratch, Assets, RenderAssets, MeshTables, Biomes) {
-    let path = std::env::temp_dir().join(format!(
+    let path = horizon_fs::temp_dir().join(format!(
         "terrain-source-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -21,11 +21,11 @@ fn fixture() -> (Scratch, Assets, RenderAssets, MeshTables, Biomes) {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&path).unwrap();
+    horizon_fs::create_dir_all(&path).unwrap();
     let write = |name: &str, value: serde_json::Value| {
         let file = path.join(name);
-        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
-        std::fs::write(file, value.to_string()).unwrap();
+        horizon_fs::create_dir_all(file.parent().unwrap()).unwrap();
+        horizon_fs::write(file, value.to_string()).unwrap();
     };
     let registry = json!({"defaults":{"minecraft:air":0,"fixture:signal":1},"states":[
         ["air",true,false,"", "minecraft:air"],
@@ -55,9 +55,9 @@ fn fixture() -> (Scratch, Assets, RenderAssets, MeshTables, Biomes) {
     }
     // The same authored sprite is used by every part of both states.
     let png_path = path.join("assets/fixture/textures/block/shared.png");
-    std::fs::create_dir_all(png_path.parent().unwrap()).unwrap();
+    horizon_fs::create_dir_all(png_path.parent().unwrap()).unwrap();
     let encode = |file: PathBuf| {
-        let mut encoder = png::Encoder::new(std::fs::File::create(file).unwrap(), 1, 1);
+        let mut encoder = png::Encoder::new(horizon_fs::File::create(file).unwrap(), 1, 1);
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
         encoder
@@ -166,7 +166,7 @@ fn fixture() -> (Scratch, Assets, RenderAssets, MeshTables, Biomes) {
         water_colormap: None,
     };
     let maps = path.join("assets/minecraft/textures/colormap");
-    std::fs::create_dir_all(&maps).unwrap();
+    horizon_fs::create_dir_all(&maps).unwrap();
     for name in ["grass", "foliage", "dry_foliage"] {
         encode(maps.join(format!("{name}.png")));
     }

@@ -1,5 +1,7 @@
 //! One-time migration of Horizon's old gateway side file into chunk NBT.
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 const LEGACY_FILE: &str = "horizon-end-gateways.json";
 
@@ -124,7 +126,7 @@ mod tests {
     static NEXT: AtomicU64 = AtomicU64::new(0);
 
     fn fixture() -> (PathBuf, SaveDir) {
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "gateway-migration-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
@@ -170,7 +172,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(save.migrate_end_gateway_exits().unwrap(), 1);
-        assert!(!dir.join(LEGACY_FILE).exists());
+        assert!(!dir.join(LEGACY_FILE).fs_exists());
         let saved = read(&save);
         assert_eq!(
             decode_end_gateway(entity(&saved, 1)).exit_portal,

@@ -1,6 +1,8 @@
 //! The packs in the game's `shaderpacks` folder: every folder and `.zip` in it (spec 1.1).
 
-use std::fs;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::{Path, PathBuf};
 
 use crate::Pack;
@@ -29,7 +31,7 @@ pub fn discover(dir: &Path) -> Vec<Found> {
             let is_zip = path
                 .extension()
                 .is_some_and(|e| e.eq_ignore_ascii_case("zip"));
-            if name.starts_with('.') || !(path.is_dir() || is_zip) {
+            if name.starts_with('.') || !(path.fs_is_dir() || is_zip) {
                 return None;
             }
             let problem = Pack::open(&path).err().map(|e| e.to_string());

@@ -6,6 +6,8 @@
 //! game, so this is the small client the screen needs. Search and download
 //! both run on a worker thread and report back over a channel; the screen
 //! only ever polls.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     path::{Path, PathBuf},
     sync::mpsc::{Receiver, Sender, channel},
@@ -223,13 +225,13 @@ pub fn safe_file_name(name: &str) -> String {
 /// number up to 999 is taken.
 pub fn free_path(dir: &Path, name: &str) -> Option<PathBuf> {
     let path = dir.join(name);
-    if !path.exists() {
+    if !path.fs_exists() {
         return Some(path);
     }
     let (stem, extension) = name.rsplit_once('.').unwrap_or((name, "zip"));
     (2..1000)
         .map(|n| dir.join(format!("{stem} ({n}).{extension}")))
-        .find(|candidate| !candidate.exists())
+        .find(|candidate| !candidate.fs_exists())
 }
 
 /// The browser's state, owned by the pack screen.
@@ -430,7 +432,7 @@ fn download_pack(versions: &str, dir: &Path) -> Message {
         }
     }
     let name = safe_file_name(&name);
-    if let Err(e) = std::fs::create_dir_all(dir) {
+    if let Err(e) = horizon_fs::create_dir_all(dir) {
         return Message::Failed(e.to_string());
     }
     let Some(path) = free_path(dir, &name) else {
@@ -439,14 +441,14 @@ fn download_pack(versions: &str, dir: &Path) -> Message {
     // Written beside the pack and renamed, so a pack list never sees a
     // half-written zip.
     let partial = path.with_extension("partial");
-    match std::fs::write(&partial, &body).and_then(|()| std::fs::rename(&partial, &path)) {
+    match horizon_fs::write(&partial, &body).and_then(|()| horizon_fs::rename(&partial, &path)) {
         Ok(()) => Message::Downloaded(
             path.file_name()
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or(name),
         ),
         Err(e) => {
-            let _ = std::fs::remove_file(&partial);
+            let _ = horizon_fs::remove_file(&partial);
             Message::Failed(e.to_string())
         }
     }
@@ -625,15 +627,15 @@ mod tests {
 
     #[test]
     fn a_download_never_replaces_a_pack_already_there() {
-        let dir = std::env::temp_dir().join(format!("horizon-browser-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let _ = std::fs::remove_file(dir.join("p.zip"));
-        let _ = std::fs::remove_file(dir.join("p (2).zip"));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-browser-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
+        let _ = horizon_fs::remove_file(dir.join("p.zip"));
+        let _ = horizon_fs::remove_file(dir.join("p (2).zip"));
         assert_eq!(free_path(&dir, "p.zip"), Some(dir.join("p.zip")));
-        std::fs::write(dir.join("p.zip"), b"x").unwrap();
+        horizon_fs::write(dir.join("p.zip"), b"x").unwrap();
         assert_eq!(free_path(&dir, "p.zip"), Some(dir.join("p (2).zip")));
-        std::fs::write(dir.join("p (2).zip"), b"x").unwrap();
+        horizon_fs::write(dir.join("p (2).zip"), b"x").unwrap();
         assert_eq!(free_path(&dir, "p.zip"), Some(dir.join("p (3).zip")));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }

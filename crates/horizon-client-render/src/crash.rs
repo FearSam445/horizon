@@ -197,9 +197,9 @@ impl Report {
     /// Writes the report in `home/crash-reports` and returns its path.
     pub fn save(&self, home: &Path) -> std::io::Result<PathBuf> {
         let dir = crate::logging::crash_reports_dir(home);
-        std::fs::create_dir_all(&dir)?;
+        horizon_fs::create_dir_all(&dir)?;
         let path = dir.join(file_name(&self.time, self.side));
-        std::fs::write(&path, self.text())?;
+        horizon_fs::write(&path, self.text())?;
         Ok(path)
     }
 }
@@ -229,14 +229,14 @@ pub fn release_tag() -> Option<String> {
     if let Some(version) = horizon_core::release::RELEASE {
         return Some(format!("v{version}"));
     }
-    let exe = std::env::current_exe().ok()?;
+    let exe = horizon_fs::current_exe().ok()?;
     let folder = exe.parent()?.file_name()?.to_str()?;
     (folder.starts_with('v') && folder[1..].starts_with(|c: char| c.is_ascii_digit()))
         .then(|| folder.to_owned())
 }
 
 fn read(path: &str) -> Option<String> {
-    std::fs::read_to_string(path).ok()
+    horizon_fs::read_to_string(path).ok()
 }
 
 /// The build's architecture, and the machine's after "on" when it emulates the build.
@@ -925,9 +925,10 @@ mod tests {
         )));
         assert!(text.contains("\tOperating System: "));
         assert!(text.contains("\tCPU: "));
-        let home = std::env::temp_dir().join(format!("horizon-crash-save-{}", std::process::id()));
+        let home =
+            horizon_fs::temp_dir().join(format!("horizon-crash-save-{}", std::process::id()));
         let path = report.save(&home).unwrap();
-        assert_eq!(std::fs::read_to_string(&path).unwrap(), text);
+        assert_eq!(horizon_fs::read_to_string(&path).unwrap(), text);
         assert!(
             path.file_name()
                 .unwrap()
@@ -935,6 +936,6 @@ mod tests {
                 .unwrap()
                 .ends_with("-client.txt")
         );
-        let _ = std::fs::remove_dir_all(&home);
+        let _ = horizon_fs::remove_dir_all(&home);
     }
 }

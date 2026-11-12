@@ -11,10 +11,10 @@ use horizon_client::{
     particles::{ParticleEngine, ParticleLevel, ParticleOptions, ParticleSnapshot, ParticleType},
     world::World,
 };
+use horizon_fs::File;
 use serde_json::Value;
 use std::{
     collections::HashMap,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
     sync::Arc,

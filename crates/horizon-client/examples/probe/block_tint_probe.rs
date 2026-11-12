@@ -2,10 +2,10 @@
 use horizon_client::{
     assets::Assets, blocks::BlockFacts, item_render::ItemRenderer, mesher::MeshTables, models,
 };
+use horizon_fs as fs;
 use horizon_world::registry::BlockStateId;
 use serde_json::Value;
 use std::{
-    fs,
     io::{BufWriter, Write},
     path::Path,
 };

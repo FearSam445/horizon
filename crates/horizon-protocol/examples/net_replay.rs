@@ -30,7 +30,7 @@ struct Packet {
 }
 
 fn load(path: &str) -> Result<Vec<Packet>, Box<dyn Error>> {
-    let data = std::fs::read(path)?;
+    let data = horizon_fs::read(path)?;
     let mut packets = Vec::new();
     let mut at = 0;
     while at + 12 <= data.len() {

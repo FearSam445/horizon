@@ -4,12 +4,12 @@ use horizon_client::{
     content_identity,
     mod_content::{ContentMod, accept_mod, build, known_components},
 };
+use horizon_fs as fs;
 use horizon_protocol::{
     buf::NBT_QUOTA,
     item::custom::{self, InstallError},
 };
 use horizon_world::nbt::Tag;
-use std::fs;
 
 #[test]
 fn registration_limits_and_defaults_are_bound_to_the_connection() {
@@ -43,13 +43,13 @@ fn registration_limits_and_defaults_are_bound_to_the_connection() {
     assert!(custom::validate(&Tag::List(vec![Tag::Int(1), Tag::String("x".into())])).is_ok());
 
     let dir =
-        std::env::temp_dir().join(format!("horizon-component-identity-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+        horizon_fs::temp_dir().join(format!("horizon-component-identity-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
     for (name, value) in [("a", 1), ("b", 2), ("c", 1)] {
         let root = dir.join(name);
-        std::fs::create_dir_all(&root).unwrap();
-        std::fs::write(root.join("facts.json"), br#"{"states":[]}"#).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&root).unwrap();
+        horizon_fs::write(root.join("facts.json"), br#"{"states":[]}"#).unwrap();
+        horizon_fs::write(
             root.join("items.json"),
             format!(r#"{{"sample:item":{{"sample:a":{{"value":{value}}}}}}}"#),
         )
@@ -60,7 +60,7 @@ fn registration_limits_and_defaults_are_bound_to_the_connection() {
     let c = content_identity::identity(&dir.join("c")).unwrap();
     assert_ne!(a, b);
     assert_eq!(a, c);
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-component-isolation-{}",
         std::process::id()
     ));
@@ -147,5 +147,5 @@ fn registration_limits_and_defaults_are_bound_to_the_connection() {
         Tag::compound([("value", Tag::Int(5))])
     );
     fs::remove_dir_all(scratch).unwrap();
-    std::fs::remove_dir_all(dir).unwrap();
+    horizon_fs::remove_dir_all(dir).unwrap();
 }

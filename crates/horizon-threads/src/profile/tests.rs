@@ -460,7 +460,7 @@ fn symbolizing_names_real_functions_and_leaks_no_path() {
     assert!(symbols.frames(0x99).is_empty());
     let secrets = [
         std::env::var("HOME").unwrap_or_default(),
-        std::env::current_exe().unwrap().display().to_string(),
+        horizon_fs::current_exe().unwrap().display().to_string(),
     ];
     for sym in targets.iter().flat_map(|&t| symbols.frames(t)) {
         let shown = format!("{} {:?}", sym.name, sym.file);

@@ -203,7 +203,7 @@ pub fn load(root: &Path) -> Vec<Rule> {
     let mut rules: Vec<Rule> = crate::properties_files(root, "ctm")
         .into_iter()
         .filter_map(|path| {
-            let bytes = std::fs::read(root.join(&path))
+            let bytes = horizon_fs::read(root.join(&path))
                 .map_err(|e| log::warn!("Horizon: connected textures {path}: {e}"))
                 .ok()?;
             // Java's `Properties.load(InputStream)` reads ISO-8859-1; UTF-8 when it is valid.
@@ -876,20 +876,20 @@ mod tests {
 
     #[test]
     fn loading_a_pack() {
-        let root = std::env::temp_dir().join(format!("horizon-ctm-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+        let root = horizon_fs::temp_dir().join(format!("horizon-ctm-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&root);
         let ctm = root.join("assets/minecraft/optifine/ctm");
-        std::fs::create_dir_all(ctm.join("b")).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(ctm.join("b")).unwrap();
+        horizon_fs::write(
             ctm.join("b/block_stone.properties"),
             "method=fixed\ntiles=0",
         )
         .unwrap();
-        std::fs::write(ctm.join("a.properties"), "matchBlocks=stone\nmethod=spiral").unwrap();
+        horizon_fs::write(ctm.join("a.properties"), "matchBlocks=stone\nmethod=spiral").unwrap();
         // ISO-8859-1, as Java reads it: "É" is one byte.
         let latin1 = b"matchBlocks=furnace\nmethod=fixed\ntiles=0\nname=\xc9p\xe9e\n";
-        std::fs::write(ctm.join("c.properties"), latin1).unwrap();
-        std::fs::write(ctm.join("z.properties"), "method=fixed\ntiles=0").unwrap();
+        horizon_fs::write(ctm.join("c.properties"), latin1).unwrap();
+        horizon_fs::write(ctm.join("z.properties"), "method=fixed\ntiles=0").unwrap();
         let rules = load(&root);
         let names: Vec<_> = rules
             .iter()
@@ -901,6 +901,6 @@ mod tests {
             ["z.properties", "block_stone.properties", "c.properties"]
         );
         assert!(rules[2].applies_at(faces::UP, 0, "plains", Some("Épée")));
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
     }
 }

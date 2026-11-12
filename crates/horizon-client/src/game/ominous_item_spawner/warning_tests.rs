@@ -32,7 +32,7 @@ fn warning_dispatch_uses_neutral_at_tick_four() {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-ominous-sound-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -40,7 +40,7 @@ fn warning_dispatch_uses_neutral_at_tick_four() {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.player = Some(PlayerMotion::new(game.motion, Vec3::new(4.5, 100.0, 4.5)).unwrap());
 
@@ -108,5 +108,5 @@ fn warning_dispatch_uses_neutral_at_tick_four() {
         "the explicit warning source must not change later event-family inference"
     );
     drop(game);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }

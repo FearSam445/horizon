@@ -18,10 +18,10 @@ impl Game<'_> {
             .advancements
             .to_json(&self.adv.tree, horizon_world::DATA_VERSION);
         if let Some(dir) = path.parent() {
-            let _ = std::fs::create_dir_all(dir);
+            let _ = horizon_fs::create_dir_all(dir);
         }
         if let Ok(text) = serde_json::to_string_pretty(&json) {
-            let _ = std::fs::write(path, text);
+            let _ = horizon_fs::write(path, text);
         }
     }
     /// `PlayerAdvancements.save` and `ServerStatsCounter.save` of a network player.

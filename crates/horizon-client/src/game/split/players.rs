@@ -6,6 +6,8 @@ use horizon_client::{
     gamepad::PadState,
     options_ui::Page,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 /// Whether `game` shows its profile page now.
 fn on_profiles(game: &Game<'_>) -> bool {
@@ -112,7 +114,7 @@ impl Split<'_> {
 
     /// The splitscreen folder in the game folder: `profiles/<name>/` holds each profile.
     fn folder() -> Result<PathBuf> {
-        Ok(std::env::current_dir()?.join("splitscreen"))
+        Ok(horizon_fs::current_dir()?.join("splitscreen"))
     }
 
     /// Add a player driven by `pad`: it picks a profile first, unless `name` is given (tests).
@@ -301,10 +303,10 @@ impl Split<'_> {
         }
         let profile = profiles.join(&name);
         let options = profile.join("options.txt");
-        let made = if options.exists() {
+        let made = if options.fs_exists() {
             None
         } else {
-            std::fs::create_dir_all(&profile)?;
+            horizon_fs::create_dir_all(&profile)?;
             let mut new = self.host.settings.clone();
             // The Controller setting is P1's, as on the profile page (`join`).
             new.controller.enabled |= self.guests[i].pad.is_some();
@@ -466,7 +468,7 @@ impl Split<'_> {
         }
         let res = self.res.ok_or("no resources")?;
         let host = &mut self.host;
-        std::fs::create_dir_all(options_file.parent().ok_or("bad options path")?)?;
+        horizon_fs::create_dir_all(options_file.parent().ok_or("bad options path")?)?;
         let mut options = host.options.clone();
         options.world = None;
         options.server = None;

@@ -4,6 +4,7 @@
 //!
 //! usage: spawn_origin <client resource directory> <seed>...
 use crate::support::common::tag;
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     nbt::Tag,
@@ -11,7 +12,7 @@ use horizon_world::{
     worldgen::generator::{GeneratorData, OverworldGenerator},
 };
 use serde_json::Value;
-use std::{fs, path::Path};
+use std::path::Path;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 

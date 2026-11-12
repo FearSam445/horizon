@@ -12,7 +12,7 @@ fn set_rot(entity: &mut PosRot, yaw: f32, pitch: f32) {
 
 pub fn main() {
     let args: Vec<String> = crate::args().collect();
-    let input = std::fs::read_to_string(&args[1]).expect("input");
+    let input = horizon_fs::read_to_string(&args[1]).expect("input");
     let mut out = String::new();
     let mut handler = SteppedInterpolation::new(0);
     let mut entity = PosRot::default();
@@ -89,5 +89,5 @@ pub fn main() {
         )
         .expect("write");
     }
-    std::fs::write(&args[2], out).expect("output");
+    horizon_fs::write(&args[2], out).expect("output");
 }

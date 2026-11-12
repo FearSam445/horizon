@@ -1,5 +1,7 @@
 //! Command execution (the `execute` side of each vanilla command class):
 //! entity selectors resolved against the game, vanilla feedback and errors.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 mod admin;
 pub(super) mod compute;
 mod data;
@@ -1151,7 +1153,7 @@ impl Game<'_> {
             "data/minecraft/tags/entity_type/{}.json",
             tag.trim_start_matches("minecraft:")
         ));
-        serde_json::from_slice::<serde_json::Value>(&std::fs::read(path).unwrap_or_default())
+        serde_json::from_slice::<serde_json::Value>(&horizon_fs::read(path).unwrap_or_default())
             .ok()
             .is_some_and(|v| {
                 v["values"]
@@ -4316,7 +4318,7 @@ impl Game<'_> {
                 .into_iter()
                 .flatten()
                 .filter_map(|b| serde_json::from_slice::<serde_json::Value>(b).ok());
-            let parsed = std::fs::read(file)
+            let parsed = horizon_fs::read(file)
                 .ok()
                 .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
                 .into_iter()
@@ -4965,7 +4967,7 @@ mod selector_bounds_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             eprintln!("Prepared resources unavailable; Game selector coverage did not run");
             return;
         }

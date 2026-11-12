@@ -1,11 +1,11 @@
 use horizon_core::{geometry::Direction, position::BlockPos};
+use horizon_fs as fs;
 use horizon_world::{
     fluid::FluidState,
     fluid_flow::{self, FluidFlowWorld},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

@@ -2,7 +2,8 @@
 //! loads through `sprites::Sprites` (its .mcmeta settings and transparency)
 //! and `mipmap::generate` makes its levels down to 1x1, printed as RGBA hex
 //! rows like VanillaMipmapOracle.
-use std::{fmt::Write as _, fs, path::Path};
+use horizon_fs as fs;
+use std::{fmt::Write as _, path::Path};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().skip(1).collect();

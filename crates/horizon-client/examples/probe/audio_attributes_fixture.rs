@@ -23,8 +23,8 @@ pub fn main() {
     let root = std::path::Path::new(&args[1]);
     let tables = MusicTables::load(root);
     let ambient = AmbientTables::load(root);
-    let input = std::fs::read_to_string(&args[2]).expect("input");
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[3]).expect("output"));
+    let input = horizon_fs::read_to_string(&args[2]).expect("input");
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[3]).expect("output"));
     for (name, m) in [
         ("MENU", Music::menu()),
         ("CREDITS", Music::credits()),

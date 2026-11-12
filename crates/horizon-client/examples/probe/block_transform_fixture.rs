@@ -8,9 +8,10 @@ use horizon_client::{
     block_transform::{Around, Transformers},
     items::Items,
 };
+use horizon_fs as fs;
 use horizon_world::chunk::BlockState;
 use horizon_world::loot::PackOverlay;
-use std::{fs, path::Path};
+use std::path::Path;
 
 fn parse(text: &str) -> BlockState {
     let (name, props) = text.split_once('|').unwrap_or((text, ""));

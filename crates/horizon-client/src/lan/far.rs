@@ -362,7 +362,7 @@ mod tests {
             }),
         );
         let save = Arc::new(SaveDir::new(
-            std::env::temp_dir().join("horizon-far-ring-test"),
+            horizon_fs::temp_dir().join("horizon-far-ring-test"),
             LevelShape::OVERWORLD,
         ));
         let encoder = ChunkEncoder::new(

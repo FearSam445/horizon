@@ -33,7 +33,7 @@ fn selectors_reject_criteria_absent_from_the_selected_definition() {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-criterion-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -41,7 +41,7 @@ fn selectors_reject_criteria_absent_from_the_selected_definition() {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.player = Some(PlayerMotion::new(game.motion, Vec3::new(10.5, 64.0, 0.5)).unwrap());
 
@@ -101,5 +101,5 @@ fn selectors_reject_criteria_absent_from_the_selected_definition() {
         assert!(select(&mut game, "h266:missing={}").is_empty());
     }
     drop(game);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }

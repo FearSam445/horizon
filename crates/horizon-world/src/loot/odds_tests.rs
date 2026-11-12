@@ -3,17 +3,17 @@ use super::LootOdds;
 
 /// Loot data holding these tables (`minecraft:<name>`).
 fn data(name: &str, tables: &[(&str, &str)]) -> LootData {
-    let root = std::env::temp_dir().join(format!("loot-odds-{name}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&root);
-    std::fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
+    let root = horizon_fs::temp_dir().join(format!("loot-odds-{name}-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&root);
+    horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
     for (id, json) in tables {
         let path = root.join(format!("data/minecraft/loot_table/{id}.json"));
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(path, json).unwrap();
+        horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+        horizon_fs::write(path, json).unwrap();
     }
-    std::fs::write(root.join("items.json"), "{}").unwrap();
+    horizon_fs::write(root.join("items.json"), "{}").unwrap();
     let data = LootData::load(&root, &PackOverlay::NONE).unwrap();
-    let _ = std::fs::remove_dir_all(&root);
+    let _ = horizon_fs::remove_dir_all(&root);
     data
 }
 

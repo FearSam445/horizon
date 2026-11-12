@@ -17,6 +17,8 @@ use horizon_core::{
     geometry::{Aabb, Vec3, VoxelShape, trig},
     random::RandomSource,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 /// `ItemStack.hurtAndConvertOnBreak`: the stack after `wear` more damage, or -
 /// when that wear breaks it - the copy it leaves behind
@@ -1613,7 +1615,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return None;
         }
         let settings = Settings::default();

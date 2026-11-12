@@ -2,6 +2,8 @@
 //! and the launcher, sent and removed by the launcher's [`crate::upload::flush`]. Only kinds the
 //! player allows get in, each within its daily cap, and the folder never holds more than
 //! [`MAX_FILES`] items or [`MAX_BYTES`].
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -36,7 +38,7 @@ pub fn push(home: &Path, item: &Item) -> std::io::Result<bool> {
     }
     item.validate().map_err(std::io::Error::other)?;
     let today = crate::today();
-    let mut kept: Kept = std::fs::read(kept_path(home))
+    let mut kept: Kept = horizon_fs::read(kept_path(home))
         .ok()
         .and_then(|b| serde_json::from_slice(&b).ok())
         .filter(|k: &Kept| k.day == today)
@@ -50,7 +52,7 @@ pub fn push(home: &Path, item: &Item) -> std::io::Result<bool> {
     }
     let json = serde_json::to_vec(item).map_err(std::io::Error::other)?;
     let dir = dir(home);
-    std::fs::create_dir_all(&dir)?;
+    horizon_fs::create_dir_all(&dir)?;
     make_room(&dir, json.len() as u64)?;
     // Names sort by day, so the oldest go first when there is no room.
     let name = format!(
@@ -67,12 +69,12 @@ pub fn push(home: &Path, item: &Item) -> std::io::Result<bool> {
 }
 
 fn files(dir: &Path) -> Vec<(PathBuf, u64)> {
-    let mut files: Vec<(PathBuf, u64)> = std::fs::read_dir(dir)
+    let mut files: Vec<(PathBuf, u64)> = horizon_fs::read_dir(dir)
         .into_iter()
         .flatten()
         .flatten()
         .filter(|e| e.path().extension().is_some_and(|x| x == "json"))
-        .map(|e| (e.path(), e.metadata().map_or(0, |m| m.len())))
+        .map(|e| (e.path(), e.fs_metadata().map_or(0, |m| m.len())))
         .collect();
     files.sort();
     files
@@ -87,7 +89,7 @@ fn make_room(dir: &Path, incoming: u64) -> std::io::Result<()> {
         if count < MAX_FILES && bytes + incoming <= MAX_BYTES {
             break;
         }
-        std::fs::remove_file(path)?;
+        horizon_fs::remove_file(path)?;
         count -= 1;
         bytes -= size;
     }
@@ -99,11 +101,11 @@ pub fn pending(home: &Path) -> Vec<(PathBuf, Item)> {
     files(&dir(home))
         .into_iter()
         .filter_map(|(path, _)| {
-            let item = std::fs::read(&path)
+            let item = horizon_fs::read(&path)
                 .ok()
                 .and_then(|b| serde_json::from_slice::<Item>(&b).ok());
             if item.is_none() {
-                let _ = std::fs::remove_file(&path);
+                let _ = horizon_fs::remove_file(&path);
             }
             item.map(|i| (path, i))
         })
@@ -118,7 +120,7 @@ pub fn retain_allowed(home: &Path) -> Vec<(PathBuf, Item)> {
         .filter(|(path, item)| {
             let allowed = consent.allows(item.kind());
             if !allowed {
-                let _ = std::fs::remove_file(path);
+                let _ = horizon_fs::remove_file(path);
             }
             allowed
         })
@@ -127,7 +129,7 @@ pub fn retain_allowed(home: &Path) -> Vec<(PathBuf, Item)> {
 
 /// Removes every waiting item ("Delete my data", or everything turned off).
 pub fn clear(home: &Path) -> std::io::Result<()> {
-    match std::fs::remove_dir_all(dir(home)) {
+    match horizon_fs::remove_dir_all(dir(home)) {
         Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e),
         _ => Ok(()),
     }
@@ -162,7 +164,7 @@ mod tests {
         );
         assert!(!push(&home, &crash()).unwrap());
         assert!(pending(&home).is_empty());
-        assert!(!dir(&home).exists());
+        assert!(!dir(&home).fs_exists());
         allow(
             &home,
             Choices {
@@ -198,15 +200,15 @@ mod tests {
         let home = test_home::new("outbox-room");
         allow(&home, Choices::ALL);
         let dir = dir(&home);
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         let old = serde_json::to_vec(&crash()).unwrap();
         for i in 0..MAX_FILES {
-            std::fs::write(dir.join(format!("000001-crash-{i:04}.json")), &old).unwrap();
+            horizon_fs::write(dir.join(format!("000001-crash-{i:04}.json")), &old).unwrap();
         }
         assert!(push(&home, &crash()).unwrap());
         let files = files(&dir);
         assert_eq!(files.len(), MAX_FILES);
-        assert!(!dir.join("000001-crash-0000.json").exists());
+        assert!(!dir.join("000001-crash-0000.json").fs_exists());
         assert!(
             files
                 .last()
@@ -226,8 +228,8 @@ mod tests {
         allow(&home, Choices::ALL);
         let empty_bug = Item::new(Source::Game, "v1", Payload::Bug(Bug::default()));
         assert!(push(&home, &empty_bug).is_err());
-        std::fs::create_dir_all(dir(&home)).unwrap();
-        std::fs::write(dir(&home).join("000001-bug-x.json"), b"{").unwrap();
+        horizon_fs::create_dir_all(dir(&home)).unwrap();
+        horizon_fs::write(dir(&home).join("000001-bug-x.json"), b"{").unwrap();
         assert!(pending(&home).is_empty());
         assert!(files(&dir(&home)).is_empty());
         clear(&home).unwrap();

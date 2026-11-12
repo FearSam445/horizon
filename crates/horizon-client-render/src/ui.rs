@@ -5,6 +5,8 @@ use crate::{
     hud::{HudAtlas, HudBatch, Rect, rgba},
     text::Text,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
@@ -81,12 +83,12 @@ pub fn read_metadata(root: &Path) -> UiMetadata {
             let mut files = Vec::new();
             let mut stack = vec![sprites];
             while let Some(dir) = stack.pop() {
-                let Ok(entries) = std::fs::read_dir(&dir) else {
+                let Ok(entries) = horizon_fs::read_dir(&dir) else {
                     continue;
                 };
                 for e in entries.flatten() {
                     let p = e.path();
-                    if p.is_dir() {
+                    if p.fs_is_dir() {
                         stack.push(p);
                     } else if p.to_string_lossy().ends_with(".png.mcmeta") {
                         files.push(p);

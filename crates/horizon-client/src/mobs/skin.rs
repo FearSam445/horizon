@@ -12,6 +12,8 @@ use super::{ModelNormals, Part, anim::Poses};
 use crate::fast_hash::FxHashMap;
 use crate::gfx::entity_skin::{SkinFrame, SkinJob, SkinPart, SkinVertex};
 use horizon_assets::item_bake::BakedItemModel;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::sync::Arc;
 
 /// A stored model: where its vertices start, and per part (pre-order) its
@@ -862,7 +864,7 @@ mod tests {
     fn posed_on_the_gpu_every_mob_draws_what_the_cpu_draws() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             eprintln!("no prepared resources: skipped");
             return;
         }
@@ -999,7 +1001,7 @@ mod tests {
     fn only_culled_render_types_ask_for_culled_back_faces() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             eprintln!("no prepared resources: skipped");
             return;
         }
@@ -1078,7 +1080,7 @@ mod tests {
     fn armor_stand_models_pose_on_the_gpu_as_on_the_cpu() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             eprintln!("no prepared resources: skipped");
             return;
         }

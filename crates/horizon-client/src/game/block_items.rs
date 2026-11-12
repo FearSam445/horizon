@@ -7,6 +7,8 @@ use horizon_client::{
     Result, block_entity_item, block_entity_nbt, containers::BlockEntity, item_data,
     items::ItemStack, save,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     level::{Behaviours, classes::Class},
     nbt::{Compound, JavaString, Tag},

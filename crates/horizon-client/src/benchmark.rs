@@ -6,6 +6,8 @@
 //! The scenes, the world (seed 1234, creative) and every step and figure match `tools/perf_bench.py`,
 //! so reports from the two can be compared.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Sender};
 use std::thread;
@@ -334,7 +336,7 @@ fn run(control: &Control, setup: Setup) -> Result<PathBuf, String> {
             &[median as f64 / f64::from(1 << 20)],
         );
     }
-    if let Ok(meta) = std::env::current_exe().and_then(std::fs::metadata) {
+    if let Ok(meta) = horizon_fs::current_exe().and_then(horizon_fs::metadata) {
         report.metric("game.binary_bytes", &[meta.len() as f64]);
     }
     crate::telemetry::keep_benchmark(&crate::logging::game_home(), &report);
@@ -374,8 +376,9 @@ fn measure(
     replace_world(&setup.game_dir)?;
     control.call(&format!("open {WORLD} {SEED} creative"))?;
     // The world opens on a worker: its folder may not exist yet when `open` replies.
-    std::fs::create_dir_all(setup.game_dir.join("saves").join(WORLD)).map_err(|e| e.to_string())?;
-    std::fs::write(
+    horizon_fs::create_dir_all(setup.game_dir.join("saves").join(WORLD))
+        .map_err(|e| e.to_string())?;
+    horizon_fs::write(
         setup.game_dir.join("saves").join(WORLD).join(MARKER),
         "Created by horizon-client --benchmark; replaced by the next run.\n",
     )
@@ -679,16 +682,16 @@ fn ab_blocks(
 /// Removes the previous run's world, never one the benchmark didn't create.
 fn replace_world(game_dir: &Path) -> Result<(), String> {
     let world = game_dir.join("saves").join(WORLD);
-    if !world.exists() {
+    if !world.fs_exists() {
         return Ok(());
     }
-    if !world.join(MARKER).exists() {
+    if !world.join(MARKER).fs_exists() {
         return Err(format!(
             "{} exists and was not created by the benchmark: rename it",
             world.display()
         ));
     }
-    std::fs::remove_dir_all(&world).map_err(|e| e.to_string())
+    horizon_fs::remove_dir_all(&world).map_err(|e| e.to_string())
 }
 
 fn poll(
@@ -1331,18 +1334,18 @@ mod tests {
     #[test]
     fn only_replaces_its_own_world() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-benchmark-test-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-benchmark-test-{}", std::process::id()));
         let world = dir.join("saves").join(WORLD);
-        std::fs::create_dir_all(&world).unwrap();
+        horizon_fs::create_dir_all(&world).unwrap();
         assert!(
             replace_world(&dir).is_err(),
             "a player's world of that name stays"
         );
-        assert!(world.exists());
-        std::fs::write(world.join(MARKER), "").unwrap();
+        assert!(world.fs_exists());
+        horizon_fs::write(world.join(MARKER), "").unwrap();
         replace_world(&dir).unwrap();
-        assert!(!world.exists());
+        assert!(!world.fs_exists());
         replace_world(&dir).unwrap();
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 }

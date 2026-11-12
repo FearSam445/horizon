@@ -5,6 +5,9 @@ use horizon_core::{
     position::BlockPos,
     random::{LegacyRandom, PositionalRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::worldgen::{
     anchor::{VerticalAnchor, WorldGenerationContext},
     biome_temperature::{BiomeTemperature, BiomeTemperatureSettings},
@@ -26,7 +29,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs,
     io::{self, Write},
     path::Path,
     sync::{Arc, Mutex},
@@ -677,7 +679,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
         &tags.tags,
     )?;
     let noises = serde_json::from_str(&fs::read_to_string(dir.join("noises.json"))?)?;
-    let rules_data = if dir.join("rules.json").exists() {
+    let rules_data = if dir.join("rules.json").fs_exists() {
         let facts: Value =
             serde_json::from_str(&fs::read_to_string(dir.join("facts-server.json"))?)?;
         Some(RuleData {

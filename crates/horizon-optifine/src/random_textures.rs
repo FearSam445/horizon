@@ -28,8 +28,8 @@
 //! Written from OptiFine's `random_entities.properties` and ETF's `RANDOM_GUIDE.md`; no mod's
 //! source was read.
 
+use horizon_fs as fs;
 use std::collections::{BTreeMap, HashMap};
-use std::fs;
 use std::path::Path;
 
 use crate::paths::files_under;
@@ -285,7 +285,7 @@ mod tests {
 
     fn pack(files: &[(&str, &str)]) -> (std::path::PathBuf, RandomTextures) {
         static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-random-textures-{}-{}",
             std::process::id(),
             N.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
@@ -529,7 +529,7 @@ mod tests {
     #[test]
     fn latin1_rules_are_read() {
         let root =
-            std::env::temp_dir().join(format!("horizon-random-latin1-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-random-latin1-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let dir = root.join(RANDOM).join("creeper");
         fs::create_dir_all(&dir).unwrap();

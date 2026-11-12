@@ -3,11 +3,9 @@ use horizon_assets::{
     model::*,
     resolve::ModelLibrary,
 };
+use horizon_fs::File;
 use serde_json::{Value, json};
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 fn bits(value: f32) -> u32 {
     if value.is_nan() {
         0x7fc0_0000

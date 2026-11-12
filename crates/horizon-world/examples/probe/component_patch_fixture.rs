@@ -1,7 +1,7 @@
+use horizon_fs as fs;
 use horizon_world::component_patch::{ComponentMap, Patch, Prototype};
 use serde_json::Value as Json;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

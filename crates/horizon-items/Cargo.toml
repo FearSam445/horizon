@@ -7,6 +7,8 @@ rust-version.workspace = true
 description = "Blocks and items as the client knows them: block facts, item stacks and their data components, enchantments, cooldowns, bundles, and items in NBT"
 
 [dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
 # SystemTime::now, also in the browser build (web/).
 horizon-clock = { path = "../../web/clock" }
 # std::time, with a clock in the browser build (web/).

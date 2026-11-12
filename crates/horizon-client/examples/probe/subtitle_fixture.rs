@@ -11,8 +11,9 @@ use horizon_client::{
     hud_overlays::{SubtitleFrame, SubtitleOverlay},
     lang,
 };
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{fs, io::Write, path::PathBuf};
+use std::{io::Write, path::PathBuf};
 
 fn vec3(v: &Value) -> [f64; 3] {
     std::array::from_fn(|i| v[i].as_f64().unwrap_or(0.0))

@@ -1,5 +1,7 @@
 //! Polytone's item modifiers' durability bar colours, on the engine's
 //! [`crate::pack_palette::ItemBars`].
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -30,7 +32,7 @@ impl crate::pack_palette::ItemBars for Bars {
 /// `<name>.png`) beside it. Colormap ids and inline colormaps aren't read. `None` without any.
 pub fn read(root: &Path) -> Option<Arc<dyn crate::pack_palette::ItemBars>> {
     let mut bars = Vec::new();
-    for namespace in std::fs::read_dir(root.join("assets"))
+    for namespace in horizon_fs::read_dir(root.join("assets"))
         .into_iter()
         .flatten()
         .flatten()
@@ -38,9 +40,9 @@ pub fn read(root: &Path) -> Option<Arc<dyn crate::pack_palette::ItemBars>> {
         let base = namespace.path().join("polytone/item_modifiers");
         let mut stack = vec![base.clone()];
         while let Some(dir) = stack.pop() {
-            for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+            for entry in horizon_fs::read_dir(&dir).into_iter().flatten().flatten() {
                 let path = entry.path();
-                if path.is_dir() {
+                if path.fs_is_dir() {
                     stack.push(path);
                 } else if let Some(bar) = item_bar(root, &base, &path) {
                     bars.push(bar);
@@ -65,7 +67,7 @@ fn item_bar(root: &Path, base: &Path, path: &Path) -> Option<DamageBar> {
     };
     if let Some(stem) = name.strip_suffix("_bar.png") {
         // A json of the same name owns its png.
-        if path.with_file_name(format!("{stem}.json")).exists() {
+        if path.with_file_name(format!("{stem}.json")).fs_exists() {
             return None;
         }
         let relative = path.parent()?.strip_prefix(base).ok()?.join(stem);
@@ -85,7 +87,7 @@ fn item_bar(root: &Path, base: &Path, path: &Path) -> Option<DamageBar> {
     let png = [format!("{stem}_bar.png"), format!("{stem}.png")]
         .into_iter()
         .map(|png| path.with_file_name(png))
-        .find(|png| png.exists())?;
+        .find(|png| png.fs_exists())?;
     let relative = path.strip_prefix(root).unwrap_or(path).to_string_lossy();
     let implicit = horizon_polytone::implicit_id(&relative, "item_modifiers");
     let targets =
@@ -101,8 +103,8 @@ mod tests {
     use super::*;
 
     fn png_row(path: &Path, pixels: &[[u8; 3]]) {
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        let file = std::fs::File::create(path).unwrap();
+        horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let file = horizon_fs::File::create(path).unwrap();
         let mut encoder = png::Encoder::new(file, pixels.len() as u32, 1);
         encoder.set_color(png::ColorType::Rgba);
         let data: Vec<u8> = pixels
@@ -118,11 +120,11 @@ mod tests {
 
     #[test]
     fn a_damage_bar_picks_its_pixel_by_the_stacks_damage() {
-        let dir = std::env::temp_dir().join(format!("pack-bars-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("pack-bars-{}", std::process::id()));
         let modifiers = dir.join("assets/minecraft/polytone/item_modifiers");
         let rgby = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0]];
         png_row(&modifiers.join("diamond_pickaxe_bar.png"), &rgby);
-        std::fs::write(
+        horizon_fs::write(
             modifiers.join("tools.json"),
             r#"{"targets": ["minecraft:iron_axe"], "bar_color": "damage"}"#,
         )
@@ -141,6 +143,6 @@ mod tests {
         assert_eq!(bars.color("minecraft:iron_axe", 0.9), Some(0x040506));
         assert_eq!(bars.color("minecraft:diamond_shovel", 0.5), None);
         assert!(read(&dir.join("none")).is_none());
-        std::fs::remove_dir_all(&dir).ok();
+        horizon_fs::remove_dir_all(&dir).ok();
     }
 }

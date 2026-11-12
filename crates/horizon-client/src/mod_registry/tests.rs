@@ -1,9 +1,11 @@
 //! Installing from a local test registry: a real content `.hmod`, an index
 //! naming it, and the game folder the launcher shares.
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 fn scratch(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!(
+    let dir = horizon_fs::temp_dir().join(format!(
         "horizon-mod-registry-{name}-{}",
         std::process::id()
     ));
@@ -133,9 +135,13 @@ fn bytes_other_than_the_index_lists_never_reach_the_mods_folder() {
     *tampered.last_mut().unwrap() ^= 1;
     let error = install(&index, &home, "ruby", &serve(tampered)).unwrap_err();
     assert!(error.contains("SHA-256"), "{error}");
-    assert!(!home.join("horizon-mods/ruby.hmod").exists());
-    assert!(!home.join("mod-browser/downloads/ruby.hmod.part").exists());
-    assert!(!home.join(MANIFEST).exists());
+    assert!(!home.join("horizon-mods/ruby.hmod").fs_exists());
+    assert!(
+        !home
+            .join("mod-browser/downloads/ruby.hmod.part")
+            .fs_exists()
+    );
+    assert!(!home.join(MANIFEST).fs_exists());
     // A taken-down file is refused before anything is downloaded.
     let mut index = index;
     index.revoked.push(index::Revoked {
@@ -145,7 +151,7 @@ fn bytes_other_than_the_index_lists_never_reach_the_mods_folder() {
         date: "2026-11-05".into(),
     });
     assert!(install(&index, &home, "ruby", &serve(bytes)).is_err());
-    assert!(!home.join("horizon-mods/ruby.hmod").exists());
+    assert!(!home.join("horizon-mods/ruby.hmod").fs_exists());
     fs::remove_dir_all(&home).unwrap();
 }
 

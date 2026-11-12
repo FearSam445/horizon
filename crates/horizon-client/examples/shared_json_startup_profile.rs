@@ -9,7 +9,7 @@ use std::path::Path;
 use web_time::Instant;
 
 fn resident_kib() -> Option<u64> {
-    let status = std::fs::read_to_string("/proc/self/status").ok()?;
+    let status = horizon_fs::read_to_string("/proc/self/status").ok()?;
     let line = status.lines().find(|line| line.starts_with("VmRSS:"))?;
     line.split_whitespace().nth(1)?.parse().ok()
 }
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else if mode == "pr607" {
         // Original PR #607 sequence at a01d47f2, retained as a same-build comparator.
         let json: serde_json::Value = serde_json::from_reader(std::io::BufReader::new(
-            std::fs::File::open(root.join("block-behaviours.json"))?,
+            horizon_fs::File::open(root.join("block-behaviours.json"))?,
         ))?;
         BlockFacts::load_with_behaviours(root, assets.registry, &json)?
     } else if mode == "shared" {
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         let parse_started = Instant::now();
         let json: serde_json::Value = serde_json::from_reader(std::io::BufReader::new(
-            std::fs::File::open(root.join("block-behaviours.json"))?,
+            horizon_fs::File::open(root.join("block-behaviours.json"))?,
         ))?;
         let parse_ms = parse_started.elapsed().as_secs_f64() * 1000.0;
         let facts_started = Instant::now();

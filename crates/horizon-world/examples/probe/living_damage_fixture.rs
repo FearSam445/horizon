@@ -1,11 +1,11 @@
 use crate::support::common::f32_bits;
+use horizon_fs as fs;
 use horizon_world::{
     living_damage::{self, DamageStat, DamageWorld},
     living_health::{self, HealthWorld},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

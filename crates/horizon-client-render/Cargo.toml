@@ -7,6 +7,8 @@ rust-version.workspace = true
 description = "The client's world data, rendering and screens: chunks, meshing, light, streaming, the renderer, the HUD, menus and settings; no gameplay"
 
 [dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
 # SystemTime::now, also in the browser build (web/).
 horizon-clock = { path = "../../web/clock" }
 # std::time, with a clock in the browser build (web/).

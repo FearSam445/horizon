@@ -27,8 +27,8 @@ pub fn main() {
     let mut backend = Fake::default();
     let mut manager = MusicManager::new(0);
     let (mut situation, mut volume) = (None::<Music>, 1.0f32);
-    let input = std::fs::read_to_string(&args[2]).expect("input");
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[3]).expect("output"));
+    let input = horizon_fs::read_to_string(&args[2]).expect("input");
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[3]).expect("output"));
     for line in input.lines() {
         writeln!(out, "{line}").expect("write");
         let a: Vec<&str> = line.split(' ').collect();

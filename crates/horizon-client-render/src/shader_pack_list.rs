@@ -2,6 +2,8 @@
 //! Settings > Shader Packs lists them: Horizon's own (docs/shaders.md) and those in the
 //! `shaders/` format, side by side.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::{Path, PathBuf};
 
 use horizon_shader_api::{OptionKind, OptionPage, PackOption};
@@ -82,7 +84,7 @@ impl Entry {
 
 /// The packs in `dir`, Horizon's first, each kind by title. A missing folder has none.
 pub fn scan(dir: &Path) -> Vec<Entry> {
-    let Ok(entries) = std::fs::read_dir(dir) else {
+    let Ok(entries) = horizon_fs::read_dir(dir) else {
         return Vec::new();
     };
     let mut paths: Vec<_> = entries.flatten().map(|e| e.path()).collect();
@@ -131,11 +133,11 @@ fn entry(path: &Path) -> Option<Entry> {
             pages,
         });
     }
-    let zip = path.is_file()
+    let zip = path.fs_is_file()
         && path
             .extension()
             .is_some_and(|e| e.eq_ignore_ascii_case("zip"));
-    (zip || path.join("shaders").is_dir()).then(|| Entry {
+    (zip || path.join("shaders").fs_is_dir()).then(|| Entry {
         title: file.clone(),
         key: file.clone(),
         file,
@@ -155,10 +157,10 @@ pub fn resolve(dir: &Path, picked: &str) -> (String, PathBuf) {
         return (String::new(), dir.join(picked));
     }
     let direct = dir.join(picked);
-    if direct.exists() && !horizon_shader_api::package::is_pack(&direct) {
+    if direct.fs_exists() && !horizon_shader_api::package::is_pack(&direct) {
         return (picked.to_owned(), direct);
     }
-    let mut native: Vec<_> = std::fs::read_dir(dir)
+    let mut native: Vec<_> = horizon_fs::read_dir(dir)
         .into_iter()
         .flatten()
         .flatten()
@@ -179,7 +181,7 @@ pub fn resolve(dir: &Path, picked: &str) -> (String, PathBuf) {
         .or_else(|| picked.strip_prefix("horizon:"))
         .or_else(|| {
             // Never reinterpret an installed classic pack as a native identity.
-            if dir.join(picked).exists() {
+            if dir.join(picked).fs_exists() {
                 return None;
             }
             let stem = picked.strip_suffix(".hshader")?;
@@ -223,14 +225,14 @@ pub fn native_values_pack(pack: &Path, id: &str) -> PathBuf {
 
 fn migrate_values(pack: &Path, key: &str) {
     let target = values_path(&values_pack(pack, key));
-    if target.exists() {
+    if target.fs_exists() {
         return;
     }
-    if let Ok(text) = std::fs::read(values_path(pack)) {
-        let result = std::fs::create_dir_all(target.parent().unwrap()).and_then(|()| {
+    if let Ok(text) = horizon_fs::read(values_path(pack)) {
+        let result = horizon_fs::create_dir_all(target.parent().unwrap()).and_then(|()| {
             use std::io::Write;
             // Another reader may already have imported the values.
-            let mut file = std::fs::OpenOptions::new()
+            let mut file = horizon_fs::OpenOptions::new()
                 .write(true)
                 .create_new(true)
                 .open(&target)?;
@@ -255,7 +257,7 @@ pub fn values_path(pack: &Path) -> PathBuf {
 /// The value of each of `options` saved for the pack at `pack`, else its default; a value
 /// out of the option's range is brought into it.
 pub fn load_values(pack: &Path, options: &[PackOption]) -> Vec<f64> {
-    let text = std::fs::read_to_string(values_path(pack)).unwrap_or_default();
+    let text = horizon_fs::read_to_string(values_path(pack)).unwrap_or_default();
     let saved: std::collections::HashMap<&str, f64> = text
         .lines()
         .filter_map(|l| l.split_once('='))
@@ -281,9 +283,9 @@ fn save_values(pack: &Path, options: &[PackOption], values: &[f64]) -> std::io::
         .collect();
     let path = values_path(pack);
     if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir)?;
+        horizon_fs::create_dir_all(dir)?;
     }
-    std::fs::write(path, text)
+    horizon_fs::write(path, text)
 }
 
 fn clamp(kind: &OptionKind, v: f64) -> f64 {
@@ -427,19 +429,19 @@ mod tests {
         ]
         .into();
         let pack = horizon_shader_api::Pack::from_files(files).unwrap();
-        std::fs::write(dir.join(file), pack.package().unwrap()).unwrap();
+        horizon_fs::write(dir.join(file), pack.package().unwrap()).unwrap();
     }
 
     #[test]
     fn native_selection_and_values_survive_install_update_rename_and_reset() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-identity-update-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+            horizon_fs::temp_dir().join(format!("horizon-identity-update-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         install(&dir, "warm-1.hshader", "1");
-        std::fs::write(dir.join("warm-1.hshader.txt"), "strength=1.5\n").unwrap();
+        horizon_fs::write(dir.join("warm-1.hshader.txt"), "strength=1.5\n").unwrap();
         let options = dir.join("options.txt");
-        std::fs::write(&options, "").unwrap();
-        std::fs::write(
+        horizon_fs::write(&options, "").unwrap();
+        horizon_fs::write(
             dir.join(crate::graphics::FILE),
             "pickedShaderPack:warm-1.hshader\n",
         )
@@ -447,9 +449,9 @@ mod tests {
         // Use the real settings loader, including persistence of the migrated selection.
         // Its shaderpacks folder sits beside options.txt.
         let packs = dir.join(DIR);
-        std::fs::create_dir_all(&packs).unwrap();
-        std::fs::rename(dir.join("warm-1.hshader"), packs.join("warm-1.hshader")).unwrap();
-        std::fs::rename(
+        horizon_fs::create_dir_all(&packs).unwrap();
+        horizon_fs::rename(dir.join("warm-1.hshader"), packs.join("warm-1.hshader")).unwrap();
+        horizon_fs::rename(
             dir.join("warm-1.hshader.txt"),
             packs.join("warm-1.hshader.txt"),
         )
@@ -462,10 +464,10 @@ mod tests {
         );
         assert_eq!(scan(&packs)[0].values, [1.5]);
         install(&packs, "warm-2.hshader", "2");
-        std::fs::remove_file(packs.join("warm-1.hshader")).unwrap();
+        horizon_fs::remove_file(packs.join("warm-1.hshader")).unwrap();
         let (_, path) = resolve(&packs, &settings.horizon.shader_pack);
         assert_eq!(path, packs.join("warm-2.hshader"));
-        std::fs::rename(path, packs.join("renamed.hshader")).unwrap();
+        horizon_fs::rename(path, packs.join("renamed.hshader")).unwrap();
         let (_, path) = resolve(&packs, "horizon:warm");
         assert_eq!(path, packs.join("renamed.hshader"));
         let manifest = horizon_shader_api::Pack::read_manifest(&path).unwrap();
@@ -484,22 +486,22 @@ mod tests {
         entry.save_values(&packs);
         assert_eq!(scan(&packs)[0].values, [1.0]);
         assert_eq!(
-            std::fs::read_to_string(packs.join("warm-1.hshader.txt")).unwrap(),
+            horizon_fs::read_to_string(packs.join("warm-1.hshader.txt")).unwrap(),
             "strength=1.5\n"
         );
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn migrates_a_removed_registry_filename_and_resolves_duplicates_deterministically() {
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-identity-duplicates-{}",
             std::process::id()
         ));
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         install(&dir, "z.hshader", "newest");
         install(&dir, "a.hshader", "oldest");
-        std::fs::write(dir.join("warm-previous.hshader.txt"), "strength=2\n").unwrap();
+        horizon_fs::write(dir.join("warm-previous.hshader.txt"), "strength=2\n").unwrap();
         let (key, path) = resolve(&dir, "warm-previous.hshader");
         assert_eq!(key, "horizon:warm");
         assert_eq!(path, dir.join("a.hshader"));
@@ -507,26 +509,27 @@ mod tests {
         assert_eq!(scan(&dir).len(), 1);
         assert_eq!(scan(&dir)[0].values, [2.0]);
         // A classic folder named like a native ID keeps its filename identity.
-        std::fs::create_dir_all(dir.join("warm/shaders")).unwrap();
+        horizon_fs::create_dir_all(dir.join("warm/shaders")).unwrap();
         assert_eq!(resolve(&dir, "warm"), ("warm".into(), dir.join("warm")));
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
     fn lists_both_kinds_horizon_first_and_skips_the_rest() {
-        let dir = std::env::temp_dir().join(format!("horizon-shader-list-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-shader-list-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
+        horizon_fs::create_dir_all(&dir).unwrap();
         let d = dir.as_path();
         let manifest = "schema = 1\nid = \"warm\"\nname = \"Warm Light\"\nversion = \"1\"\n\
             api = \"0.1\"\n[[post]]\nfile = \"p.wgsl\"\n";
-        std::fs::create_dir(d.join("warm")).unwrap();
-        std::fs::write(d.join("warm").join(horizon_shader_api::MANIFEST), manifest).unwrap();
-        std::fs::create_dir_all(d.join("Classic Folder/shaders")).unwrap();
-        std::fs::write(d.join("archive.zip"), b"").unwrap();
-        std::fs::write(d.join("notes.txt"), b"").unwrap();
-        std::fs::create_dir(d.join("empty")).unwrap();
-        std::fs::create_dir_all(d.join(".hidden/shaders")).unwrap();
+        horizon_fs::create_dir(d.join("warm")).unwrap();
+        horizon_fs::write(d.join("warm").join(horizon_shader_api::MANIFEST), manifest).unwrap();
+        horizon_fs::create_dir_all(d.join("Classic Folder/shaders")).unwrap();
+        horizon_fs::write(d.join("archive.zip"), b"").unwrap();
+        horizon_fs::write(d.join("notes.txt"), b"").unwrap();
+        horizon_fs::create_dir(d.join("empty")).unwrap();
+        horizon_fs::create_dir_all(d.join(".hidden/shaders")).unwrap();
         let packs = scan(d);
         let listed: Vec<(&str, &str, Kind)> = packs
             .iter()
@@ -541,7 +544,7 @@ mod tests {
             ]
         );
         assert!(scan(&d.join("missing")).is_empty());
-        std::fs::remove_dir_all(d).unwrap();
+        horizon_fs::remove_dir_all(d).unwrap();
     }
 
     fn option(id: &str, kind: OptionKind) -> PackOption {
@@ -582,21 +585,21 @@ mod tests {
         assert_eq!(step_value(&on, 1.0, false), 0.0);
 
         let dir =
-            std::env::temp_dir().join(format!("horizon-shader-values-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
+            horizon_fs::temp_dir().join(format!("horizon-shader-values-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
+        horizon_fs::create_dir_all(&dir).unwrap();
         let pack = dir.join("p.hshader");
         let options = [option("a", float), option("b", choice)];
         // Only what differs from the defaults is written; out of range comes back clamped.
         save_values(&pack, &options, &[1.0, 2.0]).unwrap();
-        let text = std::fs::read_to_string(values_path(&pack)).unwrap();
+        let text = horizon_fs::read_to_string(values_path(&pack)).unwrap();
         assert_eq!(text, "b=2\n");
-        std::fs::write(values_path(&pack), "a=9\nb=1\nzzz=4\n").unwrap();
+        horizon_fs::write(values_path(&pack), "a=9\nb=1\nzzz=4\n").unwrap();
         assert_eq!(load_values(&pack, &options), [2.0, 1.0]);
         save_values(&pack, &options, &[1.0, 0.0]).unwrap();
-        assert_eq!(std::fs::read_to_string(values_path(&pack)).unwrap(), "");
+        assert_eq!(horizon_fs::read_to_string(values_path(&pack)).unwrap(), "");
         assert_eq!(load_values(&pack, &options), [1.0, 0.0]);
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

@@ -2,6 +2,8 @@
 //! resource root and enabled packs layered over `en_us`, the language list
 //! from `pack.mcmeta` `language` sections, and a process-wide current
 //! language used by every screen.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     cell::RefCell,
     collections::{BTreeMap, HashMap},
@@ -412,17 +414,17 @@ impl ResourceSource for Bundled {
 }
 impl ResourceSource for std::path::PathBuf {
     fn read(&self, path: &str) -> Option<Vec<u8>> {
-        std::fs::read(self.join(path)).ok()
+        horizon_fs::read(self.join(path)).ok()
     }
     fn exists(&self, path: &str) -> bool {
-        self.join(path).is_file()
+        self.join(path).fs_is_file()
     }
     fn namespaces(&self) -> Vec<String> {
-        std::fs::read_dir(self.join("assets"))
+        horizon_fs::read_dir(self.join("assets"))
             .into_iter()
             .flatten()
             .flatten()
-            .filter(|e| e.path().is_dir())
+            .filter(|e| e.path().fs_is_dir())
             .filter_map(|e| e.file_name().to_str().map(str::to_owned))
             .collect()
     }
@@ -841,12 +843,12 @@ mod tests {
     /// registered through `horizon_hooks::lang`), with that folder.
     fn crate_lang_dirs() -> Vec<(String, std::path::PathBuf)> {
         let crates = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
-        let mut dirs: Vec<_> = std::fs::read_dir(&crates)
+        let mut dirs: Vec<_> = horizon_fs::read_dir(&crates)
             .unwrap()
             .flatten()
             .map(|e| (e.file_name().into_string().unwrap(), e.path()))
             .map(|(name, path)| (name, path.join("assets/lang")))
-            .filter(|(_, dir)| dir.join("en_us.json").is_file())
+            .filter(|(_, dir)| dir.join("en_us.json").fs_is_file())
             .collect();
         dirs.sort();
         dirs
@@ -911,10 +913,10 @@ mod tests {
     /// The checks every lang folder passes: flat maps, no repeated key, no key en_us lacks, the
     /// same placeholders as English, no empty text. Its en_us and how many files it has.
     fn check_lang_dir(dir: &std::path::Path, bundled: bool) -> (HashMap<String, String>, usize) {
-        let en_body = std::fs::read_to_string(dir.join("en_us.json")).unwrap();
+        let en_body = horizon_fs::read_to_string(dir.join("en_us.json")).unwrap();
         let en: HashMap<String, String> = serde_json::from_str(&en_body).unwrap();
         let mut seen = 0;
-        for entry in std::fs::read_dir(dir).unwrap().flatten() {
+        for entry in horizon_fs::read_dir(dir).unwrap().flatten() {
             let name = entry.file_name().into_string().unwrap();
             let Some(code) = name.strip_suffix(".json") else {
                 continue;
@@ -926,7 +928,7 @@ mod tests {
                 !bundled || Bundled.read(&path).is_some(),
                 "{name} is not served by Bundled"
             );
-            let body = std::fs::read_to_string(entry.path()).unwrap();
+            let body = horizon_fs::read_to_string(entry.path()).unwrap();
             let map: HashMap<String, String> = serde_json::from_str(&body)
                 .unwrap_or_else(|e| panic!("{name} is not a flat string map: {e}"));
             let keys = file_keys(&body);
@@ -955,9 +957,9 @@ mod tests {
     #[test]
     fn every_horizon_key_the_code_names_is_in_en_us() {
         fn rust_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
-            for entry in std::fs::read_dir(dir).into_iter().flatten().flatten() {
+            for entry in horizon_fs::read_dir(dir).into_iter().flatten().flatten() {
                 let path = entry.path();
-                if path.is_dir() {
+                if path.fs_is_dir() {
                     rust_files(&path, out);
                 } else if path.extension().is_some_and(|e| e == "rs") {
                     out.push(path);
@@ -965,7 +967,8 @@ mod tests {
             }
         }
         let english = |dir: &std::path::Path| -> HashMap<String, String> {
-            serde_json::from_str(&std::fs::read_to_string(dir.join("en_us.json")).unwrap()).unwrap()
+            serde_json::from_str(&horizon_fs::read_to_string(dir.join("en_us.json")).unwrap())
+                .unwrap()
         };
         let mut en = english(&bundled_dir());
         let crates = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
@@ -985,7 +988,7 @@ mod tests {
         assert!(files.len() > 100, "found only {} sources", files.len());
         let mut found = 0;
         for file in files {
-            let text = std::fs::read_to_string(&file).unwrap();
+            let text = horizon_fs::read_to_string(&file).unwrap();
             for (at, _) in text.match_indices("\"horizon.") {
                 let rest = &text[at + 1..];
                 let Some(end) = rest.find('"') else { continue };
@@ -1177,13 +1180,13 @@ mod tests {
             return;
         };
         let mut failed = Vec::new();
-        let mut paths: Vec<_> = std::fs::read_dir(dir)
+        let mut paths: Vec<_> = horizon_fs::read_dir(dir)
             .unwrap()
             .map(|e| e.unwrap().path())
             .collect();
         paths.sort();
         for path in paths {
-            let bytes = std::fs::read(&path).unwrap();
+            let bytes = horizon_fs::read(&path).unwrap();
             let strict = serde_json::from_slice::<HashMap<String, String>>(&bytes).is_ok();
             let mut map = HashMap::new();
             read_lang_file(&bytes, &mut map);

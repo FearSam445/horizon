@@ -1,3 +1,4 @@
+use horizon_fs as fs;
 use horizon_world::{
     component_patch::Prototype,
     identifier::Identifier,
@@ -6,7 +7,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

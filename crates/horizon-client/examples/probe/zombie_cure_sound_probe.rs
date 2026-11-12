@@ -5,8 +5,8 @@ use horizon_client::{
     mobs::{Anim, Brain, Flags, Mob, MobEvent, MobType, Part, Species, zombie_villager},
 };
 use horizon_core::{geometry::Vec3, random::RandomSource};
+use horizon_fs::File;
 use std::{
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     sync::Arc,
 };

@@ -240,7 +240,7 @@ impl Game<'_> {
             .join(ns)
             .join("test_instance")
             .join(format!("{path}.json"));
-        let json: serde_json::Value = serde_json::from_slice(&std::fs::read(file).ok()?).ok()?;
+        let json: serde_json::Value = serde_json::from_slice(&horizon_fs::read(file).ok()?).ok()?;
         parse_test_def(&json)
     }
 

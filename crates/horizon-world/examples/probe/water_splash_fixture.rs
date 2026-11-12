@@ -3,10 +3,10 @@ use horizon_core::{
     geometry::Vec3,
     random::{LegacyRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::water_splash::{self, SplashError, SplashParticle, WaterSplashWorld};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

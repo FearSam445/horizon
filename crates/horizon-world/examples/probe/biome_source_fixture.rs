@@ -1,11 +1,11 @@
 //! Original transport for fixed, checkerboard and End biome-source queries.
 use horizon_core::density::{DensitySampler, SampleError, SamplerContext};
+use horizon_fs as fs;
 use horizon_world::worldgen::biome_source::{
     CheckerboardBiomeSource, EndBiomeSource, FixedBiomeSource,
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
     sync::{Arc, Mutex},

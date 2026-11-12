@@ -7,10 +7,12 @@
 //! - Optional `recording.tmcpr.crc32`: CRC32 of the packet stream.
 
 use super::spline::CameraTrack;
+use horizon_fs::{self as fs, File, OpenOptions};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::buf::{Reader, write_varint};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, File, OpenOptions},
     io::{self, BufReader, BufWriter, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
 };
@@ -553,7 +555,7 @@ impl Drop for McprWriter {
     fn drop(&mut self) {
         // An empty stream holds nothing worth keeping; one with packets stays
         // for a later recovery (see the type's doc).
-        if self.packet_count == 0 && self.temp_tmcpr_path.exists() {
+        if self.packet_count == 0 && self.temp_tmcpr_path.fs_exists() {
             self.writer = None;
             let _ = fs::remove_file(&self.temp_tmcpr_path);
             let _ = fs::remove_file(&self.temp_meta_path);
@@ -644,7 +646,7 @@ impl TemporaryStream {
             let nanos = horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map_or(0, |duration| duration.as_nanos());
-            let path = std::env::temp_dir().join(format!(
+            let path = horizon_fs::temp_dir().join(format!(
                 "horizon-mcpr-{}-{nanos}-{attempt}.tmcpr",
                 std::process::id()
             ));
@@ -1017,7 +1019,7 @@ fn writer_may_be_alive(stream: &Path, pid: u32) -> bool {
     {
         // A process with that pid is running, but only the writer itself holds
         // the stream locked: an unlocked one means the pid was reused.
-        Path::new("/proc").join(pid.to_string()).exists() && !stream_is_unlocked(stream)
+        Path::new("/proc").join(pid.to_string()).fs_exists() && !stream_is_unlocked(stream)
     }
     #[cfg(not(target_os = "linux"))]
     {
@@ -1040,7 +1042,7 @@ fn stream_is_unlocked(stream: &Path) -> bool {
 /// without holding the whole stream in memory.
 fn whole_stream(path: &Path) -> io::Result<WholeStream> {
     let file = File::open(path)?;
-    let total = file.metadata()?.len();
+    let total = file.fs_metadata()?.len();
     let mut reader = BufReader::new(file);
     let mut whole = WholeStream::default();
     let mut offset = 0u64;
@@ -1099,7 +1101,7 @@ fn recover_stream(
 
 /// `dest`, or a `.recovered` name beside it when something already fills it.
 fn free_name(dest: &Path) -> PathBuf {
-    if !dest.exists() {
+    if !dest.fs_exists() {
         return dest.to_owned();
     }
     let name = dest
@@ -1115,7 +1117,7 @@ fn free_name(dest: &Path) -> PathBuf {
         } else {
             format!("{stem}.recovered-{n}.mcpr")
         });
-        if !candidate.exists() {
+        if !candidate.fs_exists() {
             return candidate;
         }
         n += 1;
@@ -1138,7 +1140,7 @@ mod tests {
 
     #[test]
     fn mcpr_roundtrip_metadata_and_packets() {
-        let temp_dir = std::env::temp_dir().join(format!("mcpr_test_{}", std::process::id()));
+        let temp_dir = horizon_fs::temp_dir().join(format!("mcpr_test_{}", std::process::id()));
         let _ = fs::create_dir_all(&temp_dir);
         let mcpr_path = temp_dir.join("test_recording.mcpr");
 
@@ -1198,7 +1200,7 @@ mod tests {
     struct Scratch(PathBuf);
     impl Scratch {
         fn new(name: &str) -> Self {
-            let dir = std::env::temp_dir().join(format!("mcpr_{name}_{}", std::process::id()));
+            let dir = horizon_fs::temp_dir().join(format!("mcpr_{name}_{}", std::process::id()));
             let _ = fs::remove_dir_all(&dir);
             fs::create_dir_all(&dir).unwrap();
             Self(dir)
@@ -1384,7 +1386,10 @@ mod tests {
         assert_eq!(reader.next_packet().unwrap().unwrap().payload, vec![220]);
 
         drop(reader);
-        assert!(!temp_path.exists(), "temporary stream is removed on close");
+        assert!(
+            !temp_path.fs_exists(),
+            "temporary stream is removed on close"
+        );
     }
 
     #[test]
@@ -1477,7 +1482,7 @@ mod tests {
             err.to_string().contains(&stream.display().to_string()),
             "{err}"
         );
-        assert!(stream.exists());
+        assert!(stream.fs_exists());
         let leftovers: Vec<_> = fs::read_dir(&scratch.0)
             .unwrap()
             .map(|e| e.unwrap().file_name().into_string().unwrap())
@@ -1489,12 +1494,15 @@ mod tests {
         kept.write_packet(0, 0x01, &[]).unwrap();
         let kept_stream = kept.stream_path().to_owned();
         drop(kept);
-        assert!(kept_stream.exists(), "a dropped writer keeps its packets");
+        assert!(
+            kept_stream.fs_exists(),
+            "a dropped writer keeps its packets"
+        );
 
         let dropped = McprWriter::new(scratch.0.join("dropped.mcpr"), Metadata::default()).unwrap();
         let empty_stream = dropped.stream_path().to_owned();
         drop(dropped);
-        assert!(!empty_stream.exists(), "an empty stream is not kept");
+        assert!(!empty_stream.fs_exists(), "an empty stream is not kept");
     }
 
     /// Finishing over an existing recording replaces it only with a complete one.
@@ -1551,7 +1559,7 @@ mod tests {
         assert_eq!(report.recovered, vec![archive.clone()]);
         assert!(report.skipped.is_empty(), "{report:?}");
         assert!(report.kept.is_empty(), "{report:?}");
-        assert!(!stream.exists(), "a recovered leftover is cleaned up");
+        assert!(!stream.fs_exists(), "a recovered leftover is cleaned up");
 
         let mut reader = McprReader::open(&archive).unwrap();
         assert_eq!(reader.metadata.server_name, "Crashed World");
@@ -1577,7 +1585,7 @@ mod tests {
         let report = recover_crashed_recordings(&scratch.0).unwrap();
         let archive = scratch.0.join("bare.mcpr");
         assert_eq!(report.recovered, vec![archive.clone()]);
-        assert!(!stream.exists());
+        assert!(!stream.fs_exists());
 
         let reader = McprReader::open(&archive).unwrap();
         assert_eq!(reader.metadata.server_name, Metadata::default().server_name);
@@ -1602,7 +1610,7 @@ mod tests {
         writer.write_packet(0, 0x04, &[1]).unwrap();
         let stream = writer.stream_path().to_owned();
         assert!(
-            writer.metadata_path().exists(),
+            writer.metadata_path().fs_exists(),
             "metadata is written when recording starts"
         );
 
@@ -1610,11 +1618,11 @@ mod tests {
         assert_eq!(report.skipped, vec![stream.clone()]);
         assert!(report.recovered.is_empty(), "{report:?}");
         assert!(report.kept.is_empty(), "{report:?}");
-        assert!(stream.exists(), "a live stream is not touched");
-        assert!(!dest.exists(), "a live recording is not packaged");
+        assert!(stream.fs_exists(), "a live stream is not touched");
+        assert!(!dest.fs_exists(), "a live recording is not packaged");
 
         writer.finish(1).unwrap();
-        assert!(!stream.exists(), "finish still cleans up");
+        assert!(!stream.fs_exists(), "finish still cleans up");
     }
 
     /// A stream with no whole frame cannot become a recording, so it and its
@@ -1626,8 +1634,8 @@ mod tests {
         let report = recover_crashed_recordings(&scratch.0).unwrap();
         assert_eq!(report.kept, vec![stream.clone()]);
         assert!(report.recovered.is_empty(), "{report:?}");
-        assert!(stream.exists(), "an unrecoverable leftover is kept");
-        assert!(metadata_beside(&stream).exists());
+        assert!(stream.fs_exists(), "an unrecoverable leftover is kept");
+        assert!(metadata_beside(&stream).fs_exists());
     }
 
     /// Recovery never overwrites a recording that is already there.
@@ -1645,8 +1653,8 @@ mod tests {
             report.recovered,
             vec![scratch.0.join("taken.recovered.mcpr")]
         );
-        assert!(!stream.exists());
-        assert!(existing.exists());
+        assert!(!stream.fs_exists());
+        assert!(existing.fs_exists());
     }
 
     /// The metadata beside a stream follows it while recording, so a crash can

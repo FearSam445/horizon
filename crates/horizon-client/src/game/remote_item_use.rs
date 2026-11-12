@@ -3,6 +3,8 @@
 use super::super::Game;
 use horizon_client::first_person::Hand;
 use horizon_client::items::ItemStack;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 impl Game<'_> {
     /// `FlintAndSteelItem.useOn` / `FireChargeItem.useOn` on this client's level:

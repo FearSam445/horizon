@@ -709,7 +709,7 @@ impl Chat {
     /// start the chat's history (`ChatComponent`'s constructor).
     pub fn load_history(&mut self, game_folder: &std::path::Path) {
         let file = game_folder.join(COMMAND_HISTORY_FILE);
-        if let Ok(text) = std::fs::read_to_string(&file) {
+        if let Ok(text) = horizon_fs::read_to_string(&file) {
             self.commands = text.lines().map(str::to_owned).collect();
             self.recent.extend(self.commands.iter().cloned());
         }
@@ -731,7 +731,7 @@ impl Chat {
             if let Some(file) = &self.history_file {
                 let mut text = self.commands.join("\n");
                 text.push('\n');
-                if let Err(e) = std::fs::write(file, text) {
+                if let Err(e) = horizon_fs::write(file, text) {
                     log::error!(
                         "Failed to write {COMMAND_HISTORY_FILE}, command history will be missing: {e}"
                     );

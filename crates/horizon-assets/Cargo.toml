@@ -7,6 +7,8 @@ rust-version.workspace = true
 description = "Horizon version-specific model and resource decoding"
 
 [dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
 horizon-core = { path = "../horizon-core" }
 log = "0.4"
 serde = "1.0.229"

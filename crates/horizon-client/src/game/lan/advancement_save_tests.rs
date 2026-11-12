@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod connected_advancement_save_tests {
     use super::super::Game;
-    use std::fs;
+    use horizon_fs as fs;
     fn command(game: &mut Game<'_>, text: &str) -> Vec<horizon_client::text::Text> {
         game.chat_capture = Some(Vec::new());
         let dispatcher = horizon_client::command::vanilla::build_for(false, true);
@@ -25,7 +25,7 @@ mod connected_advancement_save_tests {
         use std::sync::{Arc, Mutex};
         let mut game = super::super::native_machines::tests::server_game();
         game.options.execution_role = ExecutionRole::DedicatedServer;
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-connected-advancement-save-{}",
             std::process::id()
         ));
@@ -162,7 +162,7 @@ mod connected_advancement_save_tests {
 #[cfg(test)]
 mod connected_advancement_preservation_tests {
     use super::super::Game;
-    use std::fs;
+    use horizon_fs as fs;
     fn command(game: &mut Game<'_>, text: &str) -> Vec<horizon_client::text::Text> {
         game.chat_capture = Some(Vec::new());
         let dispatcher = horizon_client::command::vanilla::build_for(false, true);
@@ -187,7 +187,7 @@ mod connected_advancement_preservation_tests {
         use std::sync::{Arc, Mutex};
         let mut game = super::super::native_machines::tests::server_game();
         game.options.execution_role = ExecutionRole::DedicatedServer;
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-advancement-preservation-{}",
             std::process::id()
         ));

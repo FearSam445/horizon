@@ -154,7 +154,7 @@ fn vanillas_text_shader_makes_both_world_text_pipelines() {
                 .join("../../.local/horizon-client")
                 .join(horizon_core::VANILLA_VERSION)
         });
-    let read = |path: &str| std::fs::read_to_string(root.join(path)).ok();
+    let read = |path: &str| horizon_fs::read_to_string(root.join(path)).ok();
     let vertex = read("assets/minecraft/shaders/core/text.vsh").expect("vanilla's text.vsh");
     let fragment = read("assets/minecraft/shaders/core/text.fsh").expect("vanilla's text.fsh");
     let include = |id: &str| {

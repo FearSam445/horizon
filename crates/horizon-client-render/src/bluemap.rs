@@ -20,6 +20,8 @@ use crate::{
     fast_hash::{FxHashMap, FxHashSet},
     lod::{Column, Span},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::registry::{BlockRegistry, BlockStateId};
 use std::time::SystemTime;
 use std::{
@@ -773,7 +775,7 @@ impl BlueMap {
             state: Mutex::default(),
             wake: Condvar::new(),
         });
-        let map = inner.map_info(|_, name| std::fs::read(inner.dir.join(name)).ok());
+        let map = inner.map_info(|_, name| horizon_fs::read(inner.dir.join(name)).ok());
         inner.state.lock().unwrap().map = map.map(Arc::new);
         Self { inner }
     }
@@ -1139,14 +1141,14 @@ impl Inner {
 fn write_whole(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     let mut part = path.as_os_str().to_owned();
     part.push(".part");
-    std::fs::write(&part, bytes)?;
-    std::fs::rename(&part, path)
+    horizon_fs::write(&part, bytes)?;
+    horizon_fs::rename(&part, path)
 }
 /// A cached tile (`None` inside: the server has none there) and whether it
 /// is fresh; `None`: not cached.
 fn read_cached(file: &Path, lowres: &Lowres) -> Option<(Option<Tile>, bool)> {
     let fresh = |path: &Path| {
-        std::fs::metadata(path)
+        horizon_fs::metadata(path)
             .and_then(|m| m.modified())
             .ok()
             .and_then(|t| horizon_clock::system_now().duration_since(t).ok())
@@ -1155,11 +1157,11 @@ fn read_cached(file: &Path, lowres: &Lowres) -> Option<(Option<Tile>, bool)> {
     // One that doesn't decode (cut short, or of an older `tileSize`) is
     // fetched again: the worker keeps only those that do.
     let png = file.with_extension("png");
-    if let Ok(bytes) = std::fs::read(&png) {
+    if let Ok(bytes) = horizon_fs::read(&png) {
         return decode_tile(&bytes, lowres).map(|tile| (Some(tile), fresh(&png)));
     }
     let none = file.with_extension("none");
-    none.exists().then(|| (None, fresh(&none)))
+    none.fs_exists().then(|| (None, fresh(&none)))
 }
 
 /// The download worker's own state.
@@ -1296,15 +1298,15 @@ impl Worker {
             self.settings = true;
             self.answered();
             // Not gone (a file held open): no map this visit, not the wrong one.
-            if stale && std::fs::remove_dir_all(&tiles).is_err() && tiles.exists() {
+            if stale && horizon_fs::remove_dir_all(&tiles).is_err() && tiles.fs_exists() {
                 return self.found_nothing(inner);
             }
             for (name, body) in files {
-                let _ = std::fs::create_dir_all(&inner.dir);
+                let _ = horizon_fs::create_dir_all(&inner.dir);
                 // Not kept (a file held open): none cached rather than the
                 // old, which would read the new tiles wrong next time.
                 if write_whole(&inner.dir.join(&name), &body).is_err() {
-                    let _ = std::fs::remove_file(inner.dir.join(name));
+                    let _ = horizon_fs::remove_file(inner.dir.join(name));
                 }
             }
             let mut state = inner.state.lock().unwrap();
@@ -1366,31 +1368,31 @@ impl Worker {
         self.answered();
         let tile = body.as_deref().and_then(|b| decode_tile(b, &map.lowres));
         let file = inner.tile_file(&map, key);
-        let _ = std::fs::create_dir_all(file.parent().unwrap_or(&inner.dir));
+        let _ = horizon_fs::create_dir_all(file.parent().unwrap_or(&inner.dir));
         let (png, none) = (file.with_extension("png"), file.with_extension("none"));
         // Whether what is cached (and drawn) stays as it was, and the bytes
         // written (`None` also when a write failed: the new tile is still
         // drawn this visit).
         let (unchanged, written) = match (&tile, &body) {
-            (Some(_), Some(body)) if std::fs::read(&png).is_ok_and(|old| old == *body) => {
+            (Some(_), Some(body)) if horizon_fs::read(&png).is_ok_and(|old| old == *body) => {
                 // Unchanged: fresh for another `MAX_AGE`.
-                let _ = std::fs::File::options()
+                let _ = horizon_fs::File::options()
                     .append(true)
                     .open(&png)
                     .and_then(|f| f.set_modified(horizon_clock::system_now()));
                 (true, None)
             }
             (Some(_), Some(body)) => {
-                let _ = std::fs::remove_file(&none);
+                let _ = horizon_fs::remove_file(&none);
                 (
                     false,
                     write_whole(&png, body).ok().map(|()| body.len() as u64),
                 )
             }
             // Not a tile (an error page): a cached one is kept.
-            (None, Some(_)) if png.exists() => (true, None),
+            (None, Some(_)) if png.fs_exists() => (true, None),
             _ => {
-                let _ = std::fs::remove_file(&png);
+                let _ = horizon_fs::remove_file(&png);
                 (false, write_whole(&none, &[]).ok().map(|()| 0))
             }
         };
@@ -1499,10 +1501,12 @@ impl Worker {
 }
 
 fn cached_files(dir: &Path, out: &mut Vec<(SystemTime, u64, PathBuf)>) {
-    for entry in std::fs::read_dir(dir).into_iter().flatten().flatten() {
+    for entry in horizon_fs::read_dir(dir).into_iter().flatten().flatten() {
         let path = entry.path();
-        let Ok(meta) = entry.metadata() else { continue };
-        if meta.is_dir() {
+        let Ok(meta) = entry.fs_metadata() else {
+            continue;
+        };
+        if meta.fs_is_dir() {
             cached_files(&path, out);
         } else if path.extension().is_some_and(|e| e == "png" || e == "none") {
             out.push((
@@ -1528,7 +1532,7 @@ fn prune(dir: &Path, keep: u64) -> u64 {
         if total <= keep {
             break;
         }
-        if std::fs::remove_file(&path).is_ok() {
+        if horizon_fs::remove_file(&path).is_ok() {
             total -= len;
         }
     }
@@ -1816,8 +1820,8 @@ mod tests {
 
     fn scratch(name: &str) -> PathBuf {
         let dir =
-            std::env::temp_dir().join(format!("horizon-bluemap-{name}-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+            horizon_fs::temp_dir().join(format!("horizon-bluemap-{name}-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         dir
     }
 
@@ -1826,18 +1830,18 @@ mod tests {
     #[test]
     fn cached_tiles_serve_and_far_ones_are_not_wanted() {
         let dir = scratch("cache");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("settings.json"), br#"{"maps":["world"]}"#).unwrap();
-        std::fs::write(dir.join("world.json"), br#"{"lowres":{}}"#).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(dir.join("settings.json"), br#"{"maps":["world"]}"#).unwrap();
+        horizon_fs::write(dir.join("world.json"), br#"{"lowres":{}}"#).unwrap();
         let green = |_: usize, _: usize| Pixel {
             color: 0xFF57_7133,
             height: 70,
             block_light: 0,
         };
         let tiles = dir.join("world/1");
-        std::fs::create_dir_all(&tiles).unwrap();
-        std::fs::write(tiles.join("0_-1.png"), tile_png(&LOWRES, green)).unwrap();
-        std::fs::write(tiles.join("1_-1.none"), []).unwrap();
+        horizon_fs::create_dir_all(&tiles).unwrap();
+        horizon_fs::write(tiles.join("0_-1.png"), tile_png(&LOWRES, green)).unwrap();
+        horizon_fs::write(tiles.join("1_-1.none"), []).unwrap();
         let map = BlueMap::new(
             "https://map.example.net/",
             "minecraft:overworld",
@@ -1881,7 +1885,7 @@ mod tests {
         map.set_center(40 * 16 + 100, 40 * 16);
         assert!(queued((1, 30, 20)));
         assert!(map.take_changed().is_empty());
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     /// Real chunks the server sent come first; BlueMap fills the rest.
@@ -1890,9 +1894,9 @@ mod tests {
         use crate::{server_terrain::ServerTerrain, streaming::LodSource};
         let dir = scratch("terrain");
         let maps = dir.join("map");
-        std::fs::create_dir_all(&maps).unwrap();
-        std::fs::write(maps.join("settings.json"), br#"{"maps":["world"]}"#).unwrap();
-        std::fs::write(maps.join("world.json"), br#"{"lowres":{}}"#).unwrap();
+        horizon_fs::create_dir_all(&maps).unwrap();
+        horizon_fs::write(maps.join("settings.json"), br#"{"maps":["world"]}"#).unwrap();
+        horizon_fs::write(maps.join("world.json"), br#"{"lowres":{}}"#).unwrap();
         let green = |_: usize, _: usize| Pixel {
             color: 0xFF57_7133,
             height: 70,
@@ -1900,8 +1904,8 @@ mod tests {
         };
         for level in 1..=3 {
             let tiles = maps.join(format!("world/{level}"));
-            std::fs::create_dir_all(&tiles).unwrap();
-            std::fs::write(tiles.join("0_0.png"), tile_png(&LOWRES, green)).unwrap();
+            horizon_fs::create_dir_all(&tiles).unwrap();
+            horizon_fs::write(tiles.join("0_0.png"), tile_png(&LOWRES, green)).unwrap();
         }
         let map = BlueMap::new(
             "http://map.example.net",
@@ -1940,7 +1944,7 @@ mod tests {
         assert_eq!(details[0].1, columns);
         assert_eq!(details[1].1[0].surface.map(|s| s.height), Some(71));
         assert_eq!(details[2].1[0], Column::default());
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     /// The finest level on its way: a chunk-sized cell is drawn from a
@@ -1950,9 +1954,9 @@ mod tests {
         use crate::{server_terrain::ServerTerrain, streaming::LodSource};
         let dir = scratch("coarser");
         let maps = dir.join("map");
-        std::fs::create_dir_all(&maps).unwrap();
-        std::fs::write(maps.join("settings.json"), br#"{"maps":["world"]}"#).unwrap();
-        std::fs::write(maps.join("world.json"), br#"{"lowres":{}}"#).unwrap();
+        horizon_fs::create_dir_all(&maps).unwrap();
+        horizon_fs::write(maps.join("settings.json"), br#"{"maps":["world"]}"#).unwrap();
+        horizon_fs::write(maps.join("world.json"), br#"{"lowres":{}}"#).unwrap();
         // The finest coarser level wins: level 3 is lower.
         for (level, height) in [(2, 70), (3, 50)] {
             let green = |_: usize, _: usize| Pixel {
@@ -1961,8 +1965,8 @@ mod tests {
                 block_light: 0,
             };
             let tiles = maps.join(format!("world/{level}"));
-            std::fs::create_dir_all(&tiles).unwrap();
-            std::fs::write(tiles.join("0_0.png"), tile_png(&LOWRES, green)).unwrap();
+            horizon_fs::create_dir_all(&tiles).unwrap();
+            horizon_fs::write(tiles.join("0_0.png"), tile_png(&LOWRES, green)).unwrap();
         }
         let map = Arc::new(BlueMap::new(
             "http://map.example.net",
@@ -2012,7 +2016,7 @@ mod tests {
         // Nowhere near any level: nothing to stand in, and not waited for.
         assert_eq!(sampler.reduced_column(-4000, 0, 1), Column::default());
         assert!(!sampler.waited());
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
@@ -2049,16 +2053,16 @@ mod tests {
     #[test]
     fn chunks_are_as_deep_as_their_neighbours() {
         let dir = scratch("depth");
-        std::fs::create_dir_all(dir.join("world/1")).unwrap();
-        std::fs::write(dir.join("settings.json"), br#"{"maps":["world"]}"#).unwrap();
-        std::fs::write(dir.join("world.json"), br#"{"lowres":{}}"#).unwrap();
+        horizon_fs::create_dir_all(dir.join("world/1")).unwrap();
+        horizon_fs::write(dir.join("settings.json"), br#"{"maps":["world"]}"#).unwrap();
+        horizon_fs::write(dir.join("world.json"), br#"{"lowres":{}}"#).unwrap();
         // A step down at x = 8, and nothing rendered from x = 24.
         let step = |x: usize, _: usize| Pixel {
             color: if x >= 24 { 0 } else { 0xFF57_7133 },
             height: if x < 8 { 90 } else { 70 },
             block_light: 0,
         };
-        std::fs::write(dir.join("world/1/0_0.png"), tile_png(&LOWRES, step)).unwrap();
+        horizon_fs::write(dir.join("world/1/0_0.png"), tile_png(&LOWRES, step)).unwrap();
         let map = BlueMap::new(
             "http://map.example.net",
             "minecraft:overworld",
@@ -2082,29 +2086,32 @@ mod tests {
             "by the map's edge"
         );
         assert_eq!(right[16 + 8], Column::default());
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
     fn the_oldest_tiles_go_past_the_cap() {
         let dir = scratch("prune");
-        std::fs::create_dir_all(dir.join("a/1")).unwrap();
+        horizon_fs::create_dir_all(dir.join("a/1")).unwrap();
         for (i, name) in ["old", "mid", "new"].iter().enumerate() {
             let path = dir.join(format!("a/1/{name}.png"));
-            std::fs::write(&path, [0u8; 100]).unwrap();
+            horizon_fs::write(&path, [0u8; 100]).unwrap();
             let time = SystemTime::UNIX_EPOCH + Duration::from_secs(1_000_000 + i as u64);
-            std::fs::File::options()
+            horizon_fs::File::options()
                 .append(true)
                 .open(&path)
                 .unwrap()
                 .set_modified(time)
                 .unwrap();
         }
-        std::fs::write(dir.join("settings.json"), [0u8; 50]).unwrap();
+        horizon_fs::write(dir.join("settings.json"), [0u8; 50]).unwrap();
         assert_eq!(folder_size(&dir), 300);
         assert_eq!(prune(&dir, 150), 100);
-        assert!(dir.join("a/1/new.png").exists() && !dir.join("a/1/mid.png").exists());
-        assert!(dir.join("settings.json").exists(), "only tiles are pruned");
-        std::fs::remove_dir_all(&dir).unwrap();
+        assert!(dir.join("a/1/new.png").fs_exists() && !dir.join("a/1/mid.png").fs_exists());
+        assert!(
+            dir.join("settings.json").fs_exists(),
+            "only tiles are pruned"
+        );
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 }

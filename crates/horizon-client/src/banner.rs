@@ -3,9 +3,12 @@
 //! banners, and the loom rules of `LoomMenu` (selectable patterns, the
 //! six-layer limit and the result stack).
 use crate::{block_entity_render::DYES, items::ItemStack, items::Items};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::Tag;
 use serde_json::Value;
-use std::{collections::HashMap, fs, path::Path, sync::Arc};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 pub use horizon_items::banner_layer::{BannerLayer, layers_from_nbt, layers_to_nbt};
 
@@ -111,7 +114,7 @@ impl Banners {
                 .flatten()
                 .map(|e| e.path())
             {
-                if path.is_dir() {
+                if path.fs_is_dir() {
                     dirs.push(path);
                 } else if path.extension().is_some_and(|e| e == "json")
                     && let Some(name) = path
@@ -342,7 +345,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let items = Items::tags_only(&root, &horizon_world::loot::PackOverlay::NONE).unwrap();
@@ -363,7 +366,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let items = Items::tags_only(&root, &horizon_world::loot::PackOverlay::NONE).unwrap();
@@ -381,7 +384,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let b = Banners::load(&root);

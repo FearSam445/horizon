@@ -158,7 +158,7 @@ thread_local! {
 
 fn random_start() -> u64 {
     use std::sync::atomic::{AtomicU64, Ordering};
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::time::UNIX_EPOCH;
     static THREADS: AtomicU64 = AtomicU64::new(0);
     let now = horizon_clock::system_now()
         .duration_since(UNIX_EPOCH)

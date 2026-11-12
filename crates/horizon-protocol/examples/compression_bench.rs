@@ -9,7 +9,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let path = std::env::args()
         .nth(1)
         .ok_or("usage: compression_bench CAPTURE")?;
-    let data = std::fs::read(path)?;
+    let data = horizon_fs::read(path)?;
     let mut packets = Vec::new();
     let mut at = 0;
     while at + 12 <= data.len() {

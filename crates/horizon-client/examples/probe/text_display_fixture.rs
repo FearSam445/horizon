@@ -4,8 +4,8 @@ use std::{error::Error, io::Write};
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = crate::args().collect();
-    let mut out = std::fs::File::create(&args[2])?;
-    for line in std::fs::read_to_string(&args[1])?.lines() {
+    let mut out = horizon_fs::File::create(&args[2])?;
+    for line in horizon_fs::read_to_string(&args[1])?.lines() {
         let input: serde_json::Value = serde_json::from_str(line)?;
         let hex = input["wire"].as_str().unwrap();
         let bytes: Vec<u8> = (0..hex.len())

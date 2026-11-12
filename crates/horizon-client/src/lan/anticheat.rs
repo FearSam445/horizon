@@ -41,9 +41,9 @@ impl Anticheat {
         if self.log.is_none() {
             let path = std::path::PathBuf::from(&self.config.log);
             if let Some(dir) = path.parent() {
-                let _ = std::fs::create_dir_all(dir);
+                let _ = horizon_fs::create_dir_all(dir);
             }
-            let Ok(file) = std::fs::OpenOptions::new()
+            let Ok(file) = horizon_fs::OpenOptions::new()
                 .create(true)
                 .append(true)
                 .open(&path)
@@ -85,7 +85,7 @@ impl Anticheat {
     fn strike(&mut self, uuid: u128, check: Check) -> (u32, bool) {
         let path = std::path::Path::new(&self.config.strikes);
         let strikes = self.strikes.get_or_insert_with(|| {
-            std::fs::read(path)
+            horizon_fs::read(path)
                 .ok()
                 .and_then(|bytes| serde_json::from_slice(&bytes).ok())
                 .unwrap_or_default()
@@ -95,7 +95,7 @@ impl Anticheat {
         if !self.config.strikes.is_empty()
             && let Ok(json) = serde_json::to_vec_pretty(strikes)
         {
-            let _ = std::fs::write(path, json);
+            let _ = horizon_fs::write(path, json);
         }
         kick
     }
@@ -606,7 +606,7 @@ mod tests {
     #[test]
     fn the_log_keeps_every_line_in_order_up_to_the_drop() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-anticheat-log-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-anticheat-log-{}", std::process::id()));
         let path = dir.join("logs").join("anticheat.log");
         let mut anticheat = Anticheat::new(Config {
             log: path.to_string_lossy().into_owned(),
@@ -616,8 +616,8 @@ mod tests {
             anticheat.write_log(&format!("flag {i}"));
         }
         drop(anticheat);
-        let written = std::fs::read_to_string(&path).expect("the log was written");
-        let _ = std::fs::remove_dir_all(&dir);
+        let written = horizon_fs::read_to_string(&path).expect("the log was written");
+        let _ = horizon_fs::remove_dir_all(&dir);
         let flags: Vec<&str> = written
             .lines()
             .map(|line| line.split_once("] ").expect("a timestamp").1)

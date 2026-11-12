@@ -4,7 +4,7 @@ fn temp_root(label: &str) -> PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    std::env::temp_dir().join(format!("horizon-{label}-{}-{nonce}", std::process::id()))
+    horizon_fs::temp_dir().join(format!("horizon-{label}-{}-{nonce}", std::process::id()))
 }
 fn png(root: &Path, name: &str, rgba: [u8; 4]) {
     let path = root.join(format!("assets/minecraft/textures/{name}.png"));

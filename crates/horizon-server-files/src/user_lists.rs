@@ -431,11 +431,11 @@ impl<E: Entry> UserList<E> {
         Json::Array(items).pretty()
     }
     pub fn save(&self) -> std::io::Result<()> {
-        std::fs::write(&self.file, self.to_json())
+        horizon_fs::write(&self.file, self.to_json())
     }
     /// StoredUserList.load: a missing file leaves the list as it is.
     pub fn load(&mut self) -> Result<(), String> {
-        let Ok(text) = std::fs::read_to_string(&self.file) else {
+        let Ok(text) = horizon_fs::read_to_string(&self.file) else {
             return Ok(());
         };
         self.load_str(&text)
@@ -516,8 +516,9 @@ mod tests {
     #[test]
     fn a_watcher_hears_what_vanillas_notification_service_does() {
         use std::sync::{Arc, Mutex};
-        let dir = std::env::temp_dir().join(format!("horizon-lists-watch-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-lists-watch-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let heard = Arc::new(Mutex::new(Vec::new()));
         let mut ops = OpList::new(dir.join("ops.json"));
         let sink = heard.clone();
@@ -553,13 +554,13 @@ mod tests {
         assert!(bans.add(ban.clone()));
         assert!(!bans.add(ban));
         assert_eq!(*said.lock().unwrap(), 1);
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn a_cleared_list_saves_empty() {
-        let dir = std::env::temp_dir().join(format!("horizon-lists-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("horizon-lists-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let mut white = WhiteList::new(dir.join("whitelist.json"));
         assert!(white.add(WhiteEntry {
             user: NameAndId::offline("Kim")
@@ -567,9 +568,9 @@ mod tests {
         white.clear();
         assert!(white.is_empty());
         assert_eq!(
-            std::fs::read_to_string(dir.join("whitelist.json")).unwrap(),
+            horizon_fs::read_to_string(dir.join("whitelist.json")).unwrap(),
             "[]"
         );
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }

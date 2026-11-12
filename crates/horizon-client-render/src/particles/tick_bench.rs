@@ -9,6 +9,8 @@
 //!   and the engine tick apart, once the engine holds as many particles as it will.
 use super::*;
 use crate::{blocks::BlockFacts, chunk::Chunk, collisions, world::World};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::sync::Arc;
 use web_time::{Duration, Instant};
 
@@ -89,7 +91,7 @@ fn with_scene(f: impl FnOnce(&ParticleLevel)) {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    if !root.join("cached-collision.nbt").exists() {
+    if !root.join("cached-collision.nbt").fs_exists() {
         eprintln!("no prepared resources: skipped");
         return;
     }

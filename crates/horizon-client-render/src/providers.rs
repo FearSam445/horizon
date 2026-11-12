@@ -1,8 +1,11 @@
 //! Vanilla's `context_int_provider` and `context_float_provider` values (furnace
 //! fuel times, brewing times), evaluated from the data pack's JSON.
 use crate::items::{ItemStack, Items};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde_json::Value;
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, path::Path};
 
 /// Evaluator for `context_int_provider` / `context_float_provider` values.
 pub struct Providers {
@@ -20,7 +23,7 @@ fn load_dir(dir: &Path, prefix: &str, out: &mut HashMap<String, Value>) {
             .and_then(|s| s.to_str())
             .unwrap_or("")
             .to_owned();
-        if p.is_dir() {
+        if p.fs_is_dir() {
             load_dir(&p, &format!("{prefix}{name}/"), out);
         } else if let Ok(bytes) = fs::read(&p)
             && let Ok(v) = serde_json::from_slice(&bytes)

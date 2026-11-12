@@ -7,6 +7,8 @@
 use super::{Mob, Species, equine, gear, raider, render::DYE_NAMES, species};
 use crate::random_sequences::RandomSequences;
 use horizon_core::random::{LegacyRandom, RandomSource};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     loot::{EntityLootParams, LootDamage, LootData, LootEntity, LootStack},
     registry::BlockStateId,
@@ -689,7 +691,7 @@ mod death_loot_table_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("data").exists() {
+        if !root.join("data").fs_exists() {
             return;
         }
         let table = br#"{"type":"minecraft:entity","pools":[{"rolls":1,
@@ -781,9 +783,9 @@ mod slot_tests {
     #[test]
     fn experience_and_equipment_follow_the_hurt_memory_not_the_player_entity() {
         let root =
-            std::env::temp_dir().join(format!("horizon-guest-left-xp-{}", std::process::id()));
-        std::fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
-        std::fs::write(root.join("items.json"), "{}").unwrap();
+            horizon_fs::temp_dir().join(format!("horizon-guest-left-xp-{}", std::process::id()));
+        horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
+        horizon_fs::write(root.join("items.json"), "{}").unwrap();
         let loot = LootData::load(&root, &PackOverlay::default()).unwrap();
         let death = |player_killed| Death {
             loot: &loot,

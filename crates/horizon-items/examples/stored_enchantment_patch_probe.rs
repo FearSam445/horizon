@@ -1,9 +1,7 @@
 //! Saved component patches; input is label, command argument and the equivalent stack SNBT.
+use horizon_fs::File;
 use horizon_items::item_data::{canon_stack, parse_stack};
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 
 fn main() -> horizon_items::Result<()> {
     let args: Vec<_> = std::env::args().collect();

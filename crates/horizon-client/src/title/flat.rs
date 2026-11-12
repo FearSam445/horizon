@@ -10,6 +10,8 @@ use crate::{
     ui,
 };
 use horizon_assets::item_model::{DisplayContext, ItemEnv};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::Tag;
 use serde_json::Value;
 use std::{collections::BTreeSet, path::Path};
@@ -339,7 +341,7 @@ fn load(root: &Path) -> (Vec<Preset>, BTreeSet<String>, BTreeSet<String>) {
     let mut presets = Vec::new();
     let tag_path =
         root.join("data/minecraft/tags/worldgen/flat_level_generator_preset/visible.json");
-    if let Ok(text) = std::fs::read_to_string(tag_path)
+    if let Ok(text) = horizon_fs::read_to_string(tag_path)
         && let Ok(Value::Object(tag)) = serde_json::from_str(&text)
         && let Some(Value::Array(ids)) = tag.get("values")
     {
@@ -350,7 +352,7 @@ fn load(root: &Path) -> (Vec<Preset>, BTreeSet<String>, BTreeSet<String>) {
             let path = root.join(format!(
                 "data/{namespace}/worldgen/flat_level_generator_preset/{path}.json"
             ));
-            let Ok(text) = std::fs::read_to_string(path) else {
+            let Ok(text) = horizon_fs::read_to_string(path) else {
                 continue;
             };
             let Ok(value) = serde_json::from_str::<Value>(&text) else {
@@ -418,7 +420,7 @@ fn preset_settings(value: &Value) -> Option<FlatSettings> {
 }
 /// The ids of a registry in the prepared `registries.json`.
 fn registry_ids(root: &Path, registry: &str) -> BTreeSet<String> {
-    let Ok(text) = std::fs::read_to_string(root.join("registries.json")) else {
+    let Ok(text) = horizon_fs::read_to_string(root.join("registries.json")) else {
         return BTreeSet::new();
     };
     let Ok(value) = serde_json::from_str::<Value>(&text) else {
@@ -432,7 +434,7 @@ fn registry_ids(root: &Path, registry: &str) -> BTreeSet<String> {
         .unwrap_or_default()
 }
 fn json_keys(path: &Path) -> BTreeSet<String> {
-    let Ok(text) = std::fs::read_to_string(path) else {
+    let Ok(text) = horizon_fs::read_to_string(path) else {
         return BTreeSet::new();
     };
     let Ok(value) = serde_json::from_str::<Value>(&text) else {

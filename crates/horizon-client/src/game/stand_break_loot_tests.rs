@@ -55,21 +55,21 @@ fn game() -> Game<'static> {
 /// The world pack's table for armor stands: one stick.
 fn with_stick_table(game: &mut Game<'_>, name: &str) {
     let dir =
-        std::env::temp_dir().join(format!("horizon-stand-loot-{}-{name}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+        horizon_fs::temp_dir().join(format!("horizon-stand-loot-{}-{name}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
     let tables = dir.join("datapacks/stand/data/minecraft/loot_table/entities");
-    std::fs::create_dir_all(&tables).unwrap();
-    std::fs::write(
+    horizon_fs::create_dir_all(&tables).unwrap();
+    horizon_fs::write(
         dir.join("datapacks/stand/pack.mcmeta"),
         r#"{"pack":{"description":"fixture"}}"#,
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         tables.join("armor_stand.json"),
         r#"{"type":"minecraft:entity","pools":[{"rolls":1,"entries":[{"type":"minecraft:item","name":"minecraft:stick"}]}]}"#,
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         dir.join("datapacks.json"),
         r#"{"enabled":["file/stand"],"disabled":[]}"#,
     )

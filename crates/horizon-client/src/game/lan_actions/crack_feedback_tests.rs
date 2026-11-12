@@ -87,8 +87,8 @@ fn crack_packets_follow_start_clock_and_strict_observer_radius() {
     )
     .unwrap();
     let scratch =
-        std::env::temp_dir().join(format!("horizon-crack-feedback-{}", std::process::id()));
-    std::fs::create_dir_all(&scratch).unwrap();
+        horizon_fs::temp_dir().join(format!("horizon-crack-feedback-{}", std::process::id()));
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.world
         .chunks
@@ -242,9 +242,9 @@ fn crack_packets_follow_start_clock_and_strict_observer_radius() {
     }
     if let Some(path) = std::env::var_os("HORIZON_CRACK_TRACE") {
         let stages: Vec<_> = trace.iter().map(|(_, _, stage)| *stage).collect();
-        std::fs::write(path, serde_json::to_vec(&stages).unwrap()).unwrap();
+        horizon_fs::write(path, serde_json::to_vec(&stages).unwrap()).unwrap();
     }
     drop(host);
     drop(game);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }

@@ -5,9 +5,10 @@ use horizon_client::{
     merchant::{TradeContext, Trades},
 };
 use horizon_core::random::{LegacyRandom, RandomSource};
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
 use serde_json::{Value, json};
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, path::Path};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<_> = crate::args().collect();

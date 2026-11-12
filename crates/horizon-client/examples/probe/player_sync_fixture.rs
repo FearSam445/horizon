@@ -10,8 +10,8 @@ fn number(value: &Value) -> f64 {
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = crate::args().collect();
-    let input = std::io::BufReader::new(std::fs::File::open(&args[1])?);
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[2])?);
+    let input = std::io::BufReader::new(horizon_fs::File::open(&args[1])?);
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[2])?);
     for line in input.lines() {
         let row: Value = serde_json::from_str(&line?)?;
         if row["kind"] == "movement" {

@@ -1,6 +1,7 @@
 //! Chest inventory loading without unpacking loot, for the vanilla differential harness.
 use horizon_client::save;
-use std::{fs, io::Write};
+use horizon_fs as fs;
+use std::io::Write;
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = super::args().collect();

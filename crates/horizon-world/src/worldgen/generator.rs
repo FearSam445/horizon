@@ -51,11 +51,14 @@ use horizon_core::{
     position::{BlockPos, ChunkPos},
     random::{LegacyRandom, PositionalRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde_json::Value;
 use std::{
     any::Any,
     collections::{BTreeMap, BTreeSet, HashMap},
-    fs, io,
+    io,
     path::Path,
     sync::{Arc, Mutex, OnceLock},
 };
@@ -239,7 +242,7 @@ fn read_optional_bundle(
     overrides: &WorldgenOverrides,
     name: &str,
 ) -> Result<Option<Bundle>, GeneratorError> {
-    if dir.join(format!("{name}.json")).exists() {
+    if dir.join(format!("{name}.json")).fs_exists() {
         read_bundle(dir, overrides, name).map(Some)
     } else {
         Ok(None)
@@ -422,7 +425,7 @@ impl GeneratorData {
         let behaviours = loading({
             let root = dir.parent().map(Path::to_owned);
             move || {
-                root.filter(|root| root.join("block-behaviours.json").exists())
+                root.filter(|root| root.join("block-behaviours.json").fs_exists())
                     .and_then(|root| crate::level::Behaviours::load(registry, &root).ok())
                     .map(Arc::new)
             }
@@ -466,7 +469,7 @@ impl GeneratorData {
         )?;
         let mut presets = read_optional_bundle(dir, ov, "presets")?.unwrap_or_default();
         let reports = dir.join("biome_parameters");
-        if reports.is_dir() {
+        if reports.fs_is_dir() {
             for entry in fs::read_dir(&reports)? {
                 let path = entry?.path();
                 let Some(stem) = path
@@ -4076,7 +4079,7 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return;
         }
@@ -4115,7 +4118,7 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return;
         }
@@ -4308,7 +4311,7 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return;
         }
@@ -4365,7 +4368,7 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return;
         }
@@ -4469,7 +4472,7 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return;
         }
@@ -4520,7 +4523,7 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return None;
         }
@@ -4844,7 +4847,7 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return;
         }
@@ -4921,7 +4924,7 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return;
         }
@@ -5162,7 +5165,7 @@ mod tests {
     #[test]
     fn world_presets_use_their_own_noise_settings() {
         let root = test_root();
-        if !root.join("worldgen/world_presets.json").exists() {
+        if !root.join("worldgen/world_presets.json").fs_exists() {
             eprintln!("skipping: no worldgen bundle at {}", root.display());
             return;
         }

@@ -246,7 +246,7 @@ impl Default for Settings {
 impl Settings {
     /// Reads `path`; a missing or unreadable file gives the defaults.
     pub fn load(path: &Path) -> Self {
-        let mut settings: Self = std::fs::read(path)
+        let mut settings: Self = horizon_fs::read(path)
             .ok()
             .and_then(|bytes| serde_json::from_slice(&bytes).ok())
             .unwrap_or_default();
@@ -257,8 +257,8 @@ impl Settings {
     /// Writes `path` through a temporary file, so a crash never leaves half a layout.
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
         let temp = path.with_extension("json.tmp");
-        std::fs::write(&temp, serde_json::to_vec_pretty(self)?)?;
-        std::fs::rename(temp, path)
+        horizon_fs::write(&temp, serde_json::to_vec_pretty(self)?)?;
+        horizon_fs::rename(temp, path)
     }
 
     pub fn sanitize(&mut self) {
@@ -342,7 +342,7 @@ mod tests {
     use super::*;
 
     fn temp_file(name: &str) -> std::path::PathBuf {
-        std::env::temp_dir().join(format!("horizon-touch-{name}-{}.json", std::process::id()))
+        horizon_fs::temp_dir().join(format!("horizon-touch-{name}-{}.json", std::process::id()))
     }
 
     #[test]
@@ -391,7 +391,7 @@ mod tests {
         let file = temp_file("visibility");
         s.save(&file).unwrap();
         let read = Settings::load(&file);
-        std::fs::remove_file(&file).unwrap();
+        horizon_fs::remove_file(&file).unwrap();
         assert_eq!(read, s);
     }
 
@@ -399,11 +399,11 @@ mod tests {
     fn missing_bad_or_partial_files_fall_back_to_defaults() {
         assert_eq!(Settings::load(&temp_file("absent")), Settings::default());
         let file = temp_file("bad");
-        std::fs::write(&file, b"{ not json").unwrap();
+        horizon_fs::write(&file, b"{ not json").unwrap();
         assert_eq!(Settings::load(&file), Settings::default());
-        std::fs::write(&file, br#"{"mode":"dpad","left_handed":true}"#).unwrap();
+        horizon_fs::write(&file, br#"{"mode":"dpad","left_handed":true}"#).unwrap();
         let read = Settings::load(&file);
-        std::fs::remove_file(&file).unwrap();
+        horizon_fs::remove_file(&file).unwrap();
         assert_eq!(read.mode, Mode::Dpad);
         assert!(read.left_handed);
         assert_eq!(read.layouts, Settings::default().layouts);

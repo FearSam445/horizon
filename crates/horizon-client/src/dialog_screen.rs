@@ -530,8 +530,8 @@ mod tests {
     fn a_glyph_moved_down_by_its_ascent_is_clicked_where_it_is_drawn() {
         use crate::{component, hud::Rect, text::ClickEvent};
         let root =
-            std::env::temp_dir().join(format!("horizon-dialog-ascent-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+            horizon_fs::temp_dir().join(format!("horizon-dialog-ascent-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&root);
         let mut sheet = Vec::new();
         {
             let mut encoder = png::Encoder::new(&mut sheet, 8, 8);
@@ -552,8 +552,8 @@ mod tests {
             ("assets/minecraft/textures/font/box.png", sheet.as_slice()),
         ] {
             let path = root.join(path);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(path, bytes).unwrap();
+            horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+            horizon_fs::write(path, bytes).unwrap();
         }
         let font = Font::load(
             &root,
@@ -570,7 +570,7 @@ mod tests {
                 h: 1,
             },
         );
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let text = component::to_text(
             &serde_json::json!([
                 {"text": "a", "font": "minecraft:low"},

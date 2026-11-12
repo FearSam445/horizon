@@ -238,19 +238,19 @@ impl Saved {
     fn load(cache: &Option<PathBuf>) -> Self {
         cache
             .as_ref()
-            .and_then(|d| std::fs::read(d.join(Self::FILE)).ok())
+            .and_then(|d| horizon_fs::read(d.join(Self::FILE)).ok())
             .and_then(|b| serde_json::from_slice(&b).ok())
             .unwrap_or_default()
     }
 
     fn save(&self, cache: &Option<PathBuf>) {
         let Some(dir) = cache else { return };
-        let (Ok(text), Ok(())) = (serde_json::to_vec(self), std::fs::create_dir_all(dir)) else {
+        let (Ok(text), Ok(())) = (serde_json::to_vec(self), horizon_fs::create_dir_all(dir)) else {
             return;
         };
         let part = dir.join("worn.part");
-        if std::fs::write(&part, text).is_ok() {
-            let _ = std::fs::rename(&part, dir.join(Self::FILE));
+        if horizon_fs::write(&part, text).is_ok() {
+            let _ = horizon_fs::rename(&part, dir.join(Self::FILE));
         }
     }
 }
@@ -455,7 +455,7 @@ fn item(
     let file = cache
         .as_ref()
         .map(|d| d.join(format!("{}-{}.json", r.id, r.hash)));
-    let from_disk = file.as_ref().and_then(|f| std::fs::read(f).ok());
+    let from_disk = file.as_ref().and_then(|f| horizon_fs::read(f).ok());
     let bytes = match from_disk {
         Some(b) => Some(b),
         None => {
@@ -465,11 +465,11 @@ fn item(
             if let Some(f) = &file
                 && Item::parse(&fetched).is_ok()
                 && let Some(dir) = f.parent()
-                && std::fs::create_dir_all(dir).is_ok()
+                && horizon_fs::create_dir_all(dir).is_ok()
             {
                 let part = f.with_extension("part");
-                if std::fs::write(&part, &fetched).is_ok() {
-                    let _ = std::fs::rename(&part, f);
+                if horizon_fs::write(&part, &fetched).is_ok() {
+                    let _ = horizon_fs::rename(&part, f);
                 }
             }
             Some(fetched)
@@ -566,7 +566,7 @@ impl Local {
 
     /// The first item file of each slot, by file name.
     fn worn(&self) -> Vec<String> {
-        let mut files: Vec<PathBuf> = std::fs::read_dir(&self.dir)
+        let mut files: Vec<PathBuf> = horizon_fs::read_dir(&self.dir)
             .into_iter()
             .flatten()
             .flatten()
@@ -577,7 +577,9 @@ impl Local {
         let mut slots = Vec::new();
         let mut ids = Vec::new();
         for file in files {
-            if let Some(item) = std::fs::read(&file).ok().and_then(|b| Item::parse(&b).ok())
+            if let Some(item) = horizon_fs::read(&file)
+                .ok()
+                .and_then(|b| Item::parse(&b).ok())
                 && !slots.contains(&item.slot)
                 && item.slot != crate::Slot::Emote
                 && file.file_stem().is_some_and(|s| *s == *item.id)
@@ -621,7 +623,7 @@ impl Transport for Local {
             .split('?')
             .next()
             .unwrap_or_default();
-        std::fs::read(self.dir.join(format!("{id}.json"))).map_err(|e| e.to_string())
+        horizon_fs::read(self.dir.join(format!("{id}.json"))).map_err(|e| e.to_string())
     }
 }
 

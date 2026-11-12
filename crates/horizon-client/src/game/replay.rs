@@ -10,7 +10,7 @@ use horizon_client::{
 };
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 use web_time::Duration;
 
 /// The packet replay a `Game` plays, if any, and its playback clock.
@@ -568,7 +568,7 @@ impl Game<'_> {
         if r.session.is_recording() {
             return Ok(json!({ "ok": false, "error": "recording already active" }));
         }
-        let _ = std::fs::create_dir_all("recordings");
+        let _ = horizon_fs::create_dir_all("recordings");
         let ts = horizon_clock::system_now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()

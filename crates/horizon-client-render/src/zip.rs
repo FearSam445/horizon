@@ -2,9 +2,11 @@
 //! archive), on the `zip` crate. Like Java's `ZipFile` (what vanilla's
 //! `FilePackResources` reads with), the file stays open and only what is asked
 //! for is read, and entries aren't CRC-checked.
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     collections::BTreeMap,
-    fs,
     io::{self, Read, Seek, SeekFrom},
     path::Path,
     sync::{
@@ -110,7 +112,7 @@ impl Zip {
     /// gigabytes for its `pack.mcmeta` costs what opening a small one does.
     pub fn open(path: &Path) -> io::Result<Self> {
         let file = fs::File::open(path)?;
-        let len = file.metadata()?.len();
+        let len = file.fs_metadata()?.len();
         let mut tail_at = len.saturating_sub((END_HEADER + u16::MAX as usize) as u64);
         let mut tail = read_range(&file, tail_at, len)?;
         if let Some(end) = find_end(&tail) {
@@ -353,7 +355,7 @@ mod tests {
     /// `bytes` as a file and opened, the file removed again where the system lets it.
     fn opened(test: &str, bytes: &[u8]) -> io::Result<Zip> {
         let path =
-            std::env::temp_dir().join(format!("horizon-zip-{}-{test}.zip", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-zip-{}-{test}.zip", std::process::id()));
         fs::write(&path, bytes)?;
         let zip = Zip::open(&path);
         let _ = fs::remove_file(&path);

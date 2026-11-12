@@ -9,8 +9,9 @@ use horizon_client::{
     command::{ArgType, Dispatcher, NodeKind, Registries, args::RegistryIds, vanilla},
     lang,
 };
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{fs, path::Path};
+use std::path::Path;
 
 fn strings(v: &Value) -> Vec<String> {
     v.as_array()

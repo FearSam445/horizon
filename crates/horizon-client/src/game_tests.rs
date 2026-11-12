@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 #[test]
 fn weather_follows_the_dimension_type_not_the_id() {
     use super::level_can_have_weather as w;
@@ -232,9 +234,9 @@ fn eager_saves_keep_dirty_order_cooldowns_and_writer_budget() {
 #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
 fn eager_saves_wait_for_an_open_world_and_for_light() {
     let mut game = super::native_machines::tests::server_game();
-    let dir = std::env::temp_dir().join(format!("horizon-eager-game-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = horizon_fs::temp_dir().join(format!("horizon-eager-game-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
+    horizon_fs::create_dir_all(&dir).unwrap();
     game.save = Arc::new(horizon_client::save::SaveDir::new(
         dir.clone(),
         horizon_client::save::LevelShape::OVERWORLD,
@@ -254,17 +256,17 @@ fn eager_saves_wait_for_an_open_world_and_for_light() {
     game.save_chunks_eagerly(); // still queued: no new dirty transition needed
     assert!(!game.world.modified.contains(&(1, 0)));
     game.save.flush().unwrap();
-    assert!(dir.join("region/r.0.0.mca").exists());
-    std::fs::remove_dir_all(dir).unwrap();
+    assert!(dir.join("region/r.0.0.mca").fs_exists());
+    horizon_fs::remove_dir_all(dir).unwrap();
 }
 
 #[test]
 fn integrated_server_save_persists_owner_player_data() {
-    let dir = std::env::temp_dir().join(format!(
+    let dir = horizon_fs::temp_dir().join(format!(
         "horizon-integrated-player-save-{}",
         std::process::id()
     ));
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
 
     // Initial world creation writes `level.dat` before the player spawns.
     let mut level = Level {
@@ -313,7 +315,7 @@ fn integrated_server_save_persists_owner_player_data() {
         vec![(0, "minecraft:diamond_pickaxe".into(), 1, 0)]
     );
 
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
 }
 
 /// `Hud.extractRenderState`: the subtitles follow the HUD when no screen

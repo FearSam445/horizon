@@ -11,6 +11,8 @@ use horizon_core::{
     position::ChunkPos,
     ticks::{ProtoChunkTicks, SavedTick, TickTypeId},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     heightmap::HeightmapType,
     loot::PackOverlay,
@@ -306,7 +308,7 @@ impl VanillaTerrain {
             if unsupported.len() > NAMED {
                 log::warn!("Horizon:   and {} more", unsupported.len() - NAMED);
             }
-            if !dir.join("blocks/block-properties.nbt").exists() {
+            if !dir.join("blocks/block-properties.nbt").fs_exists() {
                 log::warn!(
                     "Horizon: the worldgen bundle lacks the block behavior exports (worldgen/blocks/*.nbt); \
                      prepare again (the launcher, or horizon-prepare --prepare) to add them"
@@ -613,7 +615,7 @@ impl VanillaTerrain {
     /// start nobody visited has no file for.
     pub fn set_reference_file(&self, path: std::path::PathBuf) {
         let mut referenced = self.referenced.lock().unwrap_or_else(|e| e.into_inner());
-        if let Some(list) = std::fs::read(&path)
+        if let Some(list) = horizon_fs::read(&path)
             .ok()
             .and_then(|b| serde_json::from_slice::<Vec<(String, i32, i32)>>(&b).ok())
         {
@@ -648,15 +650,15 @@ impl VanillaTerrain {
         }
         list.sort();
         if let Some(dir) = path.parent() {
-            let _ = std::fs::create_dir_all(dir);
+            let _ = horizon_fs::create_dir_all(dir);
         }
         // Written beside the file and renamed over it: a crash half way must
         // not leave truncated JSON, which loads as no references at all.
         let tmp = path.with_extension("json.tmp");
         let saved = serde_json::to_vec(&list)
             .map_err(std::io::Error::from)
-            .and_then(|b| std::fs::write(&tmp, b))
-            .and_then(|()| std::fs::rename(&tmp, path));
+            .and_then(|b| horizon_fs::write(&tmp, b))
+            .and_then(|()| horizon_fs::rename(&tmp, path));
         if let Err(e) = saved {
             log::warn!("Horizon: could not save {}: {e}", path.display());
         }

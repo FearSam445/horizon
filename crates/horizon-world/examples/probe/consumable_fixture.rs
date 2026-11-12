@@ -3,6 +3,7 @@ use horizon_core::{
     geometry::Vec3,
     random::{LegacyRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::consumable::{Consumable, EmissionWorld, UseAnimation};
 use horizon_world::{
     component_patch::Prototype,
@@ -17,7 +18,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

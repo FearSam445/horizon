@@ -14,9 +14,9 @@ use horizon_client::{
     world::World,
 };
 use horizon_core::random::{LegacyRandom, RandomSource};
+use horizon_fs::File;
 use serde_json::Value;
 use std::{
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
 };

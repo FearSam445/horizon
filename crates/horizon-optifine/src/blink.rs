@@ -9,8 +9,10 @@
 //!
 //! Written from ETF's README ("Blinking textures"); no mod's source was read.
 
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
 
 use crate::paths::files_under;
@@ -48,7 +50,7 @@ impl Blinks {
             let prefix = format!("assets/{ns}/");
             for file in files_under(root, &format!("{prefix}textures/entity"), &["_blink.png"]) {
                 let stem = &file[..file.len() - "_blink.png".len()];
-                if root.join(format!("{stem}.png")).is_file() {
+                if root.join(format!("{stem}.png")).fs_is_file() {
                     let blink =
                         Blink::read(root, stem, |path| atlas_name(&ns, &path[prefix.len()..]));
                     out.blinks
@@ -60,7 +62,7 @@ impl Blinks {
             let Some(stem) = file.strip_suffix(".png") else {
                 continue;
             };
-            if !root.join(format!("{stem}_blink.png")).is_file() {
+            if !root.join(format!("{stem}_blink.png")).fs_is_file() {
                 continue;
             }
             let frame = |path: &str| format!("{name}{}", &path[stem.len()..]);
@@ -112,7 +114,7 @@ impl Blink {
             shut: name(&format!("{stem}_blink")),
             half: root
                 .join(format!("{half}.png"))
-                .is_file()
+                .fs_is_file()
                 .then(|| name(&half)),
             length,
             frequency: number("blinkFrequency", FREQUENCY).max(length + 1),
@@ -140,7 +142,7 @@ mod tests {
 
     fn pack(name: &str, files: &[(&str, &str)]) -> (std::path::PathBuf, Blinks) {
         let root =
-            std::env::temp_dir().join(format!("horizon-blink-{name}-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-blink-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         for (path, text) in files {
             let path = root.join(path);

@@ -2,13 +2,13 @@ use horizon_core::{
     position::BlockPos,
     random::{LegacyRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::{
     consume_effect::{ConsumeEffect, EffectWorld},
     status_effect::{BlendState, Details, EffectInstance},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

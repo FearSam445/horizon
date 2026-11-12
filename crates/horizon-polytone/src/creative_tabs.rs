@@ -1,6 +1,8 @@
 //! Creative tab modifiers (`assets/<namespace>/polytone/creative_tab_modifiers/**.json`, wiki
 //! "Creative Tab Modifiers"): a tab's icon and name, and the items it loses or gains.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::Path;
 
 use serde_json::Value as Json;
@@ -147,16 +149,16 @@ impl TabModifier {
     /// Every modifier under a pack overlay root (a file's implicit target is its path).
     pub fn read_all(root: &Path) -> Vec<Self> {
         let mut out = Vec::new();
-        for namespace in std::fs::read_dir(root.join("assets"))
+        for namespace in horizon_fs::read_dir(root.join("assets"))
             .into_iter()
             .flatten()
             .flatten()
         {
             let mut stack = vec![namespace.path().join("polytone/creative_tab_modifiers")];
             while let Some(dir) = stack.pop() {
-                for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
+                for entry in horizon_fs::read_dir(&dir).into_iter().flatten().flatten() {
                     let path = entry.path();
-                    if path.is_dir() {
+                    if path.fs_is_dir() {
                         stack.push(path);
                         continue;
                     }
@@ -165,7 +167,7 @@ impl TabModifier {
                     else {
                         continue;
                     };
-                    let parsed = std::fs::read_to_string(&path)
+                    let parsed = horizon_fs::read_to_string(&path)
                         .map_err(|e| e.to_string())
                         .and_then(|t| serde_json::from_str::<Json>(&t).map_err(|e| e.to_string()))
                         .and_then(|json| Self::parse(&json, Some(&implicit)));

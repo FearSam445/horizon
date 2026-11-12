@@ -5,10 +5,12 @@
 //! the same id and a filter removes the matching ones.
 use horizon_assets::palette::apply_palette;
 use horizon_client_core::pattern::Pattern;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     path::{Path, PathBuf},
 };
 
@@ -200,9 +202,9 @@ pub fn list_textures(root: &Path) -> Vec<String> {
                 // `file_type` comes with the listing; `Path::is_dir` is a stat per
                 // entry, kept for links (which it follows).
                 let dir = match e.file_type() {
-                    Ok(t) if t.is_symlink() => p.is_dir(),
-                    Ok(t) => t.is_dir(),
-                    Err(_) => p.is_dir(),
+                    Ok(t) if t.fs_is_symlink() => p.fs_is_dir(),
+                    Ok(t) => t.fs_is_dir(),
+                    Err(_) => p.fs_is_dir(),
                 };
                 if dir {
                     stack.push(p);

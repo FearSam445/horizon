@@ -1,8 +1,8 @@
 //! Original comparison transport for generation bounds and vertical anchors.
+use horizon_fs as fs;
 use horizon_world::worldgen::anchor::{VerticalAnchor, WorldGenerationContext};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

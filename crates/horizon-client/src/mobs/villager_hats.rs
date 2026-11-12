@@ -3,7 +3,8 @@ use super::{
     anim::Poses,
     render::{PROFESSIONS, VILLAGER_TYPES},
 };
-use std::{collections::HashMap, fs, path::Path};
+use horizon_fs as fs;
+use std::{collections::HashMap, path::Path};
 
 #[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
 enum Hat {

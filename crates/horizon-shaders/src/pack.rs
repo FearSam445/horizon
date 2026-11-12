@@ -2,9 +2,11 @@
 //! the root (licences, readmes, decoy folders) is ignored (spec 1.1). Every path a pack uses is
 //! relative to that `shaders` folder, written with `/`.
 
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::BTreeMap;
 use std::fmt;
-use std::fs;
 use std::io::{self, Cursor, Read};
 use std::path::{Path, PathBuf};
 
@@ -67,9 +69,9 @@ impl Pack {
         let name = path
             .file_name()
             .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
-        let files = if path.is_dir() {
+        let files = if path.fs_is_dir() {
             let root = path.join(ROOT);
-            if !root.is_dir() {
+            if !root.fs_is_dir() {
                 return Err(PackError::NoShadersFolder);
             }
             Files::Folder(root)
@@ -181,7 +183,7 @@ impl Pack {
             return false;
         };
         match &self.files {
-            Files::Folder(root) => root.join(path).is_file(),
+            Files::Folder(root) => root.join(path).fs_is_file(),
             Files::Zip { entries, .. } => entries.contains_key(&path),
         }
     }
@@ -197,7 +199,7 @@ impl Pack {
                 .into_iter()
                 .flatten()
                 .flatten()
-                .filter(|e| e.file_type().is_ok_and(|t| t.is_file()))
+                .filter(|e| e.file_type().is_ok_and(|t| t.fs_is_file()))
                 .map(|e| e.file_name().to_string_lossy().into_owned())
                 .collect(),
             Files::Zip { entries, .. } => {
@@ -237,8 +239,8 @@ impl Pack {
                             format!("{dir}/{name}")
                         };
                         match e.file_type() {
-                            Ok(t) if t.is_dir() => dirs.push(path),
-                            Ok(t) if t.is_file() => names.push(path),
+                            Ok(t) if t.fs_is_dir() => dirs.push(path),
+                            Ok(t) if t.fs_is_file() => names.push(path),
                             _ => {}
                         }
                     }
@@ -287,7 +289,7 @@ pub(crate) mod tests {
     /// A fresh empty folder under the system's temp folder.
     pub(crate) fn temp_dir(name: &str) -> PathBuf {
         let dir =
-            std::env::temp_dir().join(format!("horizon-shaders-{name}-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-shaders-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         dir

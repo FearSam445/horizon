@@ -11,9 +11,11 @@ use crate::{
     text::Text,
     ui,
 };
+use horizon_fs::{self as fs, File};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, File},
     io::Read,
     path::{Path, PathBuf},
 };
@@ -169,7 +171,7 @@ impl StudioUi {
                 continue;
             }
 
-            let Ok(meta) = entry.metadata() else {
+            let Ok(meta) = entry.fs_metadata() else {
                 continue;
             };
             let file_size = meta.len();
@@ -513,7 +515,7 @@ mod tests {
 
     #[test]
     fn scan_and_select_recordings() {
-        let temp_dir = std::env::temp_dir().join(format!("studio_test_{}", std::process::id()));
+        let temp_dir = horizon_fs::temp_dir().join(format!("studio_test_{}", std::process::id()));
         let _ = fs::create_dir_all(&temp_dir);
 
         let rec_path = temp_dir.join("sample.mcpr");

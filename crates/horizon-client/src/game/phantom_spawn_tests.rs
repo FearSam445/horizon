@@ -7,6 +7,8 @@
 use super::super::*;
 use horizon_client::chunk::Chunk;
 use horizon_client::light::{LightTables, apply_lighting, light_chunk};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::sync::Arc;
 
 /// The prepared resources, or `None` where CI has none (the test then skips).
@@ -18,7 +20,7 @@ fn resources() -> Option<std::path::PathBuf> {
                 .join("../../.local/horizon-client")
                 .join(horizon_core::VANILLA_VERSION)
         });
-    (root.join("occlusion.nbt").is_file() && root.join("entity-types.json").is_file())
+    (root.join("occlusion.nbt").fs_is_file() && root.join("entity-types.json").fs_is_file())
         .then_some(root)
 }
 

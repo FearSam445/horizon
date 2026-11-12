@@ -200,7 +200,7 @@ pub enum Remembered {
 }
 
 pub fn remembered(dir: &Path, now: SystemTime) -> Remembered {
-    let Ok(text) = std::fs::read_to_string(dir.join(FILE)) else {
+    let Ok(text) = horizon_fs::read_to_string(dir.join(FILE)) else {
         return Remembered::Stale(None);
     };
     let mut words = text.split_whitespace();
@@ -229,8 +229,8 @@ pub fn remember(dir: &Path, found: Option<&str>, now: SystemTime) {
         Some(url) => format!("found {secs} {url}\n"),
         None => format!("none {secs}\n"),
     };
-    let _ = std::fs::create_dir_all(dir);
-    let _ = std::fs::write(dir.join(FILE), text);
+    let _ = horizon_fs::create_dir_all(dir);
+    let _ = horizon_fs::write(dir.join(FILE), text);
 }
 
 /// The servers being looked at now, by BlueMap folder: one look a server at
@@ -351,11 +351,11 @@ mod tests {
     }
 
     fn scratch(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-bluemap-detect-{name}-{}",
             std::process::id()
         ));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
         dir
     }
 
@@ -379,9 +379,9 @@ mod tests {
             remembered(&dir, t0 + RETRY_FOUND),
             Remembered::Stale(Some("https://map.example.net".into()))
         );
-        std::fs::write(dir.join(FILE), "garbage").unwrap();
+        horizon_fs::write(dir.join(FILE), "garbage").unwrap();
         assert_eq!(remembered(&dir, t0), Remembered::Stale(None));
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
@@ -439,7 +439,7 @@ mod tests {
                 maps: vec![("minecraft:the_nether".into(), "n".into())]
             })
         );
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

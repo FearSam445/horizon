@@ -15,16 +15,16 @@ fn holder_detach_still_dispatches_the_actual_interaction_criterion() {
     game.level.health = 20.0;
     game.creative = false;
     // A world of its own under the temporary folder, never the cwd.
-    game.world_root = std::env::temp_dir().join(format!(
+    game.world_root = horizon_fs::temp_dir().join(format!(
         "horizon-leash-context-control-world-{}",
         std::process::id()
     ));
-    let _ = std::fs::remove_dir_all(&game.world_root);
+    let _ = horizon_fs::remove_dir_all(&game.world_root);
     let pack = game.world_root.join("datapacks/leash_context");
     let dir = pack.join("data/leash_context/advancement");
-    std::fs::create_dir_all(&dir).unwrap();
+    horizon_fs::create_dir_all(&dir).unwrap();
     let f = horizon_core::version::DATA_PACK_FORMAT;
-    std::fs::write(
+    horizon_fs::write(
         pack.join("pack.mcmeta"),
         serde_json::json!({"pack": {
             "description":"Postbaseline actual interaction context control", "pack_format":f.0,
@@ -32,7 +32,7 @@ fn holder_detach_still_dispatches_the_actual_interaction_criterion() {
         .to_string(),
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         dir.join("interaction.json"),
         serde_json::json!({"criteria": {
             "used":{"trigger":"minecraft:player_interacted_with_entity"}}})
@@ -87,5 +87,5 @@ fn holder_detach_still_dispatches_the_actual_interaction_criterion() {
     assert_eq!(game.held().unwrap().count, 3);
     assert_eq!(game.level.player_uuid, Some([413, 0, 0, 2]));
     assert_eq!(game.world.game_time, clock);
-    let _ = std::fs::remove_dir_all(&game.world_root);
+    let _ = horizon_fs::remove_dir_all(&game.world_root);
 }

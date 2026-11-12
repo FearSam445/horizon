@@ -1,9 +1,9 @@
 use crate::support::common::f64_bits;
 use horizon_core::geometry::{Aabb, Axis, Vec3};
+use horizon_fs as fs;
 use horizon_world::edge_backoff::{EdgeBackoffInput, EdgeBackoffWorld, back_off_from_edge};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

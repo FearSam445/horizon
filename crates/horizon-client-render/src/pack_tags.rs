@@ -101,11 +101,11 @@ mod tests {
         static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let root =
-            std::env::temp_dir().join(format!("horizon-pack-tags-{}-{n}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-pack-tags-{}-{n}", std::process::id()));
         let write = |path: &str, json: serde_json::Value| {
             let file = root.join(path);
-            std::fs::create_dir_all(file.parent().unwrap()).unwrap();
-            std::fs::write(file, json.to_string()).unwrap();
+            horizon_fs::create_dir_all(file.parent().unwrap()).unwrap();
+            horizon_fs::write(file, json.to_string()).unwrap();
         };
         write(
             "data/minecraft/tags/block/logs.json",
@@ -127,6 +127,6 @@ mod tests {
         // Another registry's tag of the same name, and a tag no file defines, are empty.
         assert!(tags.members("entity_type", "logs").is_empty());
         assert!(tags.members("block", "pack:none").is_empty());
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 }

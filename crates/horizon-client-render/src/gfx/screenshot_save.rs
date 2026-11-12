@@ -210,7 +210,7 @@ fn write_png(shot: &Shot, frame: &[[u8; 4]]) -> Result<[u32; 2], String> {
         ),
         None => (frame_w, frame_h, pixels),
     };
-    let file = std::fs::File::create(&shot.path).map_err(|e| e.to_string())?;
+    let file = horizon_fs::File::create(&shot.path).map_err(|e| e.to_string())?;
     let mut encoder = png::Encoder::new(std::io::BufWriter::new(file), width, height);
     encoder.set_color(png::ColorType::Rgba);
     encoder.set_depth(png::BitDepth::Eight);
@@ -233,7 +233,7 @@ fn write_hdr_png(
     info.color_type = png::ColorType::Rgb;
     info.bit_depth = png::BitDepth::Sixteen;
     info.icc_profile = Some(hdr_icc::profile().into());
-    let file = std::fs::File::create(path).map_err(|e| e.to_string())?;
+    let file = horizon_fs::File::create(path).map_err(|e| e.to_string())?;
     let written = png::Encoder::with_info(std::io::BufWriter::new(file), info)
         .and_then(|encoder| encoder.write_header())
         .and_then(|mut writer| {
@@ -259,8 +259,8 @@ mod tests {
         else {
             return;
         };
-        let dir = std::env::temp_dir().join(format!("horizon-shot-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("horizon-shot-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("shot.png");
         let [w, h] = [3u32, 2];
         // A frame of blue-first pixels, each row padded as `copy_frame` reads them back.
@@ -309,13 +309,14 @@ mod tests {
         };
         assert_eq!(saved.path, path);
         assert_eq!(saved.result, Ok([w, h]));
-        let decoder =
-            png::Decoder::new(std::io::BufReader::new(std::fs::File::open(&path).unwrap()));
+        let decoder = png::Decoder::new(std::io::BufReader::new(
+            horizon_fs::File::open(&path).unwrap(),
+        ));
         let mut reader = decoder.read_info().unwrap();
         let mut out = vec![0; reader.output_buffer_size().unwrap()];
         reader.next_frame(&mut out).unwrap();
         // Red first, opaque: the last pixel of the first row was [20, 20, 200] blue-first.
         assert_eq!(&out[8..12], &[200, 20, 20, 255]);
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
     }
 }

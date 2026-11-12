@@ -4,8 +4,9 @@ use horizon_client::{
     world::World,
 };
 use horizon_core::geometry::Vec3;
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
-use std::{fs, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<_> = crate::args().collect();

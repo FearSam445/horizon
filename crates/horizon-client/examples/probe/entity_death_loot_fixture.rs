@@ -17,8 +17,9 @@ use horizon_core::{
     geometry::Vec3,
     random::{LegacyRandom, RandomSource},
 };
+use horizon_fs as fs;
 use horizon_world::loot::{LootDamage, LootData, LootEntity, LootStack, PackOverlay};
-use std::{collections::BTreeMap, fmt::Write as _, fs, path::Path, sync::Arc};
+use std::{collections::BTreeMap, fmt::Write as _, path::Path, sync::Arc};
 
 /// `id[;enchantment:level...]`.
 fn stack(spec: &str) -> LootStack {

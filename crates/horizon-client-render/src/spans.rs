@@ -479,7 +479,7 @@ pub mod startup {
     use web_time::Instant;
 
     static ON: AtomicBool = AtomicBool::new(false);
-    static SINK: OnceLock<Option<Mutex<std::fs::File>>> = OnceLock::new();
+    static SINK: OnceLock<Option<Mutex<horizon_fs::File>>> = OnceLock::new();
     static ORIGIN: OnceLock<Instant> = OnceLock::new();
     static NEXT_THREAD: AtomicU32 = AtomicU32::new(1);
     thread_local! {
@@ -493,7 +493,7 @@ pub mod startup {
         ORIGIN.get_or_init(|| origin);
         let sink = SINK.get_or_init(|| {
             let path = std::env::var_os("HORIZON_STARTUP_TRACE")?;
-            std::fs::File::create(&path).ok().map(Mutex::new)
+            horizon_fs::File::create(&path).ok().map(Mutex::new)
         });
         ON.store(sink.is_some(), Ordering::Relaxed);
     }

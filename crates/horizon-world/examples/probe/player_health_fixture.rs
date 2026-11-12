@@ -1,4 +1,5 @@
 use crate::support::common::f32_bits;
+use horizon_fs as fs;
 use horizon_world::{
     attributes::{
         Modifier, Operation,
@@ -9,7 +10,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
     sync::Arc,

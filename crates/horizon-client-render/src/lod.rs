@@ -5707,8 +5707,8 @@ mod tests {
                 .registry
                 .default_state("minecraft:stone")
                 .unwrap();
-            let dir = std::env::temp_dir().join(format!("horizon-{name}-{}", std::process::id()));
-            let _ = std::fs::remove_dir_all(&dir);
+            let dir = horizon_fs::temp_dir().join(format!("horizon-{name}-{}", std::process::id()));
+            let _ = horizon_fs::remove_dir_all(&dir);
             Ok(Self {
                 lod: Lod::new(source(&dir), context),
                 facts,
@@ -5811,7 +5811,7 @@ mod tests {
     }
     impl Drop for ServerLod {
         fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(&self.dir);
+            let _ = horizon_fs::remove_dir_all(&self.dir);
         }
     }
     #[test]

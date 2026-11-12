@@ -457,7 +457,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        let Ok(vertex) = std::fs::read_to_string(
+        let Ok(vertex) = horizon_fs::read_to_string(
             root.join("assets/minecraft/shaders/core/rendertype_lines.vsh"),
         ) else {
             eprintln!(
@@ -468,7 +468,7 @@ mod tests {
         };
         let include = |id: &str| {
             let (namespace, path) = id.split_once(':')?;
-            std::fs::read_to_string(root.join(format!("assets/{namespace}/{path}"))).ok()
+            horizon_fs::read_to_string(root.join(format!("assets/{namespace}/{path}"))).ok()
         };
         let program = crate::core_shader::translate_core(&vertex, RGB_FSH, &[], &include, &GLUE)
             .expect("vanilla's vertex shader translates");

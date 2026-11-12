@@ -1,5 +1,8 @@
 //! Instance-local picker entries. Hiding an entry never removes settings or world saves.
-use std::{fs, io, path::Path};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
+use std::{io, path::Path};
 
 const HIDDEN: &str = ".hidden";
 
@@ -15,9 +18,9 @@ pub fn names(root: &Path) -> io::Result<Vec<String>> {
         let Some(name) = entry.file_name().to_str().map(str::to_owned) else {
             continue;
         };
-        if entry.file_type()?.is_dir()
+        if entry.file_type()?.fs_is_dir()
             && super::valid_name(&name)
-            && !entry.path().join(HIDDEN).exists()
+            && !entry.path().join(HIDDEN).fs_exists()
         {
             names.push(name);
         }
@@ -50,7 +53,7 @@ pub fn restore(root: &Path, name: &str) -> io::Result<()> {
         let entry = entry?;
         let old = entry.file_name();
         let Some(old) = old.to_str() else { continue };
-        if entry.file_type()?.is_dir() && old != name && old.eq_ignore_ascii_case(name) {
+        if entry.file_type()?.fs_is_dir() && old != name && old.eq_ignore_ascii_case(name) {
             return Err(io::Error::new(
                 io::ErrorKind::AlreadyExists,
                 format!("Use the existing spelling: {old}"),
@@ -71,7 +74,7 @@ mod tests {
 
     #[test]
     fn hide_and_restore_preserve_settings_and_stay_in_one_instance() {
-        let root = std::env::temp_dir().join(format!("hz-profile-store-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("hz-profile-store-{}", std::process::id()));
         let (a, b) = (root.join("a"), root.join("b"));
         restore(&a, "jordank").unwrap();
         let options = a.join("jordank/options.txt");

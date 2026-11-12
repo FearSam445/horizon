@@ -7,6 +7,8 @@ rust-version.workspace = true
 description = "The client's lowest layer: chat text and translations, SNBT and NBT paths, the scoreboard, boss bars, game rules and the registry and particle tables commands name"
 
 [dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
 # std::time, with a clock in the browser build (web/).
 web-time = "1.1"
 horizon-world = { path = "../horizon-world" }

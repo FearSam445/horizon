@@ -1190,7 +1190,7 @@ mod credits_respawn_tests {
             None,
         )
         .unwrap();
-        let scratch = std::env::temp_dir().join(format!(
+        let scratch = horizon_fs::temp_dir().join(format!(
             "horizon-credits-respawn-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -1198,7 +1198,7 @@ mod credits_respawn_tests {
                 .unwrap()
                 .as_nanos()
         ));
-        std::fs::create_dir_all(&scratch).unwrap();
+        horizon_fs::create_dir_all(&scratch).unwrap();
         game.world_root = scratch.clone();
         game.level.world_spawn = Some([0, 100, 0]);
         game.lan_host(
@@ -1266,6 +1266,6 @@ mod credits_respawn_tests {
         assert!(!guest.client_loaded());
         drop(host);
         drop(game);
-        std::fs::remove_dir_all(scratch).unwrap();
+        horizon_fs::remove_dir_all(scratch).unwrap();
     }
 }

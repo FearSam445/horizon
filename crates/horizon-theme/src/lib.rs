@@ -870,7 +870,7 @@ mod tests {
     #[test]
     fn tokens_css_is_up_to_date() {
         let path = concat!(env!("CARGO_MANIFEST_DIR"), "/tokens.css");
-        let written = std::fs::read_to_string(path).unwrap_or_default();
+        let written = horizon_fs::read_to_string(path).unwrap_or_default();
         assert!(
             written == css(),
             "crates/horizon-theme/tokens.css is out of date: run `cargo run -p xtask -- tokens`"

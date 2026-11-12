@@ -370,7 +370,8 @@ impl ItemRenderer {
 mod tests {
     use super::*;
     use horizon_assets::item_model::{DisplayContext, NoEnv, StackView};
-    use std::{collections::BTreeSet, fs, path::PathBuf};
+    use horizon_fs as fs;
+    use std::{collections::BTreeSet, path::PathBuf};
 
     const CIT: &str = "assets/minecraft/optifine/cit";
 
@@ -387,7 +388,8 @@ mod tests {
 
     /// A stick, a bow's frames and a potion; with `cit`, rules over them.
     fn root(name: &str, cit: bool) -> PathBuf {
-        let root = std::env::temp_dir().join(format!("horizon-cit-{name}-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-cit-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let write = |rel: &str, text: &str| {
             let path = root.join(rel);

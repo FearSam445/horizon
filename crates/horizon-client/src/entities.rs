@@ -16,6 +16,8 @@ use horizon_core::{
     position::BlockPos,
     random::{LegacyRandom, RandomSource},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     block_collision::BlockCollisionRegistry,
     level::portal_travel::{BorderBounds, find_free_position},
@@ -2747,7 +2749,7 @@ mod fire_environment_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -2862,7 +2864,7 @@ mod destroyed_bundle_environment_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -3293,7 +3295,7 @@ mod world_border_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -3352,7 +3354,7 @@ mod world_border_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -3433,7 +3435,7 @@ mod honey_slide_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -3482,7 +3484,7 @@ mod honey_slide_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -3549,7 +3551,7 @@ mod honey_slide_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -3846,7 +3848,7 @@ mod slime_bounce_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -3971,7 +3973,7 @@ mod entity_collision_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -4016,7 +4018,7 @@ mod entity_collision_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -4169,7 +4171,7 @@ mod armor_stand_motion_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -4288,7 +4290,7 @@ mod armor_stand_motion_tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -4382,7 +4384,7 @@ mod armor_stand_motion_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -4438,7 +4440,7 @@ mod armor_stand_motion_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -4540,7 +4542,7 @@ mod armor_stand_motion_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -4576,7 +4578,7 @@ mod armor_stand_motion_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -4606,7 +4608,7 @@ mod armor_stand_motion_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();
@@ -5013,7 +5015,7 @@ mod orb_lava_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("orb lava fixture unavailable: prepared resources missing");
             return;
         }

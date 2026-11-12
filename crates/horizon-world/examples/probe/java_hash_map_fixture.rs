@@ -1,8 +1,8 @@
+use horizon_fs as fs;
 use horizon_world::java_hash_map::{CursorError, JavaHashMap, JavaKey};
 use serde_json::Value;
 use std::{
     cmp::Ordering,
-    fs,
     io::{self, Write},
     path::Path,
 };

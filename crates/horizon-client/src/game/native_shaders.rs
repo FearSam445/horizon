@@ -5,6 +5,8 @@
 //! pack that fails is refused with its problems in the chat while the last good one keeps
 //! drawing.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
@@ -227,10 +229,10 @@ pub(super) fn linear_frame_switch() -> bool {
 /// option values (`None` when the pack is unreadable).
 pub(super) fn fingerprint(path: &Path) -> Option<u64> {
     fn walk(path: &Path, hasher: &mut std::hash::DefaultHasher) -> Option<()> {
-        let meta = std::fs::metadata(path).ok()?;
+        let meta = horizon_fs::metadata(path).ok()?;
         path.hash(hasher);
-        if meta.is_dir() {
-            let mut entries: Vec<_> = std::fs::read_dir(path)
+        if meta.fs_is_dir() {
+            let mut entries: Vec<_> = horizon_fs::read_dir(path)
                 .ok()?
                 .flatten()
                 .map(|e| e.path())
@@ -264,10 +266,11 @@ mod tests {
     #[test]
     fn outcomes_and_refusals_survive_renderer_resets() {
         use super::{Api, NativeShaders, fingerprint, outcome, refused, remember};
-        let root = std::env::temp_dir().join(format!("horizon-acceptance-{}", std::process::id()));
-        std::fs::create_dir_all(&root).unwrap();
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-acceptance-{}", std::process::id()));
+        horizon_fs::create_dir_all(&root).unwrap();
         let file = root.join("post.wgsl");
-        std::fs::write(&file, "first files").unwrap();
+        horizon_fs::write(&file, "first files").unwrap();
         let stamp = fingerprint(&root);
         assert_eq!(outcome(&root), None);
         remember(&root, stamp, Some(Api::V0_1));
@@ -282,11 +285,11 @@ mod tests {
             assert_eq!(outcome(&root), Some(None));
             assert!(refused(&root, fingerprint(&root)));
         }
-        std::fs::write(&file, "repaired files with a different size").unwrap();
+        horizon_fs::write(&file, "repaired files with a different size").unwrap();
         assert!(!refused(&root, fingerprint(&root)));
         remember(&root, fingerprint(&root), Some(Api::V0_2));
         assert_eq!(outcome(&root), Some(Some(Api::V0_2)));
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     fn manifest(api: &str, extra: &str) -> Manifest {
@@ -301,39 +304,39 @@ mod tests {
     fn stable_options_are_in_the_reload_signature_and_override_keeps_its_path() {
         use super::{NativeShaders, fingerprint};
         let dir =
-            std::env::temp_dir().join(format!("horizon-native-identity-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-native-identity-{}", std::process::id()));
         let pack = dir.join("native-test_mod");
-        std::fs::create_dir_all(&pack).unwrap();
-        std::fs::write(pack.join(horizon_shader_api::MANIFEST),
+        horizon_fs::create_dir_all(&pack).unwrap();
+        horizon_fs::write(pack.join(horizon_shader_api::MANIFEST),
             "schema = 1\nid = \"p\"\nname = \"P\"\nversion = \"1\"\napi = \"0.1\"\n[[post]]\nfile = \"post.wgsl\"\n").unwrap();
-        std::fs::write(pack.join("post.wgsl"), "fixture").unwrap();
+        horizon_fs::write(pack.join("post.wgsl"), "fixture").unwrap();
         let mut state = NativeShaders::default();
         assert_eq!(state.resolve_path(&dir, "horizon:p", false), pack);
         let first = fingerprint(&pack).unwrap();
         let manifest_path = pack.join(horizon_shader_api::MANIFEST);
-        let manifest = std::fs::read_to_string(&manifest_path).unwrap();
-        std::fs::write(&manifest_path, "temporarily invalid").unwrap();
+        let manifest = horizon_fs::read_to_string(&manifest_path).unwrap();
+        horizon_fs::write(&manifest_path, "temporarily invalid").unwrap();
         state.resolved_at = Some(web_time::Instant::now() - super::LOOK_EVERY);
         assert_eq!(state.resolve_path(&dir, "horizon:p", false), pack);
         assert_ne!(fingerprint(&pack).unwrap(), first);
-        std::fs::write(&manifest_path, manifest).unwrap();
+        horizon_fs::write(&manifest_path, manifest).unwrap();
         let first = fingerprint(&pack).unwrap();
         let values = horizon_client::shader_pack_list::native_values_pack(&pack, "p");
         let path = horizon_client::shader_pack_list::values_path(&values);
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(&path, "strength=2\n").unwrap();
+        horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+        horizon_fs::write(&path, "strength=2\n").unwrap();
         assert_ne!(fingerprint(&pack).unwrap(), first);
-        std::fs::rename(&pack, dir.join("renamed")).unwrap();
+        horizon_fs::rename(&pack, dir.join("renamed")).unwrap();
         state.resolved_at = None;
         assert_eq!(
             state.resolve_path(&dir, "horizon:p", false),
             dir.join("renamed")
         );
         let manifest_path = dir.join("renamed").join(horizon_shader_api::MANIFEST);
-        let text = std::fs::read_to_string(&manifest_path)
+        let text = horizon_fs::read_to_string(&manifest_path)
             .unwrap()
             .replace("id = \"p\"", "id = \"other\"");
-        std::fs::write(manifest_path, text).unwrap();
+        horizon_fs::write(manifest_path, text).unwrap();
         state.resolved_at = Some(web_time::Instant::now() - super::LOOK_EVERY);
         assert_eq!(
             state.resolve_path(&dir, "horizon:p", false),
@@ -346,7 +349,7 @@ mod tests {
             pack,
             "an explicit missing filesystem override must not switch to another installed pack"
         );
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]

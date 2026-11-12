@@ -13,9 +13,10 @@ use horizon_client::{
         canonical_component, criteria_by_name, criteria_read_only, criteria_render_type,
     },
 };
+use horizon_fs as fs;
 use horizon_world::nbt::{self, NamedTag, Tag};
 use serde_json::{Map, Value, json};
-use std::{collections::BTreeMap, fs, io::Write};
+use std::{collections::BTreeMap, io::Write};
 
 fn canon(tag: &Tag) -> Value {
     match tag {

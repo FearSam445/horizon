@@ -9,17 +9,17 @@ use std::sync::Arc;
 
 /// A world folder with one data pack holding `h275:broken`.
 fn world_with_pack(tag: &str) -> std::path::PathBuf {
-    let world = std::env::temp_dir().join(format!("h275-{tag}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&world);
+    let world = horizon_fs::temp_dir().join(format!("h275-{tag}-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&world);
     let pack = world.join("datapacks/fixture");
     let tests = pack.join("data/h275/test_instance");
-    std::fs::create_dir_all(&tests).unwrap();
-    std::fs::write(
+    horizon_fs::create_dir_all(&tests).unwrap();
+    horizon_fs::write(
         pack.join("pack.mcmeta"),
         r#"{"pack":{"description":"H275 fixture","pack_format":100}}"#,
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         tests.join("broken.json"),
         r#"{"type":"minecraft:block_based","structure":"minecraft:empty","environment":"minecraft:default","max_ticks":20,"required":true}"#,
     )
@@ -117,16 +117,16 @@ fn a_test_instance_from_an_enabled_world_pack_is_found_and_runs() {
         Some("Starting environment minecraft:default batch 0"),
         "{said:?}"
     );
-    let _ = std::fs::remove_dir_all(&world);
+    let _ = horizon_fs::remove_dir_all(&world);
 }
 
 /// A world folder with one pack holding these `test_instance` files.
 fn world_with(tag: &str, files: &[(&str, &str)]) -> std::path::PathBuf {
-    let world = std::env::temp_dir().join(format!("h275-{tag}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&world);
+    let world = horizon_fs::temp_dir().join(format!("h275-{tag}-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&world);
     let pack = world.join("datapacks/fixture");
-    std::fs::create_dir_all(&pack).unwrap();
-    std::fs::write(
+    horizon_fs::create_dir_all(&pack).unwrap();
+    horizon_fs::write(
         pack.join("pack.mcmeta"),
         r#"{"pack":{"description":"H275 fixture","pack_format":100}}"#,
     )
@@ -134,8 +134,8 @@ fn world_with(tag: &str, files: &[(&str, &str)]) -> std::path::PathBuf {
     for (id, body) in files {
         let (ns, path) = id.split_once(':').unwrap();
         let file = pack.join(format!("data/{ns}/test_instance/{path}.json"));
-        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
-        std::fs::write(file, body).unwrap();
+        horizon_fs::create_dir_all(file.parent().unwrap()).unwrap();
+        horizon_fs::write(file, body).unwrap();
     }
     world
 }
@@ -169,7 +169,7 @@ fn a_world_keeps_the_test_instances_it_opened_with() {
     assert!(game.test_def("h275:other").is_none(), "a miss in world A");
     // A file changed after the world opened.
     let file = a.join("datapacks/fixture/data/h275/test_instance/broken.json");
-    std::fs::write(
+    horizon_fs::write(
         &file,
         FAILING.replace("\"required\":true", "\"required\":false"),
     )
@@ -202,6 +202,6 @@ fn a_world_keeps_the_test_instances_it_opened_with() {
         !game.test_def("minecraft:always_pass").unwrap().block_based,
         "built in again"
     );
-    let _ = std::fs::remove_dir_all(&a);
-    let _ = std::fs::remove_dir_all(&b);
+    let _ = horizon_fs::remove_dir_all(&a);
+    let _ = horizon_fs::remove_dir_all(&b);
 }

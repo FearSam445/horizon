@@ -5,9 +5,9 @@ use horizon_world::{
 };
 type ByteValue = DataValue<u8>;
 type SyncedBytes = SyncedValues<u8>;
+use horizon_fs as fs;
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

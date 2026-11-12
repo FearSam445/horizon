@@ -32,8 +32,8 @@ fn falling_impacts_wear_the_helmet_before_normal_armor_and_reduction() {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!("horizon-helmet-{}", std::process::id()));
-    std::fs::create_dir_all(&scratch).unwrap();
+    let scratch = horizon_fs::temp_dir().join(format!("horizon-helmet-{}", std::process::id()));
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.creative = false;
     // Equipment breaks are server notifications, with no local visual RNG.
@@ -166,5 +166,5 @@ fn falling_impacts_wear_the_helmet_before_normal_armor_and_reduction() {
     game.falling_hurt_player(position, 8.0, "minecraft:falling_anvil");
     assert_eq!(game.player.as_ref().unwrap().health.health(), 18.096_f32);
     assert_eq!(game.player.as_ref().unwrap().health.absorption(), 0.0);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }

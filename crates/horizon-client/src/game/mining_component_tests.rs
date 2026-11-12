@@ -33,7 +33,7 @@ fn mining_uses_admitted_stack_tools_and_actual_eye_immersion() {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-stack-mining-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -41,7 +41,7 @@ fn mining_uses_admitted_stack_tools_and_actual_eye_immersion() {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.player = Some(PlayerMotion::new(game.motion, Vec3::new(4.5, 62.0, 4.5)).unwrap());
     game.player.as_mut().unwrap().ground.on_ground = true;
@@ -137,7 +137,7 @@ fn mining_uses_admitted_stack_tools_and_actual_eye_immersion() {
     assert!(game.held().is_none());
     assert_eq!(game.guest_equipment_breaks.last().unwrap().0, 47);
     game.lan_acting = None;
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }
 
 /// A survival player on solid ground in an empty chunk, for `f`.

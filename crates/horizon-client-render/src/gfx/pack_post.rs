@@ -6190,10 +6190,10 @@ mod tests {
         let Ok((device, queue)) = pollster::block_on(adapter.request_device(&desc)) else {
             return;
         };
-        let dir = std::env::temp_dir().join(format!("hz-composite-blend-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("hz-composite-blend-{}", std::process::id()));
         let shaders = dir.join("shaders");
-        std::fs::create_dir_all(&shaders).unwrap();
-        let file = |name: &str, text: &str| std::fs::write(shaders.join(name), text).unwrap();
+        horizon_fs::create_dir_all(&shaders).unwrap();
+        let file = |name: &str, text: &str| horizon_fs::write(shaders.join(name), text).unwrap();
         file(
             "composite.vsh",
             "#version 120\nvoid main() { gl_Position = ftransform(); }\n",
@@ -6215,7 +6215,7 @@ mod tests {
             &horizon_shaders::Macros::standard(),
             &Default::default(),
         );
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
         let program = post.programs.remove(0);
         let buffers = pack_images::Buffers::new(
             &device,

@@ -8,8 +8,10 @@
 //! Messages go through the `log` facade. Horizon's own still print their plain text on stderr,
 //! as they did before the log existed. Other crates, including native mods and their helper
 //! crates, reach the file through INFO too, with their target prefixed to identify the source.
+use horizon_fs::{self as fs, File, OpenOptions};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::{HashMap, VecDeque};
-use std::fs::{self, File, OpenOptions};
 use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, mpsc};
@@ -48,7 +50,7 @@ pub fn data_dir() -> PathBuf {
     } else if let Some(h) = &home {
         return h.join(".local/share");
     }
-    std::env::temp_dir()
+    horizon_fs::temp_dir()
 }
 
 /// `--home DIR`, set once at start; it wins over `HORIZON_HOME`.
@@ -79,7 +81,7 @@ pub fn player_dir() -> PathBuf {
     PLAYER
         .get()
         .cloned()
-        .unwrap_or_else(|| std::env::current_dir().unwrap_or_default())
+        .unwrap_or_else(|| horizon_fs::current_dir().unwrap_or_default())
 }
 
 /// `--player-dir`, if given.
@@ -92,7 +94,7 @@ pub fn player_dir_override() -> Option<&'static Path> {
 /// out of the game folder.
 pub fn shared_dir(options_dir: &Path) -> PathBuf {
     shared_dir_of(PLAYER.get().map(PathBuf::as_path), options_dir, || {
-        std::env::current_dir().unwrap_or_default()
+        horizon_fs::current_dir().unwrap_or_default()
     })
 }
 
@@ -261,7 +263,7 @@ pub fn open_latest(dir: &Path) -> io::Result<Option<Latest>> {
         .create(true)
         .truncate(false)
         .open(dir.join("latest.log"))?;
-    let modified = file.metadata()?.modified()?;
+    let modified = file.fs_metadata()?.modified()?;
     let date = DateTime::<Local>::from(modified).date_naive();
     roll(&mut file, dir, date)?;
     Ok(Some(Latest { file, _lock: lock }))
@@ -674,7 +676,7 @@ mod tests {
     fn native_mod_records_reach_the_file_with_their_targets() {
         use log::Log;
         let dir =
-            std::env::temp_dir().join(format!("horizon-native-log-test-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-native-log-test-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         let (out, receive) = mpsc::channel();
         let writer = Writer {
@@ -867,7 +869,7 @@ mod tests {
 
     #[test]
     fn startup_archives_the_last_runs_log() {
-        let dir = std::env::temp_dir().join(format!("horizon-logs-test-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-logs-test-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         // Empty: nothing is archived (OnStartupTriggeringPolicy's minSize is 1 byte).
@@ -903,7 +905,8 @@ mod tests {
 
     #[test]
     fn the_newest_crash_report_is_found_by_name() {
-        let home = std::env::temp_dir().join(format!("horizon-crash-test-{}", std::process::id()));
+        let home =
+            horizon_fs::temp_dir().join(format!("horizon-crash-test-{}", std::process::id()));
         let _ = fs::remove_dir_all(&home);
         assert!(newest_crash_report(&home).is_none());
         let dir = crash_reports_dir(&home);

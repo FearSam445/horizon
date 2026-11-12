@@ -4,6 +4,8 @@
 //! came closer, so they stayed invisible until a block in them changed.
 //! Relit columns remesh only where their light changed (#270), and every
 //! mesh still matches the world.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 extern crate horizon_client_lib as horizon_client;
 use horizon_client::{
     assets::Assets,
@@ -31,7 +33,7 @@ fn resources() -> Option<std::path::PathBuf> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    root.join("items.json").exists().then_some(root)
+    root.join("items.json").fs_exists().then_some(root)
 }
 
 /// A saved world: every column loads with its light, as saved chunks do.

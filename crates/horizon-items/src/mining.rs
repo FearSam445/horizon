@@ -206,15 +206,15 @@ mod tests {
     /// The held stack's own tool rules decide the speed and the harvest.
     #[test]
     fn fist_and_pickaxe_on_stone_through_the_item_table() {
-        let root = std::env::temp_dir().join(format!("horizon-mining-{}", std::process::id()));
-        std::fs::create_dir_all(&root).unwrap();
-        std::fs::write(
+        let root = horizon_fs::temp_dir().join(format!("horizon-mining-{}", std::process::id()));
+        horizon_fs::create_dir_all(&root).unwrap();
+        horizon_fs::write(
             root.join("items.json"),
             r#"{"minecraft:stick":{},"minecraft:diamond_pickaxe":{"minecraft:tool":{"rules":[{"blocks":"minecraft:stone","speed":8.0,"correct_for_drops":true}],"damage_per_block":1}}}"#,
         )
         .unwrap();
         let items = Items::catalog(&root, &PackOverlay::NONE).unwrap();
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let pick = ItemStack::new("minecraft:diamond_pickaxe", 1);
         let stick = ItemStack::new("minecraft:stick", 1);
         let ground = DestroySpeedModifiers::default();

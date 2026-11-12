@@ -5,11 +5,9 @@ use horizon_client::{
     Result,
     window::{FramerateLimiter, LimiterClock, end_frame},
 };
+use horizon_fs::File;
 use serde_json::Value;
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 
 /// The scripted clock of the case: every query costs `call` ns, parking
 /// sleeps the request plus the next overshoot (at least 1 ns), spinning

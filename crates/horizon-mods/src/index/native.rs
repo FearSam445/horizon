@@ -1,5 +1,7 @@
 //! Source-only native mixin bundles. Reading a bundle never executes its code.
 use super::{Facts, valid_id};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, io::Read, path::Path};
 
@@ -18,7 +20,7 @@ pub fn is_file(path: &Path) -> bool {
 /// Whether the mod file at `path` carries native code ([`MANIFEST`]): every `.hnmod`, and a
 /// `.hmod` with code beside or instead of its content.
 pub fn holds(path: &Path) -> bool {
-    std::fs::File::open(path)
+    horizon_fs::File::open(path)
         .ok()
         .and_then(|f| zip::ZipArchive::new(f).ok())
         .is_some_and(|mut zip| zip.by_name(MANIFEST).is_ok())
@@ -138,7 +140,7 @@ impl Bundle {
     }
 
     pub fn read(path: &Path) -> Result<Self, String> {
-        let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
+        let file = horizon_fs::File::open(path).map_err(|e| e.to_string())?;
         let mut zip = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
         let mut files = BTreeMap::new();
         let mut names = std::collections::BTreeSet::new();
@@ -294,11 +296,11 @@ mod tests {
         extras: &[(&str, &[u8])],
         mixin: &str,
     ) -> Result<Bundle, String> {
-        let path = std::env::temp_dir().join(format!(
+        let path = horizon_fs::temp_dir().join(format!(
             "native-bundle-{name}-{}.{extension}",
             std::process::id()
         ));
-        let mut zip = zip::ZipWriter::new(std::fs::File::create(&path).unwrap());
+        let mut zip = zip::ZipWriter::new(horizon_fs::File::create(&path).unwrap());
         let options = zip::write::SimpleFileOptions::default();
         zip.start_file(MANIFEST, options).unwrap();
         zip.write_all(&serde_json::to_vec(&manifest()).unwrap())
@@ -312,7 +314,7 @@ mod tests {
         }
         zip.finish().unwrap();
         let result = Bundle::read(&path);
-        std::fs::remove_file(path).unwrap();
+        horizon_fs::remove_file(path).unwrap();
         result
     }
     fn mixin() -> String {

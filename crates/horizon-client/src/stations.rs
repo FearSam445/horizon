@@ -9,9 +9,12 @@ use crate::{
     items::{ItemStack, Items},
 };
 use horizon_core::random::{LegacyRandom, RandomSource};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::loot::PackOverlay;
 use serde_json::Value;
-use std::{fs, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 /// Everything the workstation menus read, loaded once with the resources.
 pub struct StationData {
@@ -1442,7 +1445,7 @@ mod tests {
     /// result saves without it (vanilla: two worn diamond pickaxes give a plain one).
     #[test]
     fn grindstone_merge_at_the_default_max_damage_writes_no_component() {
-        let root = std::env::temp_dir().join(format!("horizon-grind-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-grind-{}", std::process::id()));
         fs::create_dir_all(&root).unwrap();
         fs::write(
             root.join("items.json"),
@@ -1845,7 +1848,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             return;
         }
         // The full table: the anvil reads the items' max damage.
@@ -2039,7 +2042,7 @@ mod tests {
     #[test]
     fn smithing_transform_overlay_matches_optional_inputs_and_takes_template_result() {
         use crate::{banner::Banners, brewing::Brewing, crafting::Recipes, creative::Names, menu};
-        let root = std::env::temp_dir().join(format!("horizon-smithing-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-smithing-{}", std::process::id()));
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(
             root.join("items.json"),
@@ -2163,7 +2166,7 @@ mod tests {
 
     #[test]
     fn smithing_trim_reads_an_inline_pattern() {
-        let root = std::env::temp_dir().join(format!("horizon-trim-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-trim-{}", std::process::id()));
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(
             root.join("items.json"),
@@ -2228,7 +2231,7 @@ mod tests {
     }
     #[test]
     fn stonecutter_result_keeps_its_components() {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-stonecutter-components-{}",
             std::process::id()
         ));
@@ -2251,8 +2254,8 @@ mod tests {
     /// order (path, then namespace), not a place after the game's own.
     #[test]
     fn stonecutter_lists_recipes_in_registration_order() {
-        let root =
-            std::env::temp_dir().join(format!("horizon-stonecutter-order-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-stonecutter-order-{}", std::process::id()));
         let dir = root.join("data/minecraft/recipe");
         fs::create_dir_all(&dir).unwrap();
         let cut = |result: &str| {

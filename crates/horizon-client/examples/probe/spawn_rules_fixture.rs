@@ -19,13 +19,13 @@ use horizon_client::{
 };
 use horizon_core::LevelKey;
 use horizon_core::random::{LegacyRandom, RandomSource};
+use horizon_fs as fs;
 use horizon_world::dimension_type::DimensionFacts;
 use horizon_world::loot::PackOverlay;
 use horizon_world::{chunk::BlockState, registry::BlockStateId};
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt::Write as _,
-    fs,
     path::Path,
 };
 

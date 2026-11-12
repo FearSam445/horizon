@@ -11,10 +11,12 @@
 use super::{Column, Span, Surface};
 use crate::{chunk::LevelShape, fast_hash::FxHashMap};
 use flate2::{Compression, read::ZlibDecoder, write::ZlibEncoder};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::registry::BlockStateId;
 use sha2::{Digest, Sha256};
 use std::{
-    fs,
     io::{BufReader, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     sync::Mutex,
@@ -109,7 +111,7 @@ impl Bucket {
             .open(path)?;
         let mut index = FxHashMap::default();
         let mut end = 0u64;
-        let len = file.metadata()?.len();
+        let len = file.fs_metadata()?.len();
         {
             let mut reader = BufReader::new(&mut file);
             loop {
@@ -186,7 +188,7 @@ impl LodBake {
                 log::info!("Horizon: baked far terrain is out of date; baking it again");
             }
             let reset = || -> std::io::Result<()> {
-                if dir.exists() {
+                if dir.fs_exists() {
                     fs::remove_dir_all(&dir)?;
                 }
                 fs::create_dir_all(&dir)?;
@@ -318,8 +320,10 @@ pub fn files_digest(root: &Path) -> String {
         };
         for entry in entries.flatten() {
             let path = entry.path();
-            let Ok(meta) = entry.metadata() else { continue };
-            if meta.is_dir() {
+            let Ok(meta) = entry.fs_metadata() else {
+                continue;
+            };
+            if meta.fs_is_dir() {
                 stack.push(path);
             } else {
                 let modified = meta
@@ -456,7 +460,7 @@ mod tests {
     }
     #[test]
     fn columns_round_trip_and_survive_reopening() {
-        let world = std::env::temp_dir().join(format!("horizon-lod-bake-{}", std::process::id()));
+        let world = horizon_fs::temp_dir().join(format!("horizon-lod-bake-{}", std::process::id()));
         let _ = fs::remove_dir_all(&world);
         let dimension = world.join("dimensions").join("minecraft").join("overworld");
         fs::create_dir_all(&dimension).unwrap();
@@ -521,7 +525,8 @@ mod tests {
     }
     #[test]
     fn empty_samples_are_not_baked() {
-        let world = std::env::temp_dir().join(format!("horizon-lod-empty-{}", std::process::id()));
+        let world =
+            horizon_fs::temp_dir().join(format!("horizon-lod-empty-{}", std::process::id()));
         let _ = fs::remove_dir_all(&world);
         let dimension = world.join("dimensions").join("minecraft").join("overworld");
         fs::create_dir_all(&dimension).unwrap();

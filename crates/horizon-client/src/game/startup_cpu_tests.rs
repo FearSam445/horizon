@@ -2,8 +2,8 @@ use super::*;
 
 #[test]
 fn a_folder_without_prepared_files_is_named_before_loading() {
-    let root = std::env::temp_dir().join(format!("horizon-unprepared-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&root);
+    let root = horizon_fs::temp_dir().join(format!("horizon-unprepared-{}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&root);
     let unprepared = root.join(".local/horizon-client/26.3");
     let missing = missing_resources(&unprepared, None).expect("no manifest is reported");
     assert!(missing.contains("horizon-resources.json"), "{missing}");
@@ -23,30 +23,30 @@ fn a_folder_without_prepared_files_is_named_before_loading() {
         missing.contains("launcher: download it at https://example.org/get"),
         "{missing}"
     );
-    std::fs::create_dir_all(&root).unwrap();
-    std::fs::write(root.join("horizon-resources.json"), "{}").unwrap();
+    horizon_fs::create_dir_all(&root).unwrap();
+    horizon_fs::write(root.join("horizon-resources.json"), "{}").unwrap();
     assert_eq!(missing_resources(&root, None), None);
 
     // A killed export leaves an empty file behind; the error names it
     // instead of serde's "expected value at line 1 column 1".
-    std::fs::write(root.join("gameplay-facts.json"), "").unwrap();
+    horizon_fs::write(root.join("gameplay-facts.json"), "").unwrap();
     let damaged = missing_resources(&root, None).expect("an empty prepared file is reported");
     assert!(damaged.contains("gameplay-facts.json"), "{damaged}");
     assert!(damaged.contains("damaged"), "{damaged}");
-    std::fs::write(root.join("gameplay-facts.json"), "{}").unwrap();
+    horizon_fs::write(root.join("gameplay-facts.json"), "{}").unwrap();
     assert_eq!(missing_resources(&root, None), None);
 
-    std::fs::write(root.join("horizon-resources.json"), " \n").unwrap();
+    horizon_fs::write(root.join("horizon-resources.json"), " \n").unwrap();
     let damaged = missing_resources(&root, None).expect("an empty manifest is reported");
     assert!(damaged.contains("horizon-resources.json"), "{damaged}");
-    std::fs::remove_dir_all(&root).unwrap();
+    horizon_fs::remove_dir_all(&root).unwrap();
 }
 
 #[test]
 fn worker_prepares_owned_models_and_inventory_before_handoff() {
-    let root = std::env::temp_dir().join(format!("horizon-startup-cpu-{}", std::process::id()));
-    std::fs::create_dir_all(&root).unwrap();
-    std::fs::write(
+    let root = horizon_fs::temp_dir().join(format!("horizon-startup-cpu-{}", std::process::id()));
+    horizon_fs::create_dir_all(&root).unwrap();
+    horizon_fs::write(
         root.join("entity-models.json"),
         r#"{
         "minecraft:end_crystal#main": {}, "minecraft:ender_dragon#main": {},
@@ -59,7 +59,7 @@ fn worker_prepares_owned_models_and_inventory_before_handoff() {
     }"#,
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         root.join("creative-tabs.json"),
         r#"[{
         "id":"minecraft:building_blocks", "items":["minecraft:stone"]
@@ -73,7 +73,7 @@ fn worker_prepares_owned_models_and_inventory_before_handoff() {
     .join()
     .unwrap()
     .unwrap();
-    std::fs::remove_dir_all(&root).unwrap();
+    horizon_fs::remove_dir_all(&root).unwrap();
     assert!(prepared.crystal_model.is_some());
     assert!(prepared.cushion_model.is_some());
     let models = &prepared.entity_models;

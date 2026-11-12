@@ -8,6 +8,8 @@
 //! writes the scenario's name to PATH with the extension `done`.
 use super::Game;
 use super::event_loop::EventLoopCtl;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{collections::BTreeMap, path::PathBuf};
 
 #[derive(Default)]
@@ -69,11 +71,14 @@ impl Game<'_> {
         };
         if self.tick_script.running.is_none() {
             let go = path.with_extension("go");
-            if self.remote.is_none() || !go.exists() {
+            if self.remote.is_none() || !go.fs_exists() {
                 return;
             }
-            let _ = std::fs::remove_file(&go);
-            let Some(script) = std::fs::read_to_string(&path).ok().and_then(|t| parse(&t)) else {
+            let _ = horizon_fs::remove_file(&go);
+            let Some(script) = horizon_fs::read_to_string(&path)
+                .ok()
+                .and_then(|t| parse(&t))
+            else {
                 log::warn!("Horizon: tick script {} is not a scenario", path.display());
                 return;
             };
@@ -94,7 +99,7 @@ impl Game<'_> {
         }
         if let Some(name) = finished {
             self.tick_script.running = None;
-            let _ = std::fs::write(path.with_extension("done"), name);
+            let _ = horizon_fs::write(path.with_extension("done"), name);
         }
     }
 }

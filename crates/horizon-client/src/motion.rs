@@ -2,6 +2,8 @@
 //! jump, collision, support, restitution and stored health bindings, and
 //! powder snow's block-inside effects and freezing. Entity lifecycle, other
 //! block-inside effects and audiovisual event consumers remain separate work.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 mod body;
 
 use crate::{Result, assets::Assets, collisions::SceneCollisions, world::World};
@@ -3087,7 +3089,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipped glide exit regression: prepared resources unavailable");
             return;
         }
@@ -3118,7 +3120,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipped sword sweep regression: prepared resources unavailable");
             return;
         }
@@ -3156,7 +3158,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipped health clamp: prepared resources unavailable");
             return;
         }
@@ -3237,7 +3239,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipped attribute save: prepared resources unavailable");
             return;
         }
@@ -3329,7 +3331,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3405,7 +3407,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3471,7 +3473,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3520,7 +3522,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3580,7 +3582,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3641,7 +3643,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3703,7 +3705,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3779,7 +3781,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3853,7 +3855,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -3944,7 +3946,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4009,7 +4011,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4061,7 +4063,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4119,7 +4121,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4163,7 +4165,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4230,7 +4232,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipped hunger regression: prepared resources unavailable");
             return;
         }
@@ -4299,7 +4301,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipped damage regression: prepared resources unavailable");
             return;
         }
@@ -4488,7 +4490,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4549,7 +4551,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4598,7 +4600,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4644,7 +4646,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4677,7 +4679,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4731,7 +4733,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4772,7 +4774,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4818,7 +4820,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4867,7 +4869,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4901,7 +4903,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4935,7 +4937,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4976,7 +4978,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5023,7 +5025,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5067,7 +5069,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5116,7 +5118,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5180,7 +5182,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipping resident water/lava test: prepared resources unavailable");
             return;
         }
@@ -5439,7 +5441,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5515,7 +5517,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5570,7 +5572,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5643,7 +5645,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5695,7 +5697,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5750,7 +5752,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5821,7 +5823,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5879,7 +5881,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5931,7 +5933,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -5976,7 +5978,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipped forced flight: prepared resources unavailable");
             return;
         }
@@ -6034,7 +6036,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -6095,7 +6097,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -6135,7 +6137,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -6175,7 +6177,7 @@ mod tests {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();

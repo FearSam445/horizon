@@ -14,6 +14,8 @@ use horizon_core::{
     geometry::{Vec3, trig::Mth},
     random::{LegacyRandom, RandomSource},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::entity_data::PositionSource;
 use std::{
     collections::{BTreeMap, HashMap},
@@ -1210,7 +1212,7 @@ mod digging_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return None;
         }
         let data = MobTypes::load(&root).ok()?;

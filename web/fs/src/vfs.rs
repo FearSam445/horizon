@@ -26,8 +26,16 @@ fn now() -> SystemTime {
 #[derive(Clone)]
 enum Node {
     Dir(Dir),
-    File { data: Bytes, modified: SystemTime },
-    Entry { archive: Arc<Archive>, index: usize, len: u64, modified: SystemTime },
+    File {
+        data: Bytes,
+        modified: SystemTime,
+    },
+    Entry {
+        archive: Arc<Archive>,
+        index: usize,
+        len: u64,
+        modified: SystemTime,
+    },
 }
 
 #[derive(Clone, Default)]
@@ -41,7 +49,11 @@ impl Node {
     }
     fn meta(&self) -> Metadata {
         match self {
-            Node::Dir(_) => Metadata { kind: Kind::Dir, len: 0, modified: None },
+            Node::Dir(_) => Metadata {
+                kind: Kind::Dir,
+                len: 0,
+                modified: None,
+            },
             Node::File { data, modified } => Metadata {
                 kind: Kind::File,
                 len: lock(data).len() as u64,
@@ -84,7 +96,10 @@ fn absolute(path: &Path) -> PathBuf {
 }
 
 fn not_found(path: &Path) -> io::Error {
-    io::Error::new(io::ErrorKind::NotFound, format!("{}: no such file or folder", path.display()))
+    io::Error::new(
+        io::ErrorKind::NotFound,
+        format!("{}: no such file or folder", path.display()),
+    )
 }
 
 fn error(kind: io::ErrorKind, path: &Path, what: &str) -> io::Error {
@@ -115,10 +130,16 @@ fn find_mut<'a>(root: &'a mut Node, parts: &[OsString]) -> Option<&'a mut Node> 
 
 /// The folder holding `parts`'s last part, which must exist.
 fn parent_mut<'a>(root: &'a mut Node, parts: &[OsString], path: &Path) -> io::Result<&'a mut Dir> {
-    let (_, folder) = parts.split_last().ok_or_else(|| error(io::ErrorKind::InvalidInput, path, "the root"))?;
+    let (_, folder) = parts
+        .split_last()
+        .ok_or_else(|| error(io::ErrorKind::InvalidInput, path, "the root"))?;
     match find_mut(root, folder) {
         Some(Node::Dir(dir)) => Ok(dir),
-        Some(_) => Err(error(io::ErrorKind::NotADirectory, path, "a parent is not a folder")),
+        Some(_) => Err(error(
+            io::ErrorKind::NotADirectory,
+            path,
+            "a parent is not a folder",
+        )),
         None => Err(not_found(path)),
     }
 }
@@ -138,7 +159,8 @@ pub fn mount_zip(at: impl AsRef<Path>, bytes: Vec<u8>) -> io::Result<usize> {
     for index in 0..archive.len() {
         let (name, len, is_dir) = {
             let entry = reader.by_index_raw(index).map_err(io::Error::other)?;
-            (entry.name().to_owned(), entry.size(), entry.is_dir())
+            let name = entry.name().map_err(io::Error::other)?.into_owned();
+            (name, entry.size(), entry.is_dir())
         };
         let mut path = base.clone();
         path.extend(parts(Path::new(&name)));
@@ -149,12 +171,20 @@ pub fn mount_zip(at: impl AsRef<Path>, bytes: Vec<u8>) -> io::Result<usize> {
         let mut node = &mut *tree;
         for folder in folders {
             let Node::Dir(dir) = node else {
-                return Err(error(io::ErrorKind::InvalidData, Path::new(&name), "a file is in the way"));
+                return Err(error(
+                    io::ErrorKind::InvalidData,
+                    Path::new(&name),
+                    "a file is in the way",
+                ));
             };
             node = dir.entries.entry(folder.clone()).or_insert_with(Node::dir);
         }
         let Node::Dir(dir) = node else {
-            return Err(error(io::ErrorKind::InvalidData, Path::new(&name), "a file is in the way"));
+            return Err(error(
+                io::ErrorKind::InvalidData,
+                Path::new(&name),
+                "a file is in the way",
+            ));
         };
         if is_dir {
             dir.entries.entry(last.clone()).or_insert_with(Node::dir);
@@ -162,7 +192,12 @@ pub fn mount_zip(at: impl AsRef<Path>, bytes: Vec<u8>) -> io::Result<usize> {
             files += 1;
             dir.entries.insert(
                 last.clone(),
-                Node::Entry { archive: archive.clone(), index, len, modified },
+                Node::Entry {
+                    archive: archive.clone(),
+                    index,
+                    len,
+                    modified,
+                },
             );
         }
     }
@@ -209,7 +244,8 @@ impl Metadata {
         FileType(self.kind)
     }
     pub fn modified(&self) -> io::Result<SystemTime> {
-        self.modified.ok_or_else(|| io::ErrorKind::Unsupported.into())
+        self.modified
+            .ok_or_else(|| io::ErrorKind::Unsupported.into())
     }
     pub fn accessed(&self) -> io::Result<SystemTime> {
         self.modified()
@@ -320,16 +356,28 @@ impl File {
         OpenOptions::new().read(true).open(path)
     }
     pub fn create(path: impl AsRef<Path>) -> io::Result<File> {
-        OpenOptions::new().write(true).create(true).truncate(true).open(path)
+        OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(path)
     }
     pub fn create_new(path: impl AsRef<Path>) -> io::Result<File> {
-        OpenOptions::new().read(true).write(true).create_new(true).open(path)
+        OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create_new(true)
+            .open(path)
     }
     pub fn options() -> OpenOptions {
         OpenOptions::new()
     }
     pub fn metadata(&self) -> io::Result<Metadata> {
-        Ok(Metadata { kind: Kind::File, len: lock(&self.data).len() as u64, modified: Some(now()) })
+        Ok(Metadata {
+            kind: Kind::File,
+            len: lock(&self.data).len() as u64,
+            modified: Some(now()),
+        })
     }
     pub fn set_len(&self, size: u64) -> io::Result<()> {
         lock(&self.data).resize(size as usize, 0);
@@ -378,7 +426,11 @@ impl File {
 
     fn read_into(&self, out: &mut [u8]) -> io::Result<usize> {
         if !self.read {
-            return Err(error(io::ErrorKind::PermissionDenied, &self.path, "not opened for reading"));
+            return Err(error(
+                io::ErrorKind::PermissionDenied,
+                &self.path,
+                "not opened for reading",
+            ));
         }
         let data = lock(&self.data);
         let pos = self.pos.load(Ordering::Relaxed) as usize;
@@ -389,10 +441,18 @@ impl File {
     }
     fn write_from(&self, buf: &[u8]) -> io::Result<usize> {
         if !self.write {
-            return Err(error(io::ErrorKind::PermissionDenied, &self.path, "not opened for writing"));
+            return Err(error(
+                io::ErrorKind::PermissionDenied,
+                &self.path,
+                "not opened for writing",
+            ));
         }
         let mut data = lock(&self.data);
-        let pos = if self.append { data.len() } else { self.pos.load(Ordering::Relaxed) as usize };
+        let pos = if self.append {
+            data.len()
+        } else {
+            self.pos.load(Ordering::Relaxed) as usize
+        };
         if data.len() < pos + buf.len() {
             data.resize(pos + buf.len(), 0);
         }
@@ -512,7 +572,12 @@ impl OpenOptions {
                 }
                 data.clone()
             }
-            Some(Node::Entry { archive, index, len, .. }) => {
+            Some(Node::Entry {
+                archive,
+                index,
+                len,
+                ..
+            }) => {
                 let bytes = if writes && self.truncate {
                     Vec::new()
                 } else {
@@ -521,16 +586,32 @@ impl OpenOptions {
                 let data: Bytes = Arc::new(Mutex::new(bytes));
                 if writes {
                     // Copied out of the archive: from now on the file is the game's.
-                    dir.entries.insert(name, Node::File { data: data.clone(), modified: now() });
+                    dir.entries.insert(
+                        name,
+                        Node::File {
+                            data: data.clone(),
+                            modified: now(),
+                        },
+                    );
                 }
                 data
             }
             None if self.create || self.create_new => {
                 if !writes {
-                    return Err(error(io::ErrorKind::InvalidInput, path, "creating needs write"));
+                    return Err(error(
+                        io::ErrorKind::InvalidInput,
+                        path,
+                        "creating needs write",
+                    ));
                 }
                 let data: Bytes = Arc::new(Mutex::new(Vec::new()));
-                dir.entries.insert(name, Node::File { data: data.clone(), modified: now() });
+                dir.entries.insert(
+                    name,
+                    Node::File {
+                        data: data.clone(),
+                        modified: now(),
+                    },
+                );
                 data
             }
             None => return Err(not_found(path)),
@@ -595,14 +676,20 @@ impl DirBuilder {
         self
     }
     pub fn create(&self, path: impl AsRef<Path>) -> io::Result<()> {
-        if self.recursive { create_dir_all(path) } else { create_dir(path) }
+        if self.recursive {
+            create_dir_all(path)
+        } else {
+            create_dir(path)
+        }
     }
 }
 
 pub fn metadata(path: impl AsRef<Path>) -> io::Result<Metadata> {
     let path = path.as_ref();
     let tree = lock(&TREE);
-    find(&tree, &parts(path)).map(Node::meta).ok_or_else(|| not_found(path))
+    find(&tree, &parts(path))
+        .map(Node::meta)
+        .ok_or_else(|| not_found(path))
 }
 
 pub fn symlink_metadata(path: impl AsRef<Path>) -> io::Result<Metadata> {
@@ -620,7 +707,11 @@ pub fn canonicalize(path: impl AsRef<Path>) -> io::Result<PathBuf> {
 }
 
 pub fn read_link(path: impl AsRef<Path>) -> io::Result<PathBuf> {
-    Err(error(io::ErrorKind::InvalidInput, path.as_ref(), "not a link"))
+    Err(error(
+        io::ErrorKind::InvalidInput,
+        path.as_ref(),
+        "not a link",
+    ))
 }
 
 pub fn read(path: impl AsRef<Path>) -> io::Result<Vec<u8>> {
@@ -631,7 +722,12 @@ pub fn read(path: impl AsRef<Path>) -> io::Result<Vec<u8>> {
     };
     match node {
         Some(Node::File { data, .. }) => Ok(lock(&data).clone()),
-        Some(Node::Entry { archive, index, len, .. }) => inflate(&archive, index, len),
+        Some(Node::Entry {
+            archive,
+            index,
+            len,
+            ..
+        }) => inflate(&archive, index, len),
         Some(Node::Dir(_)) => Err(error(io::ErrorKind::IsADirectory, path, "a folder")),
         None => Err(not_found(path)),
     }
@@ -657,7 +753,10 @@ pub fn write(path: impl AsRef<Path>, contents: impl AsRef<[u8]>) -> io::Result<(
     }
     dir.entries.insert(
         name,
-        Node::File { data: Arc::new(Mutex::new(contents.as_ref().to_vec())), modified: now() },
+        Node::File {
+            data: Arc::new(Mutex::new(contents.as_ref().to_vec())),
+            modified: now(),
+        },
     );
     Ok(())
 }
@@ -704,13 +803,21 @@ pub fn create_dir_all(path: impl AsRef<Path>) -> io::Result<()> {
     let mut node = &mut *tree;
     for name in parts(path) {
         let Node::Dir(dir) = node else {
-            return Err(error(io::ErrorKind::NotADirectory, path, "a file is in the way"));
+            return Err(error(
+                io::ErrorKind::NotADirectory,
+                path,
+                "a file is in the way",
+            ));
         };
         node = dir.entries.entry(name).or_insert_with(Node::dir);
     }
     match node {
         Node::Dir(_) => Ok(()),
-        _ => Err(error(io::ErrorKind::AlreadyExists, path, "a file, not a folder")),
+        _ => Err(error(
+            io::ErrorKind::AlreadyExists,
+            path,
+            "a file, not a folder",
+        )),
     }
 }
 
@@ -729,7 +836,9 @@ fn remove(path: &Path, want_dir: bool, recursive: bool) -> io::Result<()> {
                 return Err(error(io::ErrorKind::DirectoryNotEmpty, path, "not empty"));
             }
         }
-        Some(_) if want_dir => return Err(error(io::ErrorKind::NotADirectory, path, "not a folder")),
+        Some(_) if want_dir => {
+            return Err(error(io::ErrorKind::NotADirectory, path, "not a folder"));
+        }
         Some(_) => {}
     }
     dir.entries.remove(name);
@@ -755,14 +864,20 @@ pub fn rename(from: impl AsRef<Path>, to: impl AsRef<Path>) -> io::Result<()> {
         return metadata(from).map(|_| ());
     }
     if dst.starts_with(&src) {
-        return Err(error(io::ErrorKind::InvalidInput, to, "inside the folder it moves"));
+        return Err(error(
+            io::ErrorKind::InvalidInput,
+            to,
+            "inside the folder it moves",
+        ));
     }
     let mut tree = lock(&TREE);
     // The target's folder must exist before anything moves.
     parent_mut(&mut tree, &dst, to)?;
     let node = {
         let dir = parent_mut(&mut tree, &src, from)?;
-        dir.entries.remove(src.last().expect("checked")).ok_or_else(|| not_found(from))?
+        dir.entries
+            .remove(src.last().expect("checked"))
+            .ok_or_else(|| not_found(from))?
     };
     let dir = parent_mut(&mut tree, &dst, to).expect("checked above");
     let name = dst.last().expect("checked").clone();

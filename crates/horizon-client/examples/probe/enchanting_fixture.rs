@@ -8,8 +8,9 @@ use horizon_client::{
     items::{ItemStack, Items},
     stations,
 };
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
-use std::{fmt::Write as _, fs, path::Path, sync::Arc};
+use std::{fmt::Write as _, path::Path, sync::Arc};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().collect();

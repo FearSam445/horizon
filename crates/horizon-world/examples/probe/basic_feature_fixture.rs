@@ -1,5 +1,6 @@
 //! Feature world transport retaining ordered mutations and partial failures.
 use horizon_core::random::{LegacyRandom, RandomSource, XoroshiroRandom};
+use horizon_fs as fs;
 use horizon_world::{
     heightmap::HeightmapType,
     registry::BlockStateId,
@@ -12,7 +13,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     io::{self, Write},
     path::Path,
 };

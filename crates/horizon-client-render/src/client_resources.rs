@@ -61,7 +61,8 @@ impl ClientResources {
 mod tests {
     use super::*;
     use crate::packs::{build_overlay, discover};
-    use std::{fs, path::Path};
+    use horizon_fs as fs;
+    use std::path::Path;
 
     const COW: &str = "assets/minecraft/textures/entity/cow/cow_temperate.png";
     const RED: [u8; 4] = [255, 0, 0, 255];
@@ -88,7 +89,7 @@ mod tests {
     #[test]
     fn a_resource_pack_overrides_a_texture() {
         let base =
-            std::env::temp_dir().join(format!("horizon-client-resources-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-client-resources-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         write(&vanilla.join(COW), &one_pixel_png(RED));
@@ -117,7 +118,7 @@ mod tests {
 
     #[test]
     fn only_plain_paths_under_assets_are_read() {
-        let base = std::env::temp_dir().join(format!(
+        let base = horizon_fs::temp_dir().join(format!(
             "horizon-client-resources-paths-{}",
             std::process::id()
         ));

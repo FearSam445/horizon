@@ -16,7 +16,7 @@ pub(super) const HELP: &[&str] = &[
 ];
 
 fn saves() -> Result<PathBuf> {
-    Ok(std::env::current_dir()?.join("saves"))
+    Ok(horizon_fs::current_dir()?.join("saves"))
 }
 
 impl Game<'_> {

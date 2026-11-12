@@ -17,6 +17,8 @@
 //! keeps the FXC instance and logs one line. `WGPU_DX12_COMPILER` (`fxc`,
 //! `dxc`, `auto`) overrides the choice: wgpu applies it to every instance.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::PathBuf;
 
 /// The DLL's name, as the Windows zip ships it beside `horizon-client.exe`.
@@ -40,8 +42,8 @@ pub(super) fn forced() -> bool {
 /// path, so a copy elsewhere on `PATH` (an older Windows SDK's) is never the
 /// one loaded.
 pub(super) fn bundled_dll() -> Option<PathBuf> {
-    let dll = std::env::current_exe().ok()?.parent()?.join(DLL);
-    dll.is_file().then_some(dll)
+    let dll = horizon_fs::current_exe().ok()?.parent()?.join(DLL);
+    dll.fs_is_file().then_some(dll)
 }
 
 /// The compiler setting that loads `dll`, and fails the instance (rather

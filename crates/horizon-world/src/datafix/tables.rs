@@ -8,6 +8,8 @@
 //! test, so the order is not part of their meaning. `block_state_data` keeps the order of
 //! vanilla's `register` calls (see `block_state_data.rs`).
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -135,7 +137,7 @@ fn path() -> PathBuf {
 
 /// Whether the prepared tables are there (tests skip without them).
 pub fn available() -> bool {
-    path().is_file()
+    path().fs_is_file()
 }
 
 fn text(s: String) -> &'static str {

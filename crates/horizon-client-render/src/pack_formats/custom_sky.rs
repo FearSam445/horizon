@@ -162,14 +162,14 @@ mod tests {
     use crate::custom_sky::{Conditions, Weather};
 
     fn pack(files: &[(&str, &str)]) -> (std::path::PathBuf, CustomSky) {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-custom-sky-{}-{}",
             std::process::id(),
             files.len()
         ));
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("assets/minecraft/optifine/sky/world0");
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         let png = {
             let mut bytes = Vec::new();
             let mut encoder = png::Encoder::new(&mut bytes, 6, 4);
@@ -183,8 +183,8 @@ mod tests {
             bytes
         };
         for (name, text) in files {
-            std::fs::write(dir.join(format!("{name}.properties")), text).unwrap();
-            std::fs::write(dir.join(format!("{name}.png")), &png).unwrap();
+            horizon_fs::write(dir.join(format!("{name}.properties")), text).unwrap();
+            horizon_fs::write(dir.join(format!("{name}.png")), &png).unwrap();
         }
         let sky = CustomSky::load(&root);
         (root, sky)
@@ -205,7 +205,7 @@ mod tests {
             ("sky1", "biomes=desert\ntransition=2"),
             ("sky2", "blend=alpha\nrotate=false"),
         ]);
-        let _ = std::fs::remove_dir_all(root);
+        let _ = horizon_fs::remove_dir_all(root);
         assert!(sky.has(0) && !sky.has(1));
         assert_eq!(sky.images[0].width, 6);
         let (mut state, mut out) = (State::default(), Vec::new());
@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn a_layer_turns_west_like_the_sun() {
         let (root, sky) = pack(&[("sky1", "")]);
-        let _ = std::fs::remove_dir_all(root);
+        let _ = horizon_fs::remove_dir_all(root);
         let (mut state, mut out) = (State::default(), Vec::new());
         // A quarter turn after noon (sunset): the skybox's zenith has gone down to the west.
         let c = Conditions {

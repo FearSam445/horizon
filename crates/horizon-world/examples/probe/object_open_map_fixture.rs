@@ -1,10 +1,10 @@
+use horizon_fs as fs;
 use horizon_world::{
     object_open_map::{Entry, ObjectOpenMap, TraversalError},
     object_open_set::{CursorError, ObjectKey},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

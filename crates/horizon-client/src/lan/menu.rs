@@ -10,6 +10,8 @@ use crate::{
     items::{ItemStack, Items},
     world::World,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 /// What the menus need to know about items and the slots' rules.
 pub trait Rules {
@@ -1195,7 +1197,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("items.json").exists() {
+        if !root.join("items.json").fs_exists() {
             eprintln!("skipping resource-backed menu check: {}", root.display());
             return None;
         }

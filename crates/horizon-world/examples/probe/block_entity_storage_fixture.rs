@@ -1,10 +1,10 @@
 use horizon_core::position::{BlockPos, ChunkPos};
+use horizon_fs as fs;
 use horizon_world::{
     block_entities::{ProtoBlockEntities, position_from_tag},
     nbt::Tag,
 };
 use std::{
-    fs,
     io::{self, BufRead, Write},
     str::SplitWhitespace,
 };

@@ -1,4 +1,7 @@
 use horizon_core::position::{BlockPos, ChunkPos};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     DATA_VERSION,
     chunk::{BlockState, ChunkData, PalettedContainer},
@@ -7,7 +10,6 @@ use horizon_world::{
     region::{ChunkRecord, RegionFile, RegionWriter},
 };
 use std::{
-    fs,
     io::{Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicU32, Ordering},
@@ -21,7 +23,7 @@ impl Directory {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let path = std::env::temp_dir().join(format!(
+        let path = horizon_fs::temp_dir().join(format!(
             "horizon-world-test-{}-{stamp}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
@@ -58,8 +60,8 @@ fn external_threshold_negative_coordinates_and_timestamps_roundtrip() {
     writer.write(a, &inline).unwrap();
     writer.write(b, &external).unwrap();
     writer.finish().unwrap();
-    assert!(!dir.0.join("c.-32.0.mcc").exists());
-    assert!(dir.0.join("c.-1.31.mcc").exists());
+    assert!(!dir.0.join("c.-32.0.mcc").fs_exists());
+    assert!(dir.0.join("c.-1.31.mcc").fs_exists());
     let mut reader = RegionFile::open(dir.region()).unwrap();
     assert_eq!(
         reader.chunks().collect::<Vec<_>>(),
@@ -96,9 +98,9 @@ fn in_place_writes_reuse_freed_sectors_and_keep_other_chunks() {
     region.write(c, &record(2 * 4096 - 5)).unwrap();
     assert_eq!(sectors(&dir.region()), 8);
     region.write(c, &record(256 * 4096)).unwrap();
-    assert!(dir.0.join("c.-1.31.mcc").exists());
+    assert!(dir.0.join("c.-1.31.mcc").fs_exists());
     region.write(c, &record(10)).unwrap();
-    assert!(!dir.0.join("c.-1.31.mcc").exists());
+    assert!(!dir.0.join("c.-1.31.mcc").fs_exists());
     assert!(region.clear(b, 7).unwrap());
     assert!(!region.clear(b, 7).unwrap());
     region.sync().unwrap();
@@ -145,10 +147,10 @@ fn failed_writer_cannot_commit_and_removes_its_own_external_files() {
     writer
         .write(ChunkPos::new(-1, 0), &record(1_100_000))
         .unwrap();
-    assert!(dir.0.join("c.-1.0.mcc").exists());
+    assert!(dir.0.join("c.-1.0.mcc").fs_exists());
     assert!(writer.write(ChunkPos::new(0, 0), &record(4)).is_err());
     assert!(writer.finish().is_err());
-    assert!(!dir.region().exists());
+    assert!(!dir.region().fs_exists());
     assert_eq!(fs::read_dir(&dir.0).unwrap().count(), 0);
 }
 

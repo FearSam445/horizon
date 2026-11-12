@@ -8,6 +8,8 @@ use crate::{
     advancements::{Progress, Tree},
     recipe_book::{Category, RecipeIndex, Settings, crafting_category, crafting_station},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::buf::Writer;
 use serde_json::Value;
 use std::{
@@ -868,15 +870,15 @@ mod tests {
 
     /// A resources dir with those registries and the given recipe files.
     fn resources(name: &str, recipes: &[(&str, &str)]) -> PathBuf {
-        let root =
-            std::env::temp_dir().join(format!("horizon-recipe-book-{name}-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-recipe-book-{name}-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("data/minecraft/recipe");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(root.join("registries.json"), REGISTRIES).unwrap();
-        std::fs::write(root.join("items.json"), "{}").unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(root.join("registries.json"), REGISTRIES).unwrap();
+        horizon_fs::write(root.join("items.json"), "{}").unwrap();
         for (id, json) in recipes {
-            std::fs::write(dir.join(format!("{id}.json")), json).unwrap();
+            horizon_fs::write(dir.join(format!("{id}.json")), json).unwrap();
         }
         root
     }
@@ -924,7 +926,7 @@ mod tests {
             }
             other => panic!("not an item list: {other:?}"),
         }
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     /// A recipe whose ingredient kind no loader knows stays out of the book:
@@ -989,7 +991,7 @@ mod tests {
             !add.entries.is_empty(),
             "{name}: the crafted recipe reaches the book after rejoining"
         );
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     #[test]
@@ -1007,13 +1009,13 @@ mod tests {
         let recipe = r#"{"type":"minecraft:crafting_shapeless","ingredients":["minecraft:raw_copper"],"result":{"id":"minecraft:copper_ingot","count":2}}"#;
         let root = resources("content_namespace", &[("control", recipe)]);
         let dir = root.join("data/recipe_pilot/recipe");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(dir.join("press.json"), recipe).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(dir.join("press.json"), recipe).unwrap();
         for marker in [
             horizon_items::content_namespaces::MARKER,
             horizon_items::content_namespaces::MOD_IDS_MARKER,
         ] {
-            std::fs::write(root.join(marker), br#"["recipe_pilot"]"#).unwrap();
+            horizon_fs::write(root.join(marker), br#"["recipe_pilot"]"#).unwrap();
         }
         let (sync, e) = entry(&root, "recipe_pilot:press");
         assert_eq!(
@@ -1030,7 +1032,7 @@ mod tests {
             other => panic!("not a shapeless content recipe: {other:?}"),
         }
         let _ = entry(&root, "minecraft:control");
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
     }
 
     /// DyeRecipe.display: the target, then the dyes kept to what carries the
@@ -1076,7 +1078,7 @@ mod tests {
                 HolderSet::Tag("minecraft:dyes".into()),
             ])
         );
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     /// ImbueRecipe.display: a 3×3 of four materials, the source kept to any
@@ -1129,7 +1131,7 @@ mod tests {
                 arrow,
             ])
         );
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     #[test]
@@ -1157,7 +1159,7 @@ mod tests {
                 .book_entries("minecraft:mymod_kind", &sync, NOTIFY_AND_HIGHLIGHT)
                 .is_empty()
         );
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     /// The property sets and the stonecutter read a NeoForge shape's items
@@ -1209,7 +1211,7 @@ mod tests {
         assert!(len >= 2, "an item list, not empty ({len}) nor a tag");
         assert_eq!(len - 1, 1, "the compound's one item");
         assert_eq!(r.varint().unwrap(), raw);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     /// The stonecutter's recipes go out in registration order (path, then
@@ -1256,7 +1258,7 @@ mod tests {
                 vec![item("minecraft:raw_copper")]
             ]
         );
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     /// A world's own load over the data its packs gave (`SyncData::load_over`, which keeps
@@ -1283,7 +1285,7 @@ mod tests {
         assert_ne!(full.recipes, vanilla.recipes, "the pack's recipe is sent");
         assert_eq!(over.recipes, full.recipes);
         assert_eq!(over.advancements.recipes, full.advancements.recipes);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     /// `RecipeManager.getRecipeFromDisplay`, which
@@ -1323,7 +1325,7 @@ mod tests {
             None,
             "past the last display"
         );
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     #[test]
@@ -1375,7 +1377,7 @@ mod tests {
         assert_eq!(station, SlotDisplay::Item(item("minecraft:furnace")));
         assert_eq!(duration, 200);
         assert_eq!(experience, 0.7);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     /// A recipe filter's `replace_input` (#5910) reaches the book swapped:
@@ -1426,7 +1428,7 @@ mod tests {
             SlotDisplay::Tag(HolderSet::Items(vec![item("minecraft:redstone")])),
             "the display shows the swapped input too"
         );
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     #[test]
@@ -1468,7 +1470,7 @@ mod tests {
         assert_eq!(station, SlotDisplay::Item(item("minecraft:blast_furnace")));
         assert_eq!(duration, 200);
         assert_eq!(experience, 0.7);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     /// Every recipe the game has, as a Horizon server sends it to a Horizon
@@ -1490,7 +1492,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("registries.json").exists() {
+        if !root.join("registries.json").fs_exists() {
             return;
         }
         let none = &horizon_world::loot::PackOverlay::NONE;

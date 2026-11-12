@@ -1,4 +1,5 @@
 use horizon_core::geometry::{Aabb, Axis, Direction, ShapeOp, Vec3, VoxelShape};
+use horizon_fs as fs;
 use horizon_world::{
     block_properties::{BlockDefinitionProperties, BlockPropertiesRegistry, BlockProperty},
     collision::CachedCollisionRegistry,
@@ -7,7 +8,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

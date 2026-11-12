@@ -11,6 +11,8 @@
 //! the profile is saved apart from `options.txt`. Pure logic: the runtime routes
 //! keys here only while the profile is turned on.
 use crate::gamepad::{Button, PadState};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -173,19 +175,19 @@ impl Settings {
         })
     }
     pub fn load(path: &Path) -> Self {
-        std::fs::read(path)
+        horizon_fs::read(path)
             .ok()
             .and_then(|bytes| serde_json::from_slice(&bytes).ok())
             .unwrap_or_default()
     }
     /// Save the profile; an untouched profile writes no file.
     pub fn save(&self, path: &Path) -> std::io::Result<()> {
-        if *self == Self::default() && !path.exists() {
+        if *self == Self::default() && !path.fs_exists() {
             return Ok(());
         }
         let temp = path.with_extension("json.tmp");
-        std::fs::write(&temp, serde_json::to_vec_pretty(self)?)?;
-        std::fs::rename(temp, path)
+        horizon_fs::write(&temp, serde_json::to_vec_pretty(self)?)?;
+        horizon_fs::rename(temp, path)
     }
 }
 
@@ -482,14 +484,14 @@ mod tests {
         keypad.configure(&settings);
         assert_eq!(keypad.state(), PadState::default());
 
-        let dir = std::env::temp_dir().join(format!("horizon-keypad-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("horizon-keypad-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("horizon-keypad.json");
         Settings::default().save(&path).unwrap();
-        assert!(!path.exists());
+        assert!(!path.fs_exists());
         settings.save(&path).unwrap();
         assert_eq!(Settings::load(&path), settings);
-        std::fs::remove_dir_all(&dir).unwrap();
+        horizon_fs::remove_dir_all(&dir).unwrap();
         assert_eq!(Settings::load(&path), Settings::default());
     }
 }

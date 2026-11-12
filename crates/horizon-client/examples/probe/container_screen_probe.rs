@@ -6,11 +6,9 @@ use horizon_client::{
     container_screen::{Book, Button, Clicks, Image, Release, Target, clicked_outside},
     menu::Input,
 };
+use horizon_fs::File;
 use serde_json::Value;
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 
 fn input_name(input: Input) -> &'static str {
     match input {

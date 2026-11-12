@@ -57,7 +57,7 @@ impl Game<'_> {
                 && let Some(path) = &client_config
                 && let Some(remote) = self.remote.as_ref().filter(|r| r.logged_in && r.joined)
             {
-                std::fs::write(
+                horizon_fs::write(
                     path,
                     json!({
                         "view_distance": remote.view_distance,
@@ -251,18 +251,18 @@ impl Game<'_> {
         self.harness_owner(|g| g.harness_settle(deadline, None))?;
         if let Some(path) = std::env::var_os("HORIZON_FISHING_TICK_REFERENCE") {
             let rows = self.harness_owner(|g| Ok(g.fishing_tick_reference()))?;
-            std::fs::write(path, serde_json::to_vec(&rows)?)?;
+            horizon_fs::write(path, serde_json::to_vec(&rows)?)?;
         }
         if let Some(path) = std::env::var_os("HORIZON_FISHING_BOBBING_REFERENCE") {
             let rows = self.harness_owner(|g| Ok(g.fishing_bobbing_reference()))?;
-            std::fs::write(path, serde_json::to_vec(&rows)?)?;
+            horizon_fs::write(path, serde_json::to_vec(&rows)?)?;
         }
         if let Some(path) = std::env::var_os("HORIZON_FISHING_FALLBACK_REFERENCE") {
             let rows = self.harness_owner(|g| Ok(g.fishing_fallback_reference()))?;
-            std::fs::write(path, serde_json::to_vec(&rows)?)?;
+            horizon_fs::write(path, serde_json::to_vec(&rows)?)?;
         }
         let mut out = String::new();
-        for line in std::fs::read_to_string(script)?.lines() {
+        for line in horizon_fs::read_to_string(script)?.lines() {
             if line.trim().is_empty() {
                 continue;
             }
@@ -1021,7 +1021,7 @@ impl Game<'_> {
                         g.save_stats();
                         let uuid = g.level.player_uuid.ok_or("merchant stats UUID")?;
                         let path = super::stats::player_json(&g.world_root, "stats", uuid);
-                        let raw = std::fs::read_to_string(path)?;
+                        let raw = horizon_fs::read_to_string(path)?;
                         let saved: Value = serde_json::from_str(&raw)?;
                         let value = |ty: &str, key: &str| saved["stats"][ty][key].as_i64().unwrap_or(0);
                         Ok((json!({"uuid":uuid,"books":value("minecraft:crafted","minecraft:bookshelf"),
@@ -1029,7 +1029,7 @@ impl Game<'_> {
                             "trades":value("minecraft:custom","minecraft:traded_with_villager")}), raw))
                     })?;
                     let label = op["label"].as_str().unwrap_or("");
-                    std::fs::write(
+                    horizon_fs::write(
                         output.with_file_name(format!("native-merchant-stats-{label}.json")),
                         raw,
                     )?;
@@ -1293,7 +1293,7 @@ impl Game<'_> {
                 other => return Err(format!("command harness: unknown op {other}").into()),
             }
         }
-        std::fs::write(output, out)?;
+        horizon_fs::write(output, out)?;
         Ok(())
     }
 }

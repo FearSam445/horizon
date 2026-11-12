@@ -1,9 +1,7 @@
+use horizon_fs as fs;
 use horizon_world::{chunk_status::ChunkStatus, nbt::Tag, worldgen::terrain::PreLightChunkStage};
 use serde_json::Value;
-use std::{
-    fs,
-    io::{self, Write},
-};
+use std::io::{self, Write};
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = crate::args().collect();
     let mut out = io::BufWriter::new(fs::File::create(&args[2])?);

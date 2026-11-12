@@ -13,6 +13,8 @@ use crate::{
     sprites::SpriteAnimation,
 };
 use glam::{DVec3, Mat4, Vec3, Vec4};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use web_time::Instant;
 use wgpu::util::DeviceExt;
@@ -11876,7 +11878,7 @@ impl Renderer {
             if self.hdr.is_some()
                 && let Some(marker) = self.hdr_marker.take()
             {
-                let _ = std::fs::remove_file(marker);
+                let _ = horizon_fs::remove_file(marker);
                 log::info!("Horizon renderer: HDR output presented its first frame");
             }
             if reconfigure {
@@ -13509,7 +13511,7 @@ mod tests {
     #[test]
     fn shaders_translate_to_hlsl_for_directx_12_and_glsl_for_opengl() {
         fn wgsl_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
-            for entry in std::fs::read_dir(dir).unwrap() {
+            for entry in horizon_fs::read_dir(dir).unwrap() {
                 let path = entry.unwrap().path();
                 if path.is_dir() {
                     wgsl_files(&path, out);
@@ -13527,7 +13529,7 @@ mod tests {
         // Improved transparency's files are appended to terrain.wgsl and entity.wgsl.
         let mut sources: Vec<(std::path::PathBuf, String)> = Vec::new();
         for path in files {
-            let text = std::fs::read_to_string(&path).unwrap();
+            let text = horizon_fs::read_to_string(&path).unwrap();
             let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
             if name == "oit.wgsl" || name == "gpu_occlusion.wgsl" || name == "hdr_light.wgsl" {
                 // The shared maths: it needs the file it is appended to. GPU culling's
@@ -14401,7 +14403,7 @@ mod sprite_upload_tests {
             .join(horizon_core::VANILLA_VERSION);
         if !root
             .join("assets/minecraft/textures/block/rail.png")
-            .exists()
+            .fs_exists()
         {
             return;
         }

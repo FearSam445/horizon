@@ -33,7 +33,7 @@ fn empty_tag_selectors_follow_actual_tag_edits() {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-empty-tags-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -41,7 +41,7 @@ fn empty_tag_selectors_follow_actual_tag_edits() {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.player = Some(PlayerMotion::new(game.motion, Vec3::new(10.5, 64.0, 0.5)).unwrap());
 
@@ -100,5 +100,5 @@ fn empty_tag_selectors_follow_actual_tag_edits() {
         assert_eq!(select(&mut game, "!"), HashSet::from([tagged]));
     }
     drop(game);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }

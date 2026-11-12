@@ -1,5 +1,6 @@
 use crate::support::shapes::emit;
 use horizon_core::geometry::{Direction, VoxelShape};
+use horizon_fs as fs;
 use horizon_world::{
     collision::CachedCollisionRegistry,
     dynamic_support::{DynamicSupport, DynamicSupportWorld},
@@ -9,7 +10,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

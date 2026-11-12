@@ -239,9 +239,9 @@ mod pickup_tests {
         game.level.health = 20.0;
         game.creative = false;
         // A world of its own under the temporary folder, never the cwd.
-        game.world_root =
-            std::env::temp_dir().join(format!("horizon-panda-pickup-world-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&game.world_root);
+        game.world_root = horizon_fs::temp_dir()
+            .join(format!("horizon-panda-pickup-world-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&game.world_root);
         game.build_registries();
         game.set_allow_commands(true);
         install_pickup_advancement(&mut game);
@@ -283,6 +283,6 @@ mod pickup_tests {
             "the thrower's advancement: {:?}",
             game.adv.progress.criteria
         );
-        let _ = std::fs::remove_dir_all(&game.world_root);
+        let _ = horizon_fs::remove_dir_all(&game.world_root);
     }
 }

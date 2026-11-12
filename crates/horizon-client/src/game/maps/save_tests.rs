@@ -118,7 +118,8 @@ fn canonical(tag: &Tag) -> String {
 #[test]
 #[ignore = "run through tools/test_map_saved_data_parity.py"]
 fn saved_map_codec_fixture() {
-    let cases = std::fs::read_to_string(std::env::var("HORIZON_MAP_SAVE_CASES").unwrap()).unwrap();
+    let cases =
+        horizon_fs::read_to_string(std::env::var("HORIZON_MAP_SAVE_CASES").unwrap()).unwrap();
     let cases: Vec<serde_json::Value> = serde_json::from_str(&cases).unwrap();
     let mut lines = Vec::new();
     for case in cases {
@@ -154,5 +155,5 @@ fn saved_map_codec_fixture() {
         ));
     }
     let output = std::env::var("HORIZON_MAP_SAVE_OUTPUT").unwrap();
-    std::fs::write(output, lines.join("\n") + "\n").unwrap();
+    horizon_fs::write(output, lines.join("\n") + "\n").unwrap();
 }

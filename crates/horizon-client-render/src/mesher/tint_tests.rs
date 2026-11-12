@@ -117,14 +117,14 @@ fn one_biome_shortcut_blends_like_the_full_square() {
 fn pack(files: &[(&str, Vec<u8>)]) -> std::path::PathBuf {
     static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let root = std::env::temp_dir().join(format!(
+    let root = horizon_fs::temp_dir().join(format!(
         "horizon-mesher-colormap-{}-{n}",
         std::process::id()
     ));
     for (path, bytes) in files {
         let path = root.join(path);
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(path, bytes).unwrap();
+        horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+        horizon_fs::write(path, bytes).unwrap();
     }
     root
 }
@@ -179,7 +179,7 @@ fn a_polytone_colormap_tints_by_biome_and_keeps_the_biome_colour_where_transpare
         tints.water_colormap = Some(0);
         assert_eq!(tints.water(3, 4, 5), expected, "biome {biome}");
     }
-    std::fs::remove_dir_all(root).unwrap();
+    horizon_fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
@@ -214,7 +214,7 @@ fn a_biome_colormap_blends_over_a_biome_edge_as_the_vanilla_water_tint_does() {
             ),
         ]);
         let map = crate::environment::Colormap::load(&root, "mypack:water").unwrap();
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
         vec![Arc::new(map)]
     };
     let (desert, plains) = (biomes.id("minecraft:desert"), biomes.id("minecraft:plains"));
@@ -289,7 +289,7 @@ fn biome_colors_and_a_grass_block_colormap_replace_their_whole_biome_function() 
     tints.colormaps = &colormaps;
     tints.water_colormap = Some(1);
     assert_eq!(tints.water(3, 4, 5), 0x00_FF00);
-    std::fs::remove_dir_all(root).unwrap();
+    horizon_fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
@@ -315,7 +315,7 @@ fn only_a_colormap_that_ignores_the_height_is_shared_up_a_column() {
     let load = |id| crate::environment::Colormap::load(&root, id).unwrap();
     assert!(load("mypack:flat").column);
     assert!(!load("mypack:tall").column);
-    std::fs::remove_dir_all(root).unwrap();
+    horizon_fs::remove_dir_all(root).unwrap();
 }
 
 /// Times a section's colormap tints with the freepack's kind of grass colormap (a biome id
@@ -363,5 +363,5 @@ fn colormap_tint_cost() {
     }
     let per = start.elapsed() / rounds;
     println!("{LAYERS} layers of 256 blended colormap tints: {per:?} (checksum {check})");
-    std::fs::remove_dir_all(root).unwrap();
+    horizon_fs::remove_dir_all(root).unwrap();
 }

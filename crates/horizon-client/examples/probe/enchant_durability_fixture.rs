@@ -7,9 +7,10 @@ use horizon_client::{
     items::{ItemStack, Items},
 };
 use horizon_core::random::LegacyRandom;
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
 use serde_json::Value;
-use std::{fs, io::Write, path::Path};
+use std::{io::Write, path::Path};
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = crate::args().collect();

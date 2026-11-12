@@ -3,6 +3,8 @@
 //! block it: a survival guest hovering in a mineshaft is floating, and the server kicks it
 //! after `getMaximumFlyingTicks` (80) ticks with "Flying is not enabled on this server".
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 #[test]
 fn a_guest_hovering_in_cave_air_is_kicked_for_flying() {
@@ -10,7 +12,7 @@ fn a_guest_hovering_in_cave_air_is_kicked_for_flying() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    if !root.join("cached-collision.nbt").exists() {
+    if !root.join("cached-collision.nbt").fs_exists() {
         return; // CI has no vanilla data.
     }
     let assets = crate::assets::Assets::load(&root).unwrap();

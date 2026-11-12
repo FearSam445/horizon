@@ -3358,13 +3358,13 @@ mod arrow_contents {
         let output =
             PathBuf::from(std::env::var_os("HORIZON_POTION_OUTPUT").expect("explicit output"));
         let expected: Vec<Value> = serde_json::from_slice(
-            &std::fs::read(
+            &horizon_fs::read(
                 std::env::var_os("HORIZON_POTION_EXPECTED").expect("pinned method output"),
             )
             .unwrap(),
         )
         .unwrap();
-        let rows: Vec<Value> = serde_json::from_slice(&std::fs::read(input).unwrap()).unwrap();
+        let rows: Vec<Value> = serde_json::from_slice(&horizon_fs::read(input).unwrap()).unwrap();
         let settings = Settings::default();
         let loaded = load_resources(
             root.clone(),
@@ -3380,7 +3380,7 @@ mod arrow_contents {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(std::env::current_dir().unwrap());
+        options.game_dir = Some(horizon_fs::current_dir().unwrap());
         options.execution_role = execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,
@@ -3441,6 +3441,6 @@ mod arrow_contents {
                 id
             );
         }
-        std::fs::write(output, serde_json::to_vec_pretty(&results).unwrap()).unwrap();
+        horizon_fs::write(output, serde_json::to_vec_pretty(&results).unwrap()).unwrap();
     }
 }

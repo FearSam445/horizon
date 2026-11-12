@@ -67,7 +67,7 @@ fn stack(s: Option<&ItemStack>) -> String {
 
 pub fn main() -> Result<()> {
     let args: Vec<String> = crate::args().collect();
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[1])?);
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[1])?);
     for tag in 0..3 {
         for main in [true, false] {
             for item in [

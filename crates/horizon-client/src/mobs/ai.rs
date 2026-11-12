@@ -2,6 +2,8 @@
 //! `LivingEntity.baseTick/tick/aiStep`, `Mob.serverAiStep`) and the
 //! dispatch to each species family's goals and special behaviour.
 pub(crate) use freezing::{can_freeze, in_powder_snow};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 mod feeding;
 mod freezing;
 
@@ -3154,7 +3156,7 @@ mod frog_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -3186,7 +3188,7 @@ mod poison_effect_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -3225,7 +3227,7 @@ mod poison_effect_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -3252,7 +3254,7 @@ mod poison_effect_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -3274,7 +3276,7 @@ mod poison_effect_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -3334,7 +3336,7 @@ mod poison_effect_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -3369,7 +3371,7 @@ mod poison_effect_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -3390,7 +3392,7 @@ mod poison_effect_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -3420,7 +3422,7 @@ mod poison_effect_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -4195,7 +4197,7 @@ mod feed_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -4263,7 +4265,7 @@ mod feed_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let data = MobTypes::load(&root).unwrap();
@@ -5434,7 +5436,7 @@ mod flight_effect_fall_tests {
                     }
                 }
                 if let Some(path) = std::env::var_os("HORIZON_MOB_FALL_RESET_OUTPUT") {
-                    std::fs::write(path, rows.join("\n") + "\n").unwrap();
+                    horizon_fs::write(path, rows.join("\n") + "\n").unwrap();
                 }
                 assert!(failures.is_empty(), "fall distance differs: {failures:?}");
             },
@@ -5550,7 +5552,7 @@ mod breathing_effect_tests {
                     }
                 }
                 if let Some(path) = std::env::var_os("HORIZON_MOB_BREATHING_OUTPUT") {
-                    std::fs::write(path, rows.join("\n") + "\n").unwrap();
+                    horizon_fs::write(path, rows.join("\n") + "\n").unwrap();
                 }
                 assert!(failures.is_empty(), "mob air/health differs: {failures:?}");
             },

@@ -23,7 +23,7 @@ fn main() -> Result<()> {
         return Err("expected validate or typed".into());
     }
     let total = Instant::now();
-    let bytes = std::fs::read(Path::new(&root).join("gameplay-facts.json"))?;
+    let bytes = horizon_fs::read(Path::new(&root).join("gameplay-facts.json"))?;
     let started = Instant::now();
     if mode == "validate" {
         let parsed: decode::Validate = serde_json::from_slice(&bytes)?;

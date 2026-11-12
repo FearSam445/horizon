@@ -2,11 +2,14 @@
 //! `optifine/cit/**/*.properties`, read from the overlay resource root. The rules themselves are
 //! `horizon_optifine::cit`'s.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 pub use horizon_optifine::cit::{Hand, Kind, Rule};
 
 use crate::cit_glint::{Global, StackGlint};
 use horizon_client_core::component::name_text;
 use horizon_client_core::scoreboard::comp_text;
+use horizon_fs as fs;
 use horizon_items::item_data::{canon_tag, encode_components};
 use horizon_items::items::ItemStack;
 use horizon_optifine::cit::{ComponentTest, Source, ValueTest};
@@ -14,7 +17,6 @@ use horizon_optifine::{Properties, properties_files_in};
 use horizon_world::nbt::{JavaString, Tag, parse_snbt};
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fs;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -29,7 +31,7 @@ pub fn load_rules(root: &Path) -> Vec<Rule> {
         .filter(|path| !path.ends_with("/cit.properties"))
         .filter_map(|path| {
             let props = read_properties(&root.join(&path))?;
-            let rule = Rule::parse(&path, &props, |p| root.join(p).is_file());
+            let rule = Rule::parse(&path, &props, |p| root.join(p).fs_is_file());
             if rule.is_none() {
                 log::warn!("custom item textures: {path} is not a rule Horizon can read");
             }

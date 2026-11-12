@@ -62,7 +62,7 @@ fn registry(output: &mut String) -> std::fmt::Result {
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = crate::args().collect();
     let mut output = String::new();
-    for line in std::fs::read_to_string(&args[1])?.lines() {
+    for line in horizon_fs::read_to_string(&args[1])?.lines() {
         if line == "registry" {
             registry(&mut output)?;
             continue;
@@ -71,6 +71,6 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         let attribute = attribute(fields[0]).ok_or("unknown attribute")?;
         writeln!(output, "{}", run(attribute, fields[1], fields[2])?)?;
     }
-    std::fs::write(&args[2], output)?;
+    horizon_fs::write(&args[2], output)?;
     Ok(())
 }

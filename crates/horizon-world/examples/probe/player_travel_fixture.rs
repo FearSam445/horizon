@@ -1,9 +1,9 @@
 use crate::support::common::f64_bits;
 use horizon_core::{geometry::Vec3, position::BlockPos};
+use horizon_fs as fs;
 use horizon_world::player_travel::*;
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

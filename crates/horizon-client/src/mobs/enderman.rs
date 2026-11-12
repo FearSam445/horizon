@@ -18,6 +18,8 @@ use horizon_core::{
     geometry::{Aabb, Vec3},
     random::RandomSource,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::registry::{BlockRegistry, BlockStateId};
 
 pub fn register(m: &mut Mob) {
@@ -762,7 +764,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("items.json").exists() || !root.join("data").exists() {
+        if !root.join("items.json").fs_exists() || !root.join("data").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();

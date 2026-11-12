@@ -2,6 +2,8 @@
 //! same files zipped as a `.hshader` (what the registry and the launcher
 //! carry). Both read into one [`Pack`].
 use crate::manifest::{MANIFEST, Manifest};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     collections::BTreeMap,
     io::{Read, Write},
@@ -49,21 +51,21 @@ pub fn plain_path(path: &str) -> bool {
 /// Whether `path` is a pack of this format: a folder holding
 /// `horizon-shaders.toml`, or a `.hshader` file.
 pub fn is_pack(path: &Path) -> bool {
-    path.join(MANIFEST).is_file()
-        || (path.is_file() && path.extension().is_some_and(|e| e == EXTENSION))
+    path.join(MANIFEST).fs_is_file()
+        || (path.fs_is_file() && path.extension().is_some_and(|e| e == EXTENSION))
 }
 
 impl Pack {
     /// Reads only the manifest, without loading or validating shader source.
     pub fn read_manifest(path: &Path) -> Result<Manifest, String> {
-        let file = std::fs::File::open(if path.is_dir() {
+        let file = horizon_fs::File::open(if path.fs_is_dir() {
             path.join(MANIFEST)
         } else {
             path.to_path_buf()
         })
         .map_err(|e| e.to_string())?;
         let mut text = String::new();
-        if path.is_dir() {
+        if path.fs_is_dir() {
             file.take(MAX_OTHER + 1).read_to_string(&mut text)
         } else {
             let mut zip = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
@@ -83,10 +85,11 @@ impl Pack {
     /// folders, such as `.git`, are skipped).
     pub fn read(path: &Path) -> Result<Pack, String> {
         let mut files = BTreeMap::new();
-        if path.is_dir() {
+        if path.fs_is_dir() {
             read_dir(path, "", &mut files, &mut 0)?;
         } else {
-            let file = std::fs::File::open(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            let file =
+                horizon_fs::File::open(path).map_err(|e| format!("{}: {e}", path.display()))?;
             let mut zip = zip::ZipArchive::new(file)
                 .map_err(|e| format!("{}: not a .{EXTENSION} (zip): {e}", path.display()))?;
             if zip.len() > MAX_ENTRIES {
@@ -233,7 +236,7 @@ fn read_dir(
     files: &mut BTreeMap<String, Vec<u8>>,
     total: &mut u64,
 ) -> Result<(), String> {
-    let entries = std::fs::read_dir(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    let entries = horizon_fs::read_dir(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     for entry in entries {
         let entry = entry.map_err(|e| format!("{}: {e}", dir.display()))?;
         let name = entry.file_name().to_string_lossy().into_owned();
@@ -242,10 +245,13 @@ fn read_dir(
         }
         let path = entry.path();
         let rel = format!("{prefix}{name}");
-        if path.is_dir() {
+        if path.fs_is_dir() {
             read_dir(&path, &format!("{rel}/"), files, total)?;
         } else {
-            let size = entry.metadata().map_err(|e| format!("{rel}: {e}"))?.len();
+            let size = entry
+                .fs_metadata()
+                .map_err(|e| format!("{rel}: {e}"))?
+                .len();
             if size > MAX_TOTAL {
                 return Err(format!("{rel} is over {} MiB", MAX_TOTAL >> 20));
             }
@@ -253,7 +259,7 @@ fn read_dir(
             if *total > MAX_TOTAL {
                 return Err(format!("the pack is over {} MiB", MAX_TOTAL >> 20));
             }
-            let bytes = std::fs::read(&path).map_err(|e| format!("{rel}: {e}"))?;
+            let bytes = horizon_fs::read(&path).map_err(|e| format!("{rel}: {e}"))?;
             files.insert(rel, bytes);
         }
     }

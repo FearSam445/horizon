@@ -4,9 +4,9 @@ use horizon_core::{
     carving::{CarverOutput, CarvingMask, can_reach, carve_ellipsoid},
     position::ChunkPos,
 };
+use horizon_fs as fs;
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

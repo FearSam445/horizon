@@ -13,6 +13,8 @@ description = "Reusable client systems, control tool and parity probes"
 path = "../horizon-client/src/client_lib.rs"
 
 [dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
 # SystemTime::now, also in the browser build (web/).
 horizon-clock = { path = "../../web/clock" }
 # std::time, with a clock in the browser build (web/).

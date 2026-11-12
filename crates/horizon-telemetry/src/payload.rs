@@ -456,7 +456,7 @@ mod tests {
     #[test]
     #[ignore]
     fn what_this_machine_sends() {
-        let home = std::env::current_dir().unwrap();
+        let home = horizon_fs::current_dir().unwrap();
         let mut system = System::detect_in(Some(&home));
         system.vram_mb = crate::system::vram_mb("nvidia")
             .or_else(|| crate::system::vram_mb("amd"))

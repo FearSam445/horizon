@@ -716,7 +716,7 @@ mod tests {
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let reference = std::env::var_os("HORIZON_MOUNT_CONTROL_REFERENCE").unwrap();
         let rows: Vec<serde_json::Value> =
-            serde_json::from_slice(&std::fs::read(reference).unwrap()).unwrap();
+            serde_json::from_slice(&horizon_fs::read(reference).unwrap()).unwrap();
         assert_eq!(rows.len(), 32, "missing vanilla control cases");
         let settings = Settings::default();
         let loaded = load_resources(

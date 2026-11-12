@@ -7,8 +7,9 @@ use horizon_client::{
     banner::{BannerLayer, Banners, banner_color},
     screen_layout::{self, CrafterView, LoomView, ScreenDraw},
 };
+use horizon_fs as fs;
 use serde_json::{Value, json};
-use std::{fs, path::Path, sync::Arc};
+use std::{path::Path, sync::Arc};
 
 fn draw_json(d: &ScreenDraw) -> Value {
     let round = |v: f32| ((v * 1e6).round() / 1e6) as f64;

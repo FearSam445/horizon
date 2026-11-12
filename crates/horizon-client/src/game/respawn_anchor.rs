@@ -615,7 +615,7 @@ mod connected_spawnpoint_rotation_tests {
     fn command_forced_free_point_survives_real_guest_death_and_respawn_packet() {
         let mut game = crate::game::native_machines::tests::server_game();
         game.set_allow_commands(true);
-        let scratch = std::env::temp_dir().join(format!(
+        let scratch = horizon_fs::temp_dir().join(format!(
             "horizon-forced-spawn-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -623,7 +623,7 @@ mod connected_spawnpoint_rotation_tests {
                 .unwrap()
                 .as_nanos()
         ));
-        std::fs::create_dir_all(&scratch).unwrap();
+        horizon_fs::create_dir_all(&scratch).unwrap();
         game.world_root = scratch.clone();
         // Fixture setup through the existing column insertion API; admit every lit column below.
         for x in -2..=2 {
@@ -811,7 +811,7 @@ mod connected_spawnpoint_rotation_tests {
         );
         drop(host);
         drop(game);
-        std::fs::remove_dir_all(scratch).unwrap();
+        horizon_fs::remove_dir_all(scratch).unwrap();
     }
 }
 

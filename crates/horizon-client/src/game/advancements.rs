@@ -2,6 +2,8 @@
 //! events (`CriteriaTriggers`), awarding with rewards, the toast and the
 //! chat announcement, and `players/advancements/<uuid>.json`.
 use super::{Dim, Game};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 #[cfg(test)]
 #[path = "inventory_changed_tests.rs"]
@@ -430,7 +432,7 @@ impl Game<'_> {
         self.advancement_tree();
         let progress = self
             .adv_path()
-            .and_then(|p| std::fs::read_to_string(p).ok())
+            .and_then(|p| horizon_fs::read_to_string(p).ok())
             .and_then(|t| serde_json::from_str::<Value>(&t).ok())
             .map(|v| Progress::from_json(&v))
             .unwrap_or_default();
@@ -461,10 +463,10 @@ impl Game<'_> {
             .progress
             .to_json(&self.adv.tree, horizon_world::DATA_VERSION);
         if let Some(dir) = path.parent() {
-            let _ = std::fs::create_dir_all(dir);
+            let _ = horizon_fs::create_dir_all(dir);
         }
         if let Ok(text) = serde_json::to_string_pretty(&json) {
-            let _ = std::fs::write(path, text);
+            let _ = horizon_fs::write(path, text);
         }
     }
     /// The player as predicates see it.
@@ -3085,30 +3087,30 @@ mod structure_tag_tests {
 
         // A pack's own tag (nesting the game's) and an addition to the game's.
         let dir =
-            std::env::temp_dir().join(format!("horizon-structure-tags-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+            horizon_fs::temp_dir().join(format!("horizon-structure-tags-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks").join("mypack");
         let tags = pack.join("data/mypack/tags/worldgen/structure");
         let game_tags = pack.join("data/minecraft/tags/worldgen/structure");
-        std::fs::create_dir_all(&tags).unwrap();
-        std::fs::create_dir_all(&game_tags).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&tags).unwrap();
+        horizon_fs::create_dir_all(&game_tags).unwrap();
+        horizon_fs::write(
             pack.join("pack.mcmeta"),
             r#"{"pack":{"description":"fixture"}}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             tags.join("village.json"),
             r##"{"values": ["#minecraft:village", "minecraft:igloo"]}"##,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             game_tags.join("shipwreck.json"),
             r#"{"values": ["minecraft:ocean_ruin_cold"]}"#,
         )
         .unwrap();
         let settings = json!({"enabled": ["file/mypack"], "disabled": []});
-        std::fs::write(dir.join("datapacks.json"), settings.to_string()).unwrap();
+        horizon_fs::write(dir.join("datapacks.json"), settings.to_string()).unwrap();
         game.world_root = dir.clone();
         let (tables, _) = game.build_world_tables(false, &[]).unwrap();
         game.world_tables = tables;
@@ -3122,7 +3124,7 @@ mod structure_tag_tests {
             "minecraft:ocean_ruin_cold"
         ));
         assert!(holds(&game, "#minecraft:shipwreck", "minecraft:shipwreck"));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }
 
@@ -3166,15 +3168,15 @@ mod random_chance_command_tests {
         game.build_registries();
         game.set_allow_commands(true);
 
-        let dir = std::env::temp_dir().join(format!("horizon-h122-unit-{}", std::process::id()));
-        assert!(!dir.exists());
+        let dir = horizon_fs::temp_dir().join(format!("horizon-h122-unit-{}", std::process::id()));
+        assert!(!dir.fs_exists());
         let pack = dir.join("datapacks/chance");
         let folder = pack.join("data/h122/predicate");
-        std::fs::create_dir_all(&folder).unwrap();
-        std::fs::write(pack.join("pack.mcmeta"),r#"{"pack":{"description":"Chance","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
+        horizon_fs::create_dir_all(&folder).unwrap();
+        horizon_fs::write(pack.join("pack.mcmeta"),r#"{"pack":{"description":"Chance","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
         let function = pack.join("data/h122/function");
-        std::fs::create_dir_all(&function).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&function).unwrap();
+        horizon_fs::write(
             function.join("admit.mcfunction"),
             "scoreboard players set pack h122 17\n",
         )
@@ -3184,13 +3186,13 @@ mod random_chance_command_tests {
             .map(|s| serde_json::from_str(s).unwrap())
             .collect();
         for row in &rows {
-            std::fs::write(
+            horizon_fs::write(
                 folder.join(format!("case_{}.json", row["case"])),
                 row["input"].to_string(),
             )
             .unwrap();
         }
-        std::fs::write(folder.join("pig.json"),r#"{"type":"minecraft:entity_properties","entity":"this","predicate":{"minecraft:entity_type":"minecraft:pig"}}"#).unwrap();
+        horizon_fs::write(folder.join("pig.json"),r#"{"type":"minecraft:entity_properties","entity":"this","predicate":{"minecraft:entity_type":"minecraft:pig"}}"#).unwrap();
         game.world_root = dir.clone();
         game.reload_datapacks(false);
         assert!(game.run_command("scoreboard objectives add h122 dummy"));
@@ -3245,7 +3247,7 @@ mod random_chance_command_tests {
             assert_eq!(continuation, expected, "actual world RNG {row}");
         }
         assert_eq!(game.world.game_time, clock);
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 }
 
@@ -3406,11 +3408,11 @@ mod movement_predicate_tests {
         assert!(game.run_command("forceload add 0 0"));
         assert!(game.run_command("fill 0 199 0 15 199 15 stone"));
         assert!(game.world.loaded(4, 4));
-        let root = std::env::current_dir().unwrap().join("movement-world");
+        let root = horizon_fs::current_dir().unwrap().join("movement-world");
         let pack = root.join("datapacks/movement");
         let folder = pack.join("data/motion/predicate");
-        std::fs::create_dir_all(&folder).unwrap();
-        std::fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"Movement fixture","min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
+        horizon_fs::create_dir_all(&folder).unwrap();
+        horizon_fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"Movement fixture","min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
         let entity =
             |p| json!({"type":"minecraft:entity_properties","entity":"this","predicate":p});
         let movement =
@@ -3433,14 +3435,14 @@ mod movement_predicate_tests {
             ),
         ];
         for (name, p, _) in &probes {
-            std::fs::write(folder.join(format!("{name}.json")), p.to_string()).unwrap();
+            horizon_fs::write(folder.join(format!("{name}.json")), p.to_string()).unwrap();
         }
-        std::fs::write(
+        horizon_fs::write(
             folder.join("identity.json"),
             entity(json!({"minecraft:entity_type":"minecraft:pig"})).to_string(),
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             folder.join("always.json"),
             r#"{"type":"minecraft:all_of","terms":[]}"#,
         )

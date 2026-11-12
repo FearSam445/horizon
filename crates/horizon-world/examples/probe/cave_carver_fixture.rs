@@ -4,10 +4,10 @@ use horizon_core::{
     position::ChunkPos,
     random::{LegacyRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::worldgen::{anchor::WorldGenerationContext, carver::CaveCarver};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

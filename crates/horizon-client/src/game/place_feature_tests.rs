@@ -163,9 +163,10 @@ fn an_inline_feature_draws_the_level_random_as_its_named_twin() {
     use horizon_core::random::RandomSource;
     let mut game = game();
     let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
-    let json =
-        std::fs::read_to_string(root.join("data/minecraft/worldgen/feature/flower_default.json"))
-            .expect("the vanilla feature");
+    let json = horizon_fs::read_to_string(
+        root.join("data/minecraft/worldgen/feature/flower_default.json"),
+    )
+    .expect("the vanilla feature");
     let inline: String = json.split_whitespace().collect::<Vec<_>>().join(" ");
     let flower = |game: &mut Game<'_>, at: &str| {
         ["minecraft:poppy", "minecraft:dandelion"]

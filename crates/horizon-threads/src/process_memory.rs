@@ -55,7 +55,7 @@ pub fn usage() -> Option<[u64; 3]> {
 /// The memory this process holds in RAM, in bytes.
 #[cfg(any(target_os = "linux", target_os = "android"))]
 pub fn resident_bytes() -> Option<u64> {
-    let statm = std::fs::read_to_string("/proc/self/statm").ok()?;
+    let statm = horizon_fs::read_to_string("/proc/self/statm").ok()?;
     let pages: u64 = statm.split_whitespace().nth(1)?.parse().ok()?;
     // SAFETY: reads one system constant.
     let page = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };

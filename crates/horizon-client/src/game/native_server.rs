@@ -8,6 +8,8 @@
 //! players (the hub's: a dedicated server's, a LAN host's, single player's
 //! server thread's), never on a client's.
 use super::{Dim, Game, commands::execute, lan::LanHost, lan_actions::GuestCommand};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 // Their old home, for mixin code that names them here.
 pub(crate) use horizon_client::mod_api::{NativeCommand, NativeServerPlayer};
 use horizon_client::{
@@ -790,7 +792,7 @@ impl Game<'_> {
     /// is open. API @API:join_leave_helpers@.
     pub(super) fn native_has_played_before(&self, uuid: u128) -> bool {
         !self.world_root.as_os_str().is_empty()
-            && horizon_client::lan::playerdata::path(&self.world_root, uuid).is_file()
+            && horizon_client::lan::playerdata::path(&self.world_root, uuid).fs_is_file()
     }
 
     /// Writes a line to the server's log at `level` (`INFO`, `WARN` or

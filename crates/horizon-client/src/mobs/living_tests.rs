@@ -1,4 +1,6 @@
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 /// `AgeableMob.isBaby` is `canBeABaby() && getAge() < 0`, and `Age` alone
 /// says nothing: the six ageable classes that override `canBeABaby` to
 /// false — `Frog`, `Parrot`, `ZombieNautilus`, `CamelHusk`, `Slime` and
@@ -15,7 +17,7 @@ fn a_negative_age_is_a_baby_only_where_can_be_a_baby_allows_it() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    if !root.join("entity-types.json").exists() {
+    if !root.join("entity-types.json").fs_exists() {
         return;
     }
     let types = super::super::MobTypes::load(&root).unwrap();
@@ -116,7 +118,9 @@ fn a_mob_bounces_off_a_bouncy_block_and_not_off_stone() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    if !root.join("entity-types.json").exists() || !root.join("movement-properties.nbt").exists() {
+    if !root.join("entity-types.json").fs_exists()
+        || !root.join("movement-properties.nbt").fs_exists()
+    {
         return;
     }
     let assets = crate::assets::Assets::load(&root).unwrap();
@@ -240,7 +244,9 @@ fn a_ridden_horse_floats_in_deep_water() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    if !root.join("entity-types.json").exists() || !root.join("movement-properties.nbt").exists() {
+    if !root.join("entity-types.json").fs_exists()
+        || !root.join("movement-properties.nbt").fs_exists()
+    {
         return;
     }
     let assets = crate::assets::Assets::load(&root).unwrap();
@@ -397,7 +403,9 @@ fn a_falling_mob_lands_on_a_shulker_or_a_held_happy_ghast() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.local/horizon-client")
         .join(horizon_core::VANILLA_VERSION);
-    if !root.join("entity-types.json").exists() || !root.join("movement-properties.nbt").exists() {
+    if !root.join("entity-types.json").fs_exists()
+        || !root.join("movement-properties.nbt").fs_exists()
+    {
         return;
     }
     let assets = crate::assets::Assets::load(&root).unwrap();

@@ -26,6 +26,8 @@ use horizon_core::geometry::{
     Direction,
     trig::{self, Mth},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     block_render::FaceVisibility,
     registry::{BlockRegistry, BlockStateId},
@@ -1483,7 +1485,7 @@ impl BlockEntityRenderer {
         defaults: Option<&horizon_world::item_defaults::Defaults>,
     ) -> Result<Self> {
         let owned_models = if models.is_none() {
-            Some(serde_json::from_slice(&std::fs::read(
+            Some(serde_json::from_slice(&horizon_fs::read(
                 root.join("entity-models.json"),
             )?)?)
         } else {
@@ -1515,7 +1517,7 @@ impl BlockEntityRenderer {
             };
             let name = pattern.strip_prefix("minecraft:").unwrap_or(pattern);
             let file = root.join(format!("data/minecraft/decorated_pot_pattern/{name}.json"));
-            let Ok(def) = std::fs::read(file) else {
+            let Ok(def) = horizon_fs::read(file) else {
                 continue;
             };
             let def: Value = serde_json::from_slice(&def)?;
@@ -3673,7 +3675,7 @@ mod tests {
             "copper_chest",
         ];
         let mut facts: std::collections::BTreeMap<String, Value> =
-            serde_json::from_slice(&std::fs::read(root.join("model-states.json"))?)?;
+            serde_json::from_slice(&horizon_fs::read(root.join("model-states.json"))?)?;
         let states = names.map(|name| {
             let name = format!("minecraft:{name}");
             let mut first = facts[&name]["states"][0].clone();
@@ -3715,7 +3717,8 @@ mod tests {
             };
             assert_eq!(models[0].1.particle, Some(sprites.layers[particle]));
         }
-        let all: Value = serde_json::from_slice(&std::fs::read(root.join("entity-models.json"))?)?;
+        let all: Value =
+            serde_json::from_slice(&horizon_fs::read(root.join("entity-models.json"))?)?;
         let renderer = BlockEntityRenderer::new(
             MODELS
                 .iter()
@@ -4702,7 +4705,7 @@ mod tests {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let assets = Assets::load(&root).unwrap();
@@ -4800,8 +4803,8 @@ mod tests {
             )],
         );
         renderer.set_shapes(renderer.shapes_for(&root));
-        let _ = std::fs::remove_dir_all(&root);
-        let _ = std::fs::remove_dir_all(&empty);
+        let _ = horizon_fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&empty);
         let rect = |u0: f32| Rect {
             u0,
             v0: 0.0,

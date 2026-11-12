@@ -1622,24 +1622,24 @@ mod loot_mine_location_tests {
         game.world_root =
             std::path::PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap()).join("h079-world");
         let pack = game.world_root.join("datapacks/h079");
-        std::fs::create_dir_all(pack.join("data/minecraft/loot_table/blocks")).unwrap();
-        std::fs::create_dir_all(pack.join("data/h079/function")).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(pack.join("data/minecraft/loot_table/blocks")).unwrap();
+        horizon_fs::create_dir_all(pack.join("data/h079/function")).unwrap();
+        horizon_fs::write(
             pack.join("pack.mcmeta"),
             r#"{"pack":{"description":"H079 fixture"}}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             pack.join("data/minecraft/loot_table/blocks/stone.json"),
             TABLE,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             pack.join("data/h079/function/admit.mcfunction"),
             "scoreboard players set pack h079 42\n",
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             game.world_root.join("datapacks.json"),
             r#"{"enabled":["vanilla","file/h079"],"disabled":[]}"#,
         )

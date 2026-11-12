@@ -1,12 +1,12 @@
 //! Original differential-test transport. State air/fluid facts are private inputs;
 //! tag predicates are resolved by the Rust loader, not imported oracle results.
+use horizon_fs as fs;
 use horizon_world::heightmap::{Heightmap, HeightmapChunk, HeightmapState, HeightmapType};
 use horizon_world::worldgen::tags::TagDefinitions;
 use serde_json::Value;
 use std::{
     cell::RefCell,
     collections::BTreeSet,
-    fs,
     io::{self, Write},
     path::Path,
 };

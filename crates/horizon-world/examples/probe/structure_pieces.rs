@@ -7,6 +7,7 @@
 //! location; other pieces: `-` for element, rotation and position).
 use crate::support::common::tag;
 use horizon_core::position::ChunkPos;
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     nbt::Tag,
@@ -17,7 +18,7 @@ use horizon_world::{
     },
 };
 use serde_json::Value;
-use std::{fs, path::Path};
+use std::path::Path;
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
 

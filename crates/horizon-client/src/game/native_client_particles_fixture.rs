@@ -86,13 +86,13 @@ impl Game<'_> {
         // Own sprite metadata and atlas rectangles exercise real constructors and CPU quads,
         // without a GPU, downloaded art, a resource reload or a change to imported resources.
         let pack = directory.join("particle-pack");
-        std::fs::create_dir_all(pack.join("assets/minecraft/particles"))?;
-        std::fs::create_dir_all(pack.join("assets/fixture/particles"))?;
-        std::fs::write(
+        horizon_fs::create_dir_all(pack.join("assets/minecraft/particles"))?;
+        horizon_fs::create_dir_all(pack.join("assets/fixture/particles"))?;
+        horizon_fs::write(
             pack.join("assets/minecraft/particles/smoke.json"),
             br#"{"textures":["fixture_smoke"]}"#,
         )?;
-        std::fs::write(pack.join("assets/fixture/particles/spark.json"), br#"{"textures":["fixture:spark"],"horizon:behaviour":{"velocity":[0.25,0,0],"gravity":0,"friction":1,"lifetime":3,"size":[0.2,0.2],"animation":"first"}}"#)?;
+        horizon_fs::write(pack.join("assets/fixture/particles/spark.json"), br#"{"textures":["fixture:spark"],"horizon:behaviour":{"velocity":[0.25,0,0],"gravity":0,"friction":1,"lifetime":3,"size":[0.2,0.2],"animation":"first"}}"#)?;
         let rect = Rect {
             u0: 0.0,
             v0: 0.0,
@@ -185,7 +185,7 @@ impl Game<'_> {
             self.particles.is_empty(),
             "named provider lifetime still expires normally"
         );
-        std::fs::write(
+        horizon_fs::write(
             directory.join("report.json"),
             serde_json::to_vec_pretty(&serde_json::json!({
                 "client_spawn": true, "encoded_slots_unchanged": true,

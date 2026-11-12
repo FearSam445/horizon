@@ -8,7 +8,7 @@ use std::{
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().collect();
     let catalog = Arc::new(Catalog::from_json(&serde_json::from_str(
-        &std::fs::read_to_string(&args[1])?,
+        &horizon_fs::read_to_string(&args[1])?,
     )?)?);
     let count: usize = args[2].parse()?;
     let active = args[3] == "active";

@@ -6,7 +6,7 @@ use std::{error::Error, fmt::Write};
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = crate::args().collect();
     let mut output = String::new();
-    for line in std::fs::read_to_string(&args[1])?.lines() {
+    for line in horizon_fs::read_to_string(&args[1])?.lines() {
         if let Some(name) = line.strip_prefix("name\t") {
             let components = horizon_client::item_data::command_components(&format!(
                 "[minecraft:custom_name={name}]"
@@ -65,6 +65,6 @@ pub fn main() -> Result<(), Box<dyn Error>> {
             display.shows("minecraft:attribute_modifiers")
         )?;
     }
-    std::fs::write(&args[2], output)?;
+    horizon_fs::write(&args[2], output)?;
     Ok(())
 }

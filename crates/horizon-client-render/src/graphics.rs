@@ -2,7 +2,10 @@
 //! `horizon-graphics.txt` next to `options.txt` so that file stays exactly
 //! vanilla's. Every default reproduces vanilla's rendering; only choices the
 //! player makes here depart from it.
-use std::{fs, path::Path};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
+use std::path::Path;
 
 pub const FILE: &str = "horizon-graphics.txt";
 /// Written beside it before a window's HDR output is switched on, naming the graphics driver it
@@ -1431,7 +1434,7 @@ mod tests {
     }
 
     fn scratch(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-{name}-{}-{:?}",
             std::process::id(),
             std::thread::current().id()
@@ -1457,7 +1460,7 @@ mod tests {
             let g = Graphics::load(&dir);
             let failed = (mode != HdrMode::Off).then(|| driver.to_owned());
             assert_eq!((g.hdr, &g.hdr_failed_start), (mode, &failed), "{mode:?}");
-            assert!(!dir.join(HDR_MARKER).exists(), "{mode:?}");
+            assert!(!dir.join(HDR_MARKER).fs_exists(), "{mode:?}");
             // Saved for good: the next start, without a marker, reads the same.
             let again = Graphics::load(&dir);
             assert_eq!((again.hdr, again.hdr_failed_start), (mode, failed));

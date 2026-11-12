@@ -28,6 +28,8 @@ use horizon_core::{
     geometry::{Aabb, Vec3, trig},
     random::{LegacyRandom, RandomSource},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::entity_data::Value;
 use horizon_world::nbt::Tag;
 
@@ -4991,7 +4993,7 @@ mod tests {
                 .collect();
             cases.push(triangles);
         }
-        std::fs::write(path, serde_json::to_vec(&cases).unwrap()).unwrap();
+        horizon_fs::write(path, serde_json::to_vec(&cases).unwrap()).unwrap();
     }
 
     #[test]
@@ -5597,7 +5599,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = horizon_client::assets::Assets::load(&root).unwrap();

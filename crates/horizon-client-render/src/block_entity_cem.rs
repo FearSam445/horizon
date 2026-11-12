@@ -288,7 +288,8 @@ fn part(bone: &Bone, count: &mut usize) -> (String, ModelPart) {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use std::{collections::BTreeSet, fs};
+    use horizon_fs as fs;
+    use std::collections::BTreeSet;
 
     /// A part with one face and `children`.
     pub(crate) fn plane(children: Vec<(&str, ModelPart)>) -> ModelPart {
@@ -315,7 +316,7 @@ pub(crate) mod tests {
     /// A fresh pack folder named for `test`, holding `files` under `assets/minecraft/`.
     pub(crate) fn pack(test: &str, files: &[(&str, String)]) -> std::path::PathBuf {
         let root =
-            std::env::temp_dir().join(format!("horizon-be-cem-{test}-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-be-cem-{test}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         for (path, text) in files {
             let path = root.join("assets/minecraft").join(path);

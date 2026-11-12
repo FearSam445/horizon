@@ -32,7 +32,7 @@ fn with_command_game(name: &str, test: impl FnOnce(&mut Game<'_>)) {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-saved-{name}-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -40,14 +40,14 @@ fn with_command_game(name: &str, test: impl FnOnce(&mut Game<'_>)) {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.player = Some(PlayerMotion::new(game.motion, Vec3::new(10.5, 200.0, 0.5)).unwrap());
     game.build_registries();
     game.set_allow_commands(true);
     test(&mut game);
     drop(game);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }
 
 #[test]

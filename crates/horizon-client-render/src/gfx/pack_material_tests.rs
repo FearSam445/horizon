@@ -14,14 +14,14 @@ fn terrain_material_samplers_preserve_surface_and_encoded_bytes() {
         ..Default::default()
     }))
     .unwrap();
-    let root = std::env::temp_dir().join(format!("horizon-material-pack-{}", std::process::id()));
-    std::fs::create_dir_all(root.join("shaders")).unwrap();
-    std::fs::write(
+    let root = horizon_fs::temp_dir().join(format!("horizon-material-pack-{}", std::process::id()));
+    horizon_fs::create_dir_all(root.join("shaders")).unwrap();
+    horizon_fs::write(
         root.join("shaders/gbuffers_terrain.vsh"),
         "#version 120\nvoid main(){gl_Position=gl_Vertex;}",
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         root.join("shaders/gbuffers_terrain.fsh"),
         r#"#version 120
 uniform sampler2D gtexture;
@@ -256,5 +256,5 @@ void main() {
         "{error}"
     );
     eprintln!("Material oracle negative filtering control: rejected by production binding");
-    std::fs::remove_dir_all(root).unwrap();
+    horizon_fs::remove_dir_all(root).unwrap();
 }

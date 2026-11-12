@@ -11,9 +11,9 @@ use horizon_client::block_entity_item::place;
 use horizon_client::block_entity_nbt::canonical;
 use horizon_client::containers::{default_name_key, display_name, double_chest_name};
 use horizon_client::save::text;
+use horizon_fs as fs;
 use horizon_world::nbt::{Tag, parse_snbt};
 use serde_json::Value;
-use std::fs;
 
 /// ParityData.canon of a text component: sorted keys.
 fn canon(tag: &Tag, out: &mut String) {

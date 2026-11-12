@@ -1,9 +1,9 @@
 //! Transport for decoded scalar provider samples and subsequent random state.
 use horizon_core::random::{LegacyRandom, RandomSource, XoroshiroRandom};
+use horizon_fs as fs;
 use horizon_world::worldgen::value_provider::{FloatProvider, IntProvider};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

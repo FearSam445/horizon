@@ -16,7 +16,7 @@ fn unhex(s: &str) -> Vec<u8> {
 
 pub fn main() {
     let args: Vec<String> = crate::args().collect();
-    let cases = std::fs::read_to_string(&args[1]).unwrap();
+    let cases = horizon_fs::read_to_string(&args[1]).unwrap();
     let mut out = String::new();
     let mut games: Vec<LanGame> = Vec::new();
     for line in cases.lines() {
@@ -42,5 +42,5 @@ pub fn main() {
             other => panic!("{other}"),
         }
     }
-    std::fs::write(&args[2], out).unwrap();
+    horizon_fs::write(&args[2], out).unwrap();
 }

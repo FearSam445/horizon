@@ -1,3 +1,4 @@
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     heightmap::HeightmapState,
@@ -6,7 +7,7 @@ use horizon_world::{
     worldgen::{tags::TagDefinitions, terrain::TerrainBlockStates},
 };
 use serde_json::Value;
-use std::{collections::BTreeSet, fs, path::Path};
+use std::{collections::BTreeSet, path::Path};
 #[derive(Clone, Copy)]
 pub struct State {
     air: bool,

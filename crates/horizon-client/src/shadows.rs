@@ -7,6 +7,8 @@ use crate::{
     world::World,
 };
 use glam::DVec3;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 /// Vanilla renderer shadow radius and strength for an entity type id.
 pub fn shadow_params(entity: &str) -> (f32, f32) {
@@ -274,7 +276,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("gameplay-facts.json").exists() {
+        if !root.join("gameplay-facts.json").fs_exists() {
             eprintln!(
                 "skipping resource-backed shadow bounds check: {}",
                 root.display()
@@ -353,7 +355,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("gameplay-facts.json").exists() {
+        if !root.join("gameplay-facts.json").fs_exists() {
             eprintln!("skipping resource-backed shadow check: {}", root.display());
             return;
         }

@@ -19,11 +19,11 @@ use horizon_core::{
     position::BlockPos,
     random::{RandomSource, position_seed},
 };
+use horizon_fs::File;
 use horizon_world::{chunk::BlockState, registry::BlockStateId};
 use serde_json::Value;
 use std::{
     collections::HashMap,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
     sync::Arc,

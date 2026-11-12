@@ -2,6 +2,7 @@ use horizon_core::{
     position::BlockPos,
     random::{LegacyRandom, RandomSource, XoroshiroRandom},
 };
+use horizon_fs as fs;
 use horizon_world::{
     active_effects::{ActiveEffects, EffectHooks},
     consume_effect::ConsumeEffect,
@@ -12,7 +13,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     cmp::Ordering,
-    fs,
     io::{self, Write},
     path::Path,
 };

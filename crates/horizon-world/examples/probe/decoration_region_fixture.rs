@@ -3,6 +3,7 @@ use horizon_core::{
     biome::obfuscate_seed,
     position::{BlockPos, ChunkPos},
 };
+use horizon_fs as fs;
 use horizon_world::{
     heightmap::HeightmapType,
     registry::{BlockRegistry, BlockStateId},
@@ -23,7 +24,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs,
     io::{self, Write},
     path::Path,
     sync::Arc,

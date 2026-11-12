@@ -3,9 +3,11 @@
 //! mod is off until the player turns it on in Options > Mods. A native mod is
 //! built in, so on until turned off (`mod.<id>:false`); the launcher builds
 //! only the native mods whose line is `true`.
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs,
     path::Path,
 };
 
@@ -112,7 +114,7 @@ impl ModList {
         if self.enabled.is_empty()
             && self.disabled.is_empty()
             && self.keys.is_empty()
-            && !path.exists()
+            && !path.fs_exists()
         {
             return;
         }

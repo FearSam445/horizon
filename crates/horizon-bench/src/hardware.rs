@@ -158,7 +158,7 @@ fn os_version() -> Option<String> {
 #[cfg(not(target_arch = "wasm32"))]
 #[cfg(target_os = "linux")]
 fn os_version() -> Option<String> {
-    let release = std::fs::read_to_string("/etc/os-release").ok()?;
+    let release = horizon_fs::read_to_string("/etc/os-release").ok()?;
     let name = key_value(&release, "PRETTY_NAME", '=')?
         .trim_matches('"')
         .to_owned();

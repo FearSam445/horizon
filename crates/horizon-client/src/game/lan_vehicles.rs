@@ -789,7 +789,7 @@ mod controller_tests {
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
         options.game_dir = Some(
-            std::env::temp_dir().join(format!("horizon-boat-driver-unit-{}", std::process::id())),
+            horizon_fs::temp_dir().join(format!("horizon-boat-driver-unit-{}", std::process::id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -921,7 +921,7 @@ mod controller_tests {
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
         options.game_dir = Some(
-            std::env::temp_dir().join(format!("horizon-horse-fall-unit-{}", std::process::id())),
+            horizon_fs::temp_dir().join(format!("horizon-horse-fall-unit-{}", std::process::id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(

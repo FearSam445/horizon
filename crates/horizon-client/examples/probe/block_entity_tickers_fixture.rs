@@ -28,7 +28,7 @@ fn entity(name: &str) -> BlockEntity {
 
 pub fn main() {
     let args: Vec<String> = crate::args().collect();
-    let input = std::fs::read_to_string(&args[1]).expect("input");
+    let input = horizon_fs::read_to_string(&args[1]).expect("input");
     let mut out = String::new();
     let mut entities = BlockEntities::default();
     let mut states: HashMap<Pos, u32> = HashMap::new();
@@ -99,5 +99,5 @@ pub fn main() {
             other => panic!("unknown op {other}"),
         }
     }
-    std::fs::write(&args[2], out).expect("output");
+    horizon_fs::write(&args[2], out).expect("output");
 }

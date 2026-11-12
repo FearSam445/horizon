@@ -4,8 +4,9 @@ use horizon_client::{
     hud::{HudAtlas, HudBatch, Rect},
     text::Text,
 };
+use horizon_fs as fs;
 use serde_json::Value;
-use std::{error::Error, fs, io::Write};
+use std::{error::Error, io::Write};
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<_> = crate::args().collect();

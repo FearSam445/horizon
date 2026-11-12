@@ -3,6 +3,9 @@ use horizon_core::{
     geometry::{Aabb, ShapeOp, Vec3, VoxelShape},
     position::BlockPos,
 };
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     block_collision::{BlockCollisionRegistry, DynamicCollisionWorld, ShulkerCollisionState},
     chunk::BlockState,
@@ -18,7 +21,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };
@@ -184,7 +186,7 @@ impl<W: Write> PowderSnowWorld for RegistryWorld<'_, W> {
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let arg = crate::args().nth(1).expect("private fixture directory");
     let dir = Path::new(&arg);
-    let registry = if dir.join("block-registry.nbt").exists() {
+    let registry = if dir.join("block-registry.nbt").fs_exists() {
         Some(BlockRegistry::from_nbt(
             &nbt::read_named(
                 &fs::read(dir.join("block-registry.nbt"))?,

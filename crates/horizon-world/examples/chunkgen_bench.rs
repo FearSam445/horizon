@@ -5,6 +5,7 @@
 //!     [--dimension overworld|the_nether|the_end]
 //!     [--warmup] [--json] [--no-map] [--snapshot PATH]
 use horizon_core::position::ChunkPos;
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     heightmap::HeightmapType,
@@ -17,7 +18,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     io::{BufRead, BufReader},
     path::{Path, PathBuf},
     sync::{

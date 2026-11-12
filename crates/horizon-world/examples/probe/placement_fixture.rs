@@ -1,11 +1,11 @@
 //! Transport for placement decoding, emissions, failures and random state.
 use crate::support::placement_queries as queries;
 use horizon_core::random::{LegacyRandom, RandomSource, XoroshiroRandom};
+use horizon_fs as fs;
 use horizon_world::worldgen::{anchor::WorldGenerationContext, placement::PlacementModifier};
 use serde_json::Value;
 use std::cell::RefCell;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

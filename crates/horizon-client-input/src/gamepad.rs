@@ -6,7 +6,10 @@
 //! bindings, deadzones and the look curve, button edges from successive pad
 //! states, and `horizon-controller.txt`, kept next to `options.txt` so that
 //! file stays exactly vanilla's. The game reads the pads with gilrs.
-use std::{collections::BTreeMap, fs, path::Path};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
+use std::{collections::BTreeMap, path::Path};
 use web_time::{Duration, Instant};
 
 pub const FILE: &str = "horizon-controller.txt";
@@ -738,7 +741,7 @@ impl PadSettings {
     /// never touch a controller get no new file.
     pub fn save(&self, dir: &Path) {
         let path = dir.join(FILE);
-        if *self != Self::default() || path.exists() {
+        if *self != Self::default() || path.fs_exists() {
             let _ = fs::write(path, self.serialize());
         }
     }
@@ -1815,7 +1818,7 @@ bind_key.hotbar.2:north
 
     #[test]
     fn navigation_preferences_migrate_and_stay_with_each_player() {
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-pad-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -1833,7 +1836,7 @@ bind_key.hotbar.2:north
         assert_eq!(legacy.binding("key.jump"), Some(Button::East));
         assert_eq!(legacy.look_sensitivity, 0.7);
         fresh.save(&dir);
-        assert!(!dir.join(FILE).exists(), "defaults write no file");
+        assert!(!dir.join(FILE).fs_exists(), "defaults write no file");
         let mut other = legacy;
         other.pointer_speed = 2.5;
         other.scroll_speed = 24.0;

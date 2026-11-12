@@ -12,13 +12,13 @@ use horizon_client::{
     items::Items,
     menu::{Env, Input, Kind, Menu},
 };
+use horizon_fs as fs;
 use horizon_protocol::registry::Ids;
 use horizon_world::loot::PackOverlay;
 use serde_json::Value;
 use std::{
     cell::{Cell, RefCell},
     collections::HashMap,
-    fs,
     path::Path,
 };
 

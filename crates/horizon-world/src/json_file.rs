@@ -5,8 +5,9 @@
 //! many files a player should prepare again. These helpers put the path in front
 //! of that message.
 
+use horizon_fs as fs;
 use serde::de::{Deserialize, DeserializeOwned};
-use std::{fs, io, path::Path};
+use std::{io, path::Path};
 
 /// `path`'s bytes; an I/O error names the file.
 pub fn read_bytes(path: &Path) -> io::Result<Vec<u8>> {
@@ -36,7 +37,8 @@ fn named(path: &Path, error: io::Error) -> io::Error {
 /// A path for tests: a fresh folder under the system temporary directory.
 #[cfg(test)]
 fn test_dir(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("horizon-json-file-{tag}-{}", std::process::id()));
+    let dir =
+        horizon_fs::temp_dir().join(format!("horizon-json-file-{tag}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir

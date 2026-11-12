@@ -11,10 +11,8 @@ use horizon_client_render::{
     packs::{self, Pack},
     sprites::Sprites,
 };
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use horizon_fs as fs;
+use std::path::{Path, PathBuf};
 use web_time::Instant;
 
 /// A small deterministic generator: the same files on every run and every branch.
@@ -295,7 +293,7 @@ fn main() {
         .and_then(|i| args.get(i + 1))
         .map_or(1, |s| s.parse().unwrap());
     let runs = 3;
-    let scratch = std::env::temp_dir().join(format!("horizon-pack-bench-{}", std::process::id()));
+    let scratch = horizon_fs::temp_dir().join(format!("horizon-pack-bench-{}", std::process::id()));
     let _ = fs::remove_dir_all(&scratch);
     fs::create_dir_all(&scratch).unwrap();
     let mut noise = Noise(0x9e37_79b9_7f4a_7c15);

@@ -57,8 +57,8 @@ pub fn main() {
         ([0.0f64; 3], 0.0f32, false, false, false, 0);
     let mut height = 1.8f32;
     let mut columns: Vec<([i32; 3], bool)> = Vec::new();
-    let input = std::fs::read_to_string(&args[2]).expect("input");
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[3]).expect("output"));
+    let input = horizon_fs::read_to_string(&args[2]).expect("input");
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[3]).expect("output"));
     for line in input.lines() {
         writeln!(out, "{line}").expect("write");
         let a: Vec<&str> = line.split(' ').collect();

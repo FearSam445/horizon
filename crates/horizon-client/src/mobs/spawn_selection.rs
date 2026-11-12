@@ -20,11 +20,11 @@ use horizon_core::{
     geometry::{Aabb, Vec3},
     random::RandomSource,
 };
+use horizon_fs as fs;
 use serde_json::Value;
 use std::{
     borrow::{Borrow, Cow},
     collections::HashMap,
-    fs,
     path::Path,
 };
 

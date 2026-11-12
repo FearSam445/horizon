@@ -4,10 +4,12 @@
 //! batch at a time on a thread of its own, every download logged in
 //! `downloads/log.json`, and the cache cut to its 20 newest files on start.
 use super::{Batch, Request};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use sha1::{Digest, Sha1};
 use std::time::SystemTime;
 use std::{
-    fs,
     io::{self, Read, Write},
     path::{Path, PathBuf},
     sync::mpsc::{Receiver, Sender, channel},
@@ -180,7 +182,7 @@ fn hex(bytes: &[u8]) -> String {
 }
 /// `checkExistingFile`: the file is there with that hash.
 fn matches(path: &Path, sha1: &str) -> bool {
-    path.exists() && sha1_of(path).is_ok_and(|actual| actual == sha1)
+    path.fs_exists() && sha1_of(path).is_ok_and(|actual| actual == sha1)
 }
 /// `updateModificationTime`: used now, so the cleaner keeps it longest.
 fn touch(path: &Path) {
@@ -218,7 +220,7 @@ fn download_file_within(
             touch(target);
             return Ok(target.clone());
         }
-        if target.exists() {
+        if target.fs_exists() {
             log::warn!(
                 "Horizon: existing file {} not found or had mismatched hash",
                 target.display()
@@ -331,10 +333,10 @@ pub fn vacuum(dir: &Path, max_files: usize) {
         };
         for e in entries.flatten() {
             let path = e.path();
-            let Ok(meta) = e.metadata() else { continue };
-            if meta.is_dir() {
+            let Ok(meta) = e.fs_metadata() else { continue };
+            if meta.fs_is_dir() {
                 stack.push(path);
-            } else if meta.is_file() && path.parent() != Some(dir) {
+            } else if meta.fs_is_file() && path.parent() != Some(dir) {
                 let time = meta.modified().unwrap_or(SystemTime::UNIX_EPOCH);
                 files.push((path, time));
             }
@@ -411,7 +413,7 @@ mod tests {
         hex(&Sha1::digest(bytes))
     }
     fn scratch() -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("horizon-packs-{:016x}", rand_suffix()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-packs-{:016x}", rand_suffix()));
         fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -469,7 +471,7 @@ mod tests {
             sha1: None,
         };
         assert!(download_file(&dir.join("dead"), &dead, &[], MAX_SIZE, &channel().0).is_err());
-        assert!(!dir.join("dead").exists());
+        assert!(!dir.join("dead").fs_exists());
         let (url, server) = serve("200 OK", vec![0; 100]);
         let large = Request {
             id: 3,
@@ -588,9 +590,9 @@ mod tests {
         }
         fs::write(dir.join("log.json"), b"").unwrap();
         vacuum(&dir, 2);
-        assert!(dir.join("a/3").exists() && dir.join("b/1").exists());
-        assert!(!dir.join("a/1").exists() && !dir.join("a/2").exists());
-        assert!(dir.join("log.json").exists());
+        assert!(dir.join("a/3").fs_exists() && dir.join("b/1").fs_exists());
+        assert!(!dir.join("a/1").fs_exists() && !dir.join("a/2").fs_exists());
+        assert!(dir.join("log.json").fs_exists());
         fs::remove_dir_all(dir).unwrap();
     }
 }

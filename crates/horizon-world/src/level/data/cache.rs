@@ -11,6 +11,8 @@
 //! snapshot, while a rebuild that only touched other crates keeps them.
 use super::*;
 use crate::registry::snapshot as registry_snapshot;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::time::SystemTime;
@@ -925,11 +927,11 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !source.join("block-behaviours.json").exists() {
+        if !source.join("block-behaviours.json").fs_exists() {
             eprintln!("skipping behaviour cache tests: no client resources");
             return None;
         }
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-behaviour-cache-test-{}-{}",
             std::process::id(),
             NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed),
@@ -946,7 +948,7 @@ mod tests {
         }
         for entry in fs::read_dir(source.join("data/minecraft/tags/fluid")).unwrap() {
             let entry = entry.unwrap();
-            if entry.file_type().unwrap().is_file() {
+            if entry.file_type().unwrap().fs_is_file() {
                 fs::copy(
                     entry.path(),
                     dir.join("data/minecraft/tags/fluid")
@@ -1018,9 +1020,9 @@ mod tests {
         };
         assert!(load_from(&dir, &registry, &root.0).is_none());
         let initial = load_or_build();
-        assert!(dir.join(FILE_NAME).is_file());
+        assert!(dir.join(FILE_NAME).fs_is_file());
         assert!(
-            !root.0.join(FILE_NAME).exists(),
+            !root.0.join(FILE_NAME).fs_exists(),
             "the resource folder stays untouched"
         );
         let hit = load_from(&dir, &registry, &root.0).expect("cache hit");
@@ -1083,11 +1085,11 @@ mod tests {
             .unwrap_or_else(|| {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
-        if !source.join("facts.json").exists() {
+        if !source.join("facts.json").fs_exists() {
             eprintln!("skipping registry cache test: no client resources");
             return None;
         }
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-registry-cache-test-{}-{}",
             std::process::id(),
             NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed),
@@ -1103,7 +1105,7 @@ mod tests {
             return;
         };
         let (registry, flags) = BlockRegistry::from_facts_json_with_flags(
-            std::fs::File::open(root.0.join("facts.json")).unwrap(),
+            horizon_fs::File::open(root.0.join("facts.json")).unwrap(),
         )
         .unwrap();
         // The game's cache folder, apart from the resources.
@@ -1111,7 +1113,7 @@ mod tests {
         assert!(load_registry_from(&dir, &root.0).is_none());
         write_registry(&dir, &root.0, &registry, &flags).unwrap();
         assert!(
-            !root.0.join(REGISTRY_FILE_NAME).exists(),
+            !root.0.join(REGISTRY_FILE_NAME).fs_exists(),
             "the resource folder stays untouched"
         );
         let (hit, hit_flags) = load_registry_from(&dir, &root.0).expect("cache hit");

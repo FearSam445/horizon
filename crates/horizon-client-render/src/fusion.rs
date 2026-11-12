@@ -13,6 +13,9 @@
 use crate::connected::{Overlay, Pick, TileLayer};
 use crate::models::StateModels;
 use crate::sprites::Sprites;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_optifine::cem::json::Json;
 use horizon_optifine::ctm::connect::{self, Axes, Face};
 use horizon_optifine::fusion::{
@@ -25,7 +28,6 @@ use horizon_world::block_state_properties::BlockProperties;
 use horizon_world::registry::{BlockRegistry, BlockStateId};
 use std::{
     collections::HashMap,
-    fs,
     num::NonZeroU16,
     path::{Path, PathBuf},
 };
@@ -223,9 +225,9 @@ fn mcmeta_files(textures: &Path) -> Vec<PathBuf> {
         for entry in fs::read_dir(&dir).into_iter().flatten().flatten() {
             let path = entry.path();
             let dir = match entry.file_type() {
-                Ok(t) if t.is_symlink() => path.is_dir(),
-                Ok(t) => t.is_dir(),
-                Err(_) => path.is_dir(),
+                Ok(t) if t.fs_is_symlink() => path.fs_is_dir(),
+                Ok(t) => t.fs_is_dir(),
+                Err(_) => path.fs_is_dir(),
             };
             if dir {
                 dirs.push(path);
@@ -613,7 +615,7 @@ mod tests {
     #[test]
     fn models_name_the_predicates_their_faces_draw() {
         let root =
-            std::env::temp_dir().join(format!("horizon-fusion-models-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-fusion-models-{}", std::process::id()));
         let models = root.join("assets/demo/models/block");
         fs::create_dir_all(&models).unwrap();
         // A pane arm over a template whose `particle` names the pane sheet but draws no face
@@ -657,7 +659,8 @@ mod tests {
 
     #[test]
     fn faces_of_one_sprite_join_by_their_own_keys() {
-        let root = std::env::temp_dir().join(format!("horizon-fusion-keys-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-fusion-keys-{}", std::process::id()));
         let models = root.join("assets/demo/models/block");
         fs::create_dir_all(&models).unwrap();
         // The wiki's example: four keys on one texture, two of them joining by `blue`.

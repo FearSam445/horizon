@@ -23,8 +23,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         reagents: Default::default(),
         inputs: Default::default(),
     };
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[3])?);
-    for line in std::io::BufReader::new(std::fs::File::open(&args[2])?).lines() {
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[3])?);
+    for line in std::io::BufReader::new(horizon_fs::File::open(&args[2])?).lines() {
         let input: serde_json::Value = serde_json::from_str(&line?)?;
         let mut stack = ItemStack::new(
             input["item"].as_str().unwrap(),

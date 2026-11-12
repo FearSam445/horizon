@@ -1,11 +1,9 @@
 //! Transport for the vanilla quad sorting / viewpoint parity gate.
 use horizon_client::gfx::translucency::{SortState, Sorter, quad_center};
+use horizon_fs as fs;
 use serde::Deserialize;
 use serde_json::json;
-use std::{
-    fs,
-    io::{BufWriter, Write},
-};
+use std::io::{BufWriter, Write};
 
 #[derive(Deserialize)]
 struct Case {

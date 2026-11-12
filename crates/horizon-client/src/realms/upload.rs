@@ -7,7 +7,9 @@
 //! blocks at the end. A path that does not fit ustar's 255 bytes fails the packing rather than
 //! uploading a truncated archive.
 use super::client::{RealmSlot, RealmsClient, RealmsError, UploadFailure, UploadInfo};
-use std::fs::File;
+use horizon_fs::File;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -156,7 +158,7 @@ impl Archive {
 
 impl Drop for Archive {
     fn drop(&mut self) {
-        let _ = std::fs::remove_file(&self.path);
+        let _ = horizon_fs::remove_file(&self.path);
     }
 }
 
@@ -166,13 +168,13 @@ pub fn pack_world(world: &Path, progress: &UploadProgress) -> Result<Archive, Up
     match write_archive(world, &path, progress) {
         Ok(len) => {
             if len > SIZE_LIMIT {
-                let _ = std::fs::remove_file(&path);
+                let _ = horizon_fs::remove_file(&path);
                 return Err(UploadError::TooLarge);
             }
             Ok(Archive { path, len })
         }
         Err(e) => {
-            let _ = std::fs::remove_file(&path);
+            let _ = horizon_fs::remove_file(&path);
             Err(e)
         }
     }
@@ -200,7 +202,7 @@ fn write_archive(world: &Path, path: &Path, progress: &UploadProgress) -> Result
     file.sync_all()
         .map_err(|e| UploadError::Failed(e.to_string()))?;
     drop(file);
-    let len = std::fs::metadata(path)
+    let len = horizon_fs::metadata(path)
         .map_err(|e| UploadError::Failed(e.to_string()))?
         .len();
     Ok(len)
@@ -216,18 +218,18 @@ fn add_tree(
     if progress.is_cancelled() {
         return Err(UploadError::Cancelled);
     }
-    let metadata = std::fs::metadata(path).map_err(|e| UploadError::Failed(e.to_string()))?;
+    let metadata = horizon_fs::metadata(path).map_err(|e| UploadError::Failed(e.to_string()))?;
     let modified = metadata
         .modified()
         .ok()
         .and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok())
         .map_or(0, |d| d.as_secs());
-    let directory = metadata.is_dir();
+    let directory = metadata.fs_is_dir();
     let size = if directory { 0 } else { metadata.len() };
     tar.header(name, size, directory, modified)
         .map_err(|e| UploadError::Failed(e.to_string()))?;
     if directory {
-        let mut children: Vec<PathBuf> = std::fs::read_dir(path)
+        let mut children: Vec<PathBuf> = horizon_fs::read_dir(path)
             .map_err(|e| UploadError::Failed(e.to_string()))?
             .flatten()
             .map(|entry| entry.path())
@@ -387,12 +389,12 @@ mod tests {
     use super::*;
 
     fn world_dir(name: &str) -> PathBuf {
-        let dir =
-            std::env::temp_dir().join(format!("realms-upload-test-{}-{name}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(dir.join("region")).unwrap();
-        std::fs::write(dir.join("level.dat"), b"nbt").unwrap();
-        std::fs::write(dir.join("region/r.0.0.mca"), vec![7u8; 600]).unwrap();
+        let dir = horizon_fs::temp_dir()
+            .join(format!("realms-upload-test-{}-{name}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
+        horizon_fs::create_dir_all(dir.join("region")).unwrap();
+        horizon_fs::write(dir.join("level.dat"), b"nbt").unwrap();
+        horizon_fs::write(dir.join("region/r.0.0.mca"), vec![7u8; 600]).unwrap();
         dir
     }
 
@@ -445,8 +447,8 @@ mod tests {
                 ("world/region/r.0.0.mca".to_owned(), 600),
             ]
         );
-        assert!(std::fs::metadata(archive.path()).unwrap().len() > 0);
-        let _ = std::fs::remove_dir_all(&dir);
+        assert!(horizon_fs::metadata(archive.path()).unwrap().len() > 0);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]
@@ -458,7 +460,7 @@ mod tests {
             pack_world(&dir, &progress).unwrap_err(),
             UploadError::Cancelled
         );
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]

@@ -12,7 +12,9 @@ use super::{CURRENT, update};
 use crate::compression::Compression;
 use crate::nbt::{self, Compound, JavaString, Limits, NamedTag, Tag};
 use crate::region::{ChunkRecord, RegionFile, RegionWriter};
-use std::fs;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -105,11 +107,11 @@ fn resolve(base: &Path, relative: &str) -> PathBuf {
 /// the target exists.
 fn move_file(base: &Path, from: &str, to: &str) -> io::Result<()> {
     let from = resolve(base, from);
-    if !from.exists() {
+    if !from.fs_exists() {
         return Ok(());
     }
     let to = resolve(base, to);
-    if to.exists() {
+    if to.fs_exists() {
         return Err(io::Error::new(
             io::ErrorKind::AlreadyExists,
             format!(
@@ -128,7 +130,7 @@ fn move_file(base: &Path, from: &str, to: &str) -> io::Result<()> {
 /// `FileFixUtil.deleteFileOrEmptyDirectory`.
 fn delete(base: &Path, relative: &str) -> io::Result<()> {
     let path = resolve(base, relative);
-    if path.is_dir() {
+    if path.fs_is_dir() {
         let entries: Vec<_> = fs::read_dir(&path)?.collect::<Result<_, _>>()?;
         if entries.len() == 1 && entries[0].file_name() == ".DS_Store" {
             let _ = fs::remove_file(entries[0].path());
@@ -137,7 +139,7 @@ fn delete(base: &Path, relative: &str) -> io::Result<()> {
             return Ok(());
         }
         fs::remove_dir(&path)
-    } else if path.exists() {
+    } else if path.fs_exists() {
         fs::remove_file(&path)
     } else {
         Ok(())
@@ -149,7 +151,7 @@ pub(super) fn subdirectories(path: &Path) -> Vec<PathBuf> {
         .map(|r| {
             r.filter_map(Result::ok)
                 .map(|e| e.path())
-                .filter(|p| p.is_dir())
+                .filter(|p| p.fs_is_dir())
                 .collect()
         })
         .unwrap_or_default();
@@ -165,7 +167,7 @@ fn dimensions(base: &Path) -> Vec<PathBuf> {
             .map(|d| base.join("dimensions/minecraft").join(d))
             .to_vec()
     };
-    if !root.exists() {
+    if !root.fs_exists() {
         return defaults();
     }
     let found: Vec<PathBuf> = subdirectories(&root)
@@ -316,7 +318,7 @@ fn fix_4772(base: &Path) -> io::Result<()> {
 
 /// `RegexMove` over the files of a folder.
 fn regex_move(folder: &Path, rename: impl Fn(&str) -> Option<String>) -> io::Result<()> {
-    if !folder.is_dir() {
+    if !folder.fs_is_dir() {
         return Ok(());
     }
     let mut names: Vec<String> = fs::read_dir(folder)?
@@ -725,7 +727,7 @@ fn files_with_suffix(folder: &Path, suffix: &str) -> Vec<PathBuf> {
         .map(|r| {
             r.filter_map(Result::ok)
                 .map(|e| e.path())
-                .filter(|p| p.is_file() && p.to_string_lossy().ends_with(suffix))
+                .filter(|p| p.fs_is_file() && p.to_string_lossy().ends_with(suffix))
                 .collect()
         })
         .unwrap_or_default();
@@ -864,14 +866,14 @@ impl Progress<'_> {
 /// `SavedDataStorage.readTagFromDisk` over every known file of a data folder.
 fn saved_data_files(data: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
-    if !data.is_dir() {
+    if !data.fs_is_dir() {
         return Ok(files);
     }
     let mut stack = vec![data.to_path_buf()];
     while let Some(dir) = stack.pop() {
         for entry in fs::read_dir(&dir)?.filter_map(Result::ok) {
             let p = entry.path();
-            if p.is_dir() {
+            if p.fs_is_dir() {
                 stack.push(p);
             } else if p.to_string_lossy().ends_with(".dat") {
                 files.push(p);
@@ -1144,7 +1146,7 @@ mod upgrade_tests {
     /// file fixing does not open the screen.
     #[test]
     fn upgrade_reports_one_operation_per_file() {
-        let base = std::env::temp_dir().join(format!("horizon-progress-{}", std::process::id()));
+        let base = horizon_fs::temp_dir().join(format!("horizon-progress-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let level = Tag::compound([("Data", Tag::compound([("DataVersion", Tag::Int(4899))]))]);
         write_dat(&base.join("level.dat"), &level).unwrap();
@@ -1166,7 +1168,7 @@ mod upgrade_tests {
     /// next file, and the DataVersion stays old so the next open retries.
     #[test]
     fn cancel_stops_the_data_upgrade_and_keeps_the_version() {
-        let base = std::env::temp_dir().join(format!("horizon-cancel-{}", std::process::id()));
+        let base = horizon_fs::temp_dir().join(format!("horizon-cancel-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let level = Tag::compound([("Data", Tag::compound([("DataVersion", Tag::Int(4899))]))]);
         write_dat(&base.join("level.dat"), &level).unwrap();
@@ -1189,7 +1191,7 @@ mod upgrade_tests {
     /// retries, and a later successful run stamps the current one.
     #[test]
     fn failed_upgrade_keeps_old_data_version() {
-        let base = std::env::temp_dir().join(format!("horizon-upgrade-{}", std::process::id()));
+        let base = horizon_fs::temp_dir().join(format!("horizon-upgrade-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let old = 4899;
         let level = Tag::compound([("Data", Tag::compound([("DataVersion", Tag::Int(old))]))]);
@@ -1262,7 +1264,8 @@ mod upgrade_tests {
     /// every chunk at the current version.
     #[test]
     fn parallel_region_upgrade_matches_one_thread() {
-        let base = std::env::temp_dir().join(format!("horizon-par-regions-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-par-regions-{}", std::process::id()));
         let _ = fs::remove_dir_all(&base);
         let mut outputs = Vec::new();
         for threads in [1, 4] {
@@ -1284,7 +1287,7 @@ mod upgrade_tests {
             );
             fs::remove_file(dir.join("r.-1.5.mca")).unwrap();
             assert_eq!(chunk_versions(&dir), vec![vec![CURRENT; 20]; 9]);
-            assert!(!dir.join(".datafix").exists());
+            assert!(!dir.join(".datafix").fs_exists());
             let bytes: Vec<Vec<u8>> = files_with_suffix(&dir, ".mca")
                 .iter()
                 .map(|f| fs::read(f).unwrap())
@@ -1299,7 +1302,7 @@ mod upgrade_tests {
     /// hand: at most one file each is converted, the rest stay old.
     #[test]
     fn cancel_stops_every_region_worker_after_its_file() {
-        let dir = std::env::temp_dir().join(format!("horizon-par-cancel-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-par-cancel-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         old_region_folder(&dir, 9, 20);
         let progress = UpgradeProgress::new();
@@ -1327,7 +1330,7 @@ mod upgrade_tests {
             progress.total_file_fix_stats().finished_operations() as usize,
             converted
         );
-        assert!(!dir.join(".datafix").exists());
+        assert!(!dir.join(".datafix").fs_exists());
         let _ = fs::remove_dir_all(&dir);
     }
 }

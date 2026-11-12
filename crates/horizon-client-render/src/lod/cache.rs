@@ -4,9 +4,11 @@
 //! or format is cleared on first use.
 use super::{Column, Span, Surface};
 use crate::fast_hash::FxHashMap;
+use horizon_fs::{File, OpenOptions};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::registry::BlockStateId;
 use std::{
-    fs::{File, OpenOptions},
     io::{Read, Seek, SeekFrom, Write},
     path::PathBuf,
     sync::{Arc, Mutex},
@@ -122,11 +124,11 @@ impl DiskCache {
 
     fn open(&self, (rx, rz): (i32, i32), create: bool) -> Option<Region> {
         let path = self.dir.join(format!("r.{rx}.{rz}.hlod"));
-        if !create && !path.exists() {
+        if !create && !path.fs_exists() {
             return None;
         }
         if create {
-            std::fs::create_dir_all(&self.dir).ok()?;
+            horizon_fs::create_dir_all(&self.dir).ok()?;
         }
         let mut file = OpenOptions::new()
             .read(true)
@@ -142,7 +144,7 @@ impl DiskCache {
             && header[8..] == self.key.to_le_bytes();
         let mut index = FxHashMap::default();
         if current {
-            let size = file.metadata().ok()?.len();
+            let size = file.fs_metadata().ok()?.len();
             let mut at = HEADER;
             let mut record = [0; RECORD as usize];
             while at + RECORD <= size {
@@ -182,8 +184,8 @@ pub fn build_key(states: usize, biomes: usize) -> u64 {
     env!("CARGO_PKG_VERSION").hash(&mut hasher);
     match option_env!("HORIZON_COMMIT") {
         Some(commit) => commit.hash(&mut hasher),
-        None => std::env::current_exe()
-            .and_then(|exe| exe.metadata()?.modified())
+        None => horizon_fs::current_exe()
+            .and_then(|exe| exe.fs_metadata()?.modified())
             .ok()
             .hash(&mut hasher),
     }
@@ -310,18 +312,18 @@ mod tests {
 
     #[test]
     fn chunks_survive_reopening_and_a_torn_last_record() {
-        let dir = std::env::temp_dir().join(format!("horizon-lod-cache-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+        let dir = horizon_fs::temp_dir().join(format!("horizon-lod-cache-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         let cache = DiskCache::new(dir.clone(), 7);
         assert!(cache.get(3, -40).is_none(), "nothing cached yet");
         cache.put(3, -40, &columns(0));
         cache.put(4, -40, &columns(1));
         let path = dir.join("r.0.-2.hlod");
-        let size = std::fs::metadata(&path).unwrap().len();
+        let size = horizon_fs::metadata(&path).unwrap().len();
         // A chunk cached already is not appended again.
         cache.put(3, -40, &columns(2));
         assert_eq!(*cache.get(3, -40).unwrap(), columns(0));
-        assert_eq!(std::fs::metadata(&path).unwrap().len(), size);
+        assert_eq!(horizon_fs::metadata(&path).unwrap().len(), size);
         drop(cache);
 
         let file = OpenOptions::new().write(true).open(&path).unwrap();
@@ -331,7 +333,7 @@ mod tests {
         assert_eq!(*cache.get(3, -40).unwrap(), columns(0));
         assert_eq!(*cache.get(4, -40).unwrap(), columns(1));
         assert_eq!(
-            std::fs::metadata(&path).unwrap().len(),
+            horizon_fs::metadata(&path).unwrap().len(),
             size,
             "torn tail cut"
         );
@@ -343,7 +345,7 @@ mod tests {
         cache.put(5, -40, &columns(3));
         assert!(cache.get(4, -40).is_none());
         assert_eq!(*cache.get(5, -40).unwrap(), columns(3));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]

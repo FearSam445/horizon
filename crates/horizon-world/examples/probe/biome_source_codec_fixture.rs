@@ -1,12 +1,12 @@
 //! Registry-aware codec transport for biome-source definitions.
 use horizon_core::density::{ConstantSampler, SamplerContext};
+use horizon_fs as fs;
 use horizon_world::worldgen::{
     biome_source::BiomeSourceCatalog, climate::ClimateSampler, tags::TagDefinitions,
 };
 use serde_json::Value;
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs,
     io::{self, Write},
     path::Path,
     sync::Arc,

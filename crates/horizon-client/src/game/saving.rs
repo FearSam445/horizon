@@ -2,6 +2,8 @@
 //! snapshots are prepared in small batches and the region workers drain.
 use super::{Game, loading_frame};
 use horizon_client::{Result, hud::HudBatch};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::{HashSet, VecDeque};
 use web_time::{Duration, Instant};
 
@@ -325,7 +327,7 @@ impl Game<'_> {
         {
             return;
         }
-        if icon.path.is_file() {
+        if icon.path.fs_is_file() {
             // tryTakeScreenshotIfNeeded's hasWorldScreenshot: it has one, stop asking.
             self.world_icon = None;
             return;

@@ -8,6 +8,8 @@ use crate::{
     assets::{Assets, RenderAssets},
     motion::MotionResources,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::block_collision::BlockCollisionRegistry;
 use std::{
     path::{Path, PathBuf},
@@ -34,7 +36,7 @@ pub(crate) fn vanilla() -> Option<&'static Vanilla> {
                         .join("../../.local/horizon-client")
                         .join(horizon_core::VANILLA_VERSION)
                 });
-            if !root.join("movement-properties.nbt").exists() {
+            if !root.join("movement-properties.nbt").fs_exists() {
                 return None;
             }
             let assets = Assets::load(&root).unwrap();

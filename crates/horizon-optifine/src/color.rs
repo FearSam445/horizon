@@ -202,7 +202,7 @@ impl ColorProperties {
     /// The pack's file under `root`, or vanilla's colours (all `None`) without one.
     pub fn load(root: &Path) -> Self {
         for file in FILES {
-            if let Ok(text) = std::fs::read_to_string(root.join(file)) {
+            if let Ok(text) = horizon_fs::read_to_string(root.join(file)) {
                 let mut out = Self::parse(file, &Properties::parse(&text));
                 out.file = Some(file.to_owned());
                 return out;
@@ -441,17 +441,17 @@ mod tests {
 
     #[test]
     fn load_prefers_optifine_over_mcpatcher() {
-        let root = std::env::temp_dir().join(format!("horizon-color-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+        let root = horizon_fs::temp_dir().join(format!("horizon-color-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&root);
         for (top, colour) in [("optifine", "010101"), ("mcpatcher", "020202")] {
             let dir = root.join(format!("assets/minecraft/{top}"));
-            std::fs::create_dir_all(&dir).unwrap();
-            std::fs::write(dir.join("color.properties"), format!("lilypad={colour}")).unwrap();
+            horizon_fs::create_dir_all(&dir).unwrap();
+            horizon_fs::write(dir.join("color.properties"), format!("lilypad={colour}")).unwrap();
         }
         let c = ColorProperties::load(&root);
-        std::fs::remove_dir_all(root.join("assets/minecraft/optifine")).unwrap();
+        horizon_fs::remove_dir_all(root.join("assets/minecraft/optifine")).unwrap();
         let legacy = ColorProperties::load(&root);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         assert_eq!(c.lilypad, Some(0x010101));
         assert_eq!(c.file.as_deref(), Some(FILE));
         assert_eq!(legacy.lilypad, Some(0x020202));

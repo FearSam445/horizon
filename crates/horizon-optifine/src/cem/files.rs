@@ -4,7 +4,10 @@
 //! entities' models.
 
 use super::model::{EntityModel, MAX_BYTES, parse_jem};
-use std::{collections::BTreeMap, fs, path::Path};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
+use std::{collections::BTreeMap, path::Path};
 
 /// Every `.jem` of the CEM folders by model name, sorted, each name's files best first:
 /// `emf/cem` before `optifine/cem` whichever form either uses, and within one folder the flat
@@ -20,12 +23,12 @@ pub fn jem_files(root: &Path) -> BTreeMap<String, Vec<String>> {
             let name = e.file_name().to_string_lossy().into_owned();
             if let Some(model) = name.strip_suffix(".jem") {
                 // A directory named `x.jem` isn't a model.
-                if e.path().is_file() {
+                if e.path().fs_is_file() {
                     flat.push((model.to_owned(), format!("{base}/{name}")));
                 }
             } else {
                 let path = format!("{base}/{name}/{name}.jem");
-                if root.join(&path).is_file() {
+                if root.join(&path).fs_is_file() {
                     nested.push((name, path));
                 }
             }
@@ -60,7 +63,7 @@ pub fn load_jem(root: &Path, path: &str) -> Option<EntityModel> {
                 "Horizon: custom entity model {path}: its texture {texture} is outside \
                  assets/minecraft/textures/, so not in the atlas: the vanilla one draws"
             );
-        } else if !root.join(texture).is_file() {
+        } else if !root.join(texture).fs_is_file() {
             log::warn!(
                 "Horizon: custom entity model {path}: its texture {texture} doesn't exist, \
                  so not in the atlas: the vanilla one draws"
@@ -93,7 +96,7 @@ mod tests {
 
     #[test]
     fn emf_files_win_and_a_flat_file_beats_its_folder() {
-        let root = std::env::temp_dir().join(format!("horizon-jem-files-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-jem-files-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         for path in [
             // EMF's folder form over OptiFine's flat file.

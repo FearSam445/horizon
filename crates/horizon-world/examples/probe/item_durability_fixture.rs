@@ -1,7 +1,7 @@
+use horizon_fs as fs;
 use horizon_world::item_durability::{self, DurabilityStack, DurabilityWorld};
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

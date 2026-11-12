@@ -451,9 +451,10 @@ mod tests {
     #[test]
     fn a_world_open_reuses_loot_data_of_the_same_packs() {
         use horizon_world::loot::PackOverlay;
-        let root = std::env::temp_dir().join(format!("horizon-loot-reuse-{}", std::process::id()));
-        std::fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
-        std::fs::write(root.join("items.json"), "{}").unwrap();
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-reuse-{}", std::process::id()));
+        horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
+        horizon_fs::write(root.join("items.json"), "{}").unwrap();
         let mut slot = None;
         let first = reuse_or_load(&mut slot, &root, &PackOverlay::NONE).expect("loot data");
         let again = reuse_or_load(&mut slot, &root, &PackOverlay::NONE).unwrap();
@@ -465,7 +466,7 @@ mod tests {
         let packs = PackOverlay { files: &files };
         let other = reuse_or_load(&mut slot, &root, &packs).unwrap();
         assert!(!Arc::ptr_eq(&first, &other));
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
     }
 
     #[test]

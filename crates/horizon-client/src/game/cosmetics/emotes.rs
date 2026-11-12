@@ -107,11 +107,11 @@ pub(in crate::game) fn set_model_playing(
 
 /// The emotes among a folder's item files, by id.
 fn read_folder(dir: &std::path::Path) -> Vec<Arc<Item>> {
-    let mut emotes: Vec<Arc<Item>> = std::fs::read_dir(dir)
+    let mut emotes: Vec<Arc<Item>> = horizon_fs::read_dir(dir)
         .into_iter()
         .flatten()
         .flatten()
-        .filter_map(|e| Item::parse(&std::fs::read(e.path()).ok()?).ok())
+        .filter_map(|e| Item::parse(&horizon_fs::read(e.path()).ok()?).ok())
         .filter(|i| i.slot == Slot::Emote)
         .map(Arc::new)
         .collect();

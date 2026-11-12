@@ -10,8 +10,9 @@ use horizon_client::{
     items::Items,
     stations::StationRecipes,
 };
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
-use std::{fs, path::Path};
+use std::path::Path;
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().collect();

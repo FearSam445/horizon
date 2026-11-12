@@ -1,9 +1,11 @@
 //! World-list operations. Metadata edits preserve every other NBT field;
 //! backups use vanilla's ZIP layout and never include the session lock.
 use crate::save::{read_dat, write_dat};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::Tag;
 use std::{
-    fs,
     io::{self, Seek, Write},
     path::{Path, PathBuf},
 };
@@ -18,7 +20,7 @@ fn world_path(saves: &Path, folder: &str) -> crate::Result<PathBuf> {
         return Err("Invalid world folder".into());
     }
     let path = saves.join(folder);
-    if !fs::symlink_metadata(&path)?.is_dir() {
+    if !fs::symlink_metadata(&path)?.fs_is_dir() {
         return Err("World folder is not a directory".into());
     }
     Ok(path)
@@ -39,9 +41,9 @@ fn collect_symlinks(dir: &Path, found: &mut Vec<PathBuf>) -> crate::Result<()> {
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let kind = entry.file_type()?;
-        if kind.is_symlink() {
+        if kind.fs_is_symlink() {
             found.push(entry.path());
-        } else if kind.is_dir() {
+        } else if kind.fs_is_dir() {
             collect_symlinks(&entry.path(), found)?;
         }
     }
@@ -102,7 +104,7 @@ fn remove_contents(world: &Path, lock: &Path) -> io::Result<()> {
             continue;
         }
         // `file_type` does not follow links, and `remove_dir_all` never does.
-        if entry.file_type()?.is_dir() {
+        if entry.file_type()?.fs_is_dir() {
             fs::remove_dir_all(&path)?;
         } else {
             fs::remove_file(&path)?;
@@ -167,7 +169,7 @@ pub fn backup(saves: &Path, folder: &str) -> crate::Result<u64> {
     let result = (|| {
         let mut zip = zip::ZipWriter::new(file);
         write_tree(&mut zip, &world, &world, folder)?;
-        Ok(zip.finish()?.metadata()?.len())
+        Ok(zip.finish()?.fs_metadata()?.len())
     })();
     if result.is_err() {
         let _ = fs::remove_file(path);
@@ -198,15 +200,15 @@ pub fn write_tree_skipping<W: Write + Seek>(
         let entry = entry?;
         let path = entry.path();
         let kind = entry.file_type()?;
-        if kind.is_symlink() {
+        if kind.fs_is_symlink() {
             return Err(format!("Cannot back up symbolic link: {}", path.display()).into());
         }
         let skipped = skip.iter().any(|name| entry.file_name() == *name);
-        if kind.is_dir() {
+        if kind.fs_is_dir() {
             if !skipped {
                 write_tree_skipping(zip, root, &path, prefix, skip)?;
             }
-        } else if kind.is_file() && !skipped {
+        } else if kind.fs_is_file() && !skipped {
             let relative = path.strip_prefix(root)?;
             let name = format!("{prefix}/{}", relative.to_string_lossy().replace('\\', "/"));
             zip.start_file(

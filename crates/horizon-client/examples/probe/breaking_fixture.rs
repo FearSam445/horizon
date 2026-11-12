@@ -7,10 +7,10 @@ use horizon_client::{
     models,
 };
 use horizon_core::position::BlockPos;
+use horizon_fs as fs;
 use horizon_world::registry::BlockStateId;
 use serde_json::{Value, json};
 use std::{
-    fs,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
 };

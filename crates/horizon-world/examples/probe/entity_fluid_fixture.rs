@@ -3,6 +3,9 @@ use horizon_core::{
     geometry::{Aabb, Vec3},
     position::BlockPos,
 };
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::{
     block_support::BlockSupportRegistry,
     dynamic_support::DynamicSupportWorld,
@@ -16,7 +19,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeSet,
-    fs,
     io::{self, Write},
     path::Path,
 };
@@ -320,7 +322,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             .0
             .tag)
     };
-    let registry = if dir.join("block-registry.nbt").exists() {
+    let registry = if dir.join("block-registry.nbt").fs_exists() {
         Some(BlockRegistry::from_nbt(&load("block-registry.nbt")?)?)
     } else {
         None

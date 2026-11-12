@@ -165,15 +165,15 @@ fn decode_one(bytes: &[u8]) -> Capture {
 
 #[test]
 fn after_each_flush_the_file_on_disk_inflates_to_exactly_the_fields_written() {
-    let path = std::env::temp_dir().join(format!("hzperf-flush-{}.hzperf", std::process::id()));
-    let mut writer = CaptureWriter::new(std::fs::File::create(&path).unwrap()).unwrap();
+    let path = horizon_fs::temp_dir().join(format!("hzperf-flush-{}.hzperf", std::process::id()));
+    let mut writer = CaptureWriter::new(horizon_fs::File::create(&path).unwrap()).unwrap();
     let mut expected = Capture {
         format: FORMAT,
         ..Default::default()
     };
     let mut written = 1;
     let check = |expected: &Capture, written: usize| {
-        let inflated = inflate_prefix(&std::fs::read(&path).unwrap());
+        let inflated = inflate_prefix(&horizon_fs::read(&path).unwrap());
         let fields = complete_fields(&inflated);
         assert_eq!(fields.len(), written, "whole fields on disk");
         assert_eq!(
@@ -192,10 +192,10 @@ fn after_each_flush_the_file_on_disk_inflates_to_exactly_the_fields_written() {
     }
     writer.finish().unwrap();
     let mut whole = Vec::new();
-    GzDecoder::new(std::fs::File::open(&path).unwrap())
+    GzDecoder::new(horizon_fs::File::open(&path).unwrap())
         .read_to_end(&mut whole)
         .unwrap();
-    std::fs::remove_file(&path).unwrap();
+    horizon_fs::remove_file(&path).unwrap();
     assert_eq!(
         decode_one(&whole),
         expected,

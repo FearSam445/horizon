@@ -1,4 +1,6 @@
-use std::fs::{self, File, OpenOptions};
+use horizon_fs::{self as fs, File, OpenOptions};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
@@ -86,8 +88,8 @@ pub fn retain(
     for entry in fs::read_dir(dir)? {
         let entry = entry?;
         let name = entry.file_name().to_string_lossy().into_owned();
-        let meta = entry.metadata()?;
-        if meta.is_file() && is_capture_name(&name) {
+        let meta = entry.fs_metadata()?;
+        if meta.fs_is_file() && is_capture_name(&name) {
             files.push((name, entry.path(), meta.len()));
         }
     }

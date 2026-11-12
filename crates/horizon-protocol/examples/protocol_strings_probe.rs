@@ -1,8 +1,8 @@
 //! The packet string parity corpus, without a connection or game resources.
+use horizon_fs::File;
 use horizon_protocol::buf::Reader;
 use std::{
     error::Error,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 

@@ -922,7 +922,7 @@ mod panic_environmental_tests {
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION)
             .join("data/minecraft/tags/damage_type/panic_environmental_causes.json");
-        let Ok(text) = std::fs::read_to_string(path) else {
+        let Ok(text) = horizon_fs::read_to_string(path) else {
             return;
         };
         let json: serde_json::Value = serde_json::from_str(&text).unwrap();

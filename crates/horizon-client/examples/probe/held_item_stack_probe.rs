@@ -4,11 +4,9 @@ use horizon_client::{
     items::ItemStack,
     mobs::{Extra, render},
 };
+use horizon_fs::File;
 use serde_json::Value;
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 
 pub fn main() -> Result<()> {
     let args: Vec<String> = crate::args().collect();

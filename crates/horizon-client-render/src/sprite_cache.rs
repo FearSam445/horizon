@@ -4,9 +4,11 @@
 //! sizes and modification times and the format version is the same; anything
 //! else (missing, corrupt, stale, unwritable) means the normal decoding path.
 use crate::mipmap::Strategy;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     collections::HashMap,
-    fs,
     hash::{DefaultHasher, Hash, Hasher},
     path::{Path, PathBuf},
 };
@@ -43,8 +45,8 @@ fn fingerprint(root: &Path) -> Option<u64> {
     fn walk(dir: &Path, base: &Path, sum: &mut u64) -> Option<()> {
         for entry in fs::read_dir(dir).ok()? {
             let entry = entry.ok()?;
-            let meta = entry.metadata().ok()?;
-            if meta.is_dir() {
+            let meta = entry.fs_metadata().ok()?;
+            if meta.fs_is_dir() {
                 walk(&entry.path(), base, sum)?;
                 continue;
             }
@@ -59,7 +61,7 @@ fn fingerprint(root: &Path) -> Option<u64> {
     let mut sum = 0;
     for namespace in fs::read_dir(root.join("assets")).ok()? {
         let textures = namespace.ok()?.path().join("textures");
-        if textures.is_dir() {
+        if textures.fs_is_dir() {
             walk(&textures, root, &mut sum)?;
         }
     }
@@ -218,8 +220,8 @@ mod tests {
         }
     }
     fn scratch(tag: &str) -> PathBuf {
-        let dir =
-            std::env::temp_dir().join(format!("horizon-sprite-cache-{tag}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-sprite-cache-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(dir.join("assets/minecraft/textures/block")).unwrap();
         dir
@@ -325,7 +327,7 @@ mod tests {
         let png = root.join("assets/minecraft/textures/block/x.png");
         write_png(&png, [255, 0, 0, 255]);
         let decoded = sprite_pixels(&root);
-        assert!(root.join(FILE).exists());
+        assert!(root.join(FILE).fs_exists());
         assert_eq!(
             sprite_pixels(&root),
             decoded,

@@ -18,15 +18,15 @@ fn chat_completion_reaches_mods_from_keyboard_and_mouse() {
 fn chat_completion_reaches_mods_from_keyboard_and_mouse_in_own_process() {
     let root = PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
     let scratch = PathBuf::from(std::env::var_os("HORIZON_HOME").unwrap()).join("suggestion-game");
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     struct RestoreDir(PathBuf);
     impl Drop for RestoreDir {
         fn drop(&mut self) {
-            std::env::set_current_dir(&self.0).unwrap();
+            horizon_fs::set_current_dir(&self.0).unwrap();
         }
     }
-    let _restore = RestoreDir(std::env::current_dir().unwrap());
-    std::env::set_current_dir(&scratch).unwrap();
+    let _restore = RestoreDir(horizon_fs::current_dir().unwrap());
+    horizon_fs::set_current_dir(&scratch).unwrap();
     let settings = Settings::default();
     let loaded = load_resources(
         root.clone(),

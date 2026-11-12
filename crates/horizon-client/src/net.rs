@@ -554,14 +554,14 @@ pub fn shown_address(address: &str) -> String {
 /// The relay the player set (`friendsRelay` in horizon.txt, beside
 /// options.txt), else the resolver's (`HORIZON_RELAY_URL`). None by default.
 pub fn friends_relay_setting() -> Option<String> {
-    let dir = std::env::current_dir().ok()?;
+    let dir = horizon_fs::current_dir().ok()?;
     crate::ui_theme::preference(&dir, "friendsRelay")
         .filter(|r| !r.is_empty())
         .or_else(|| horizon_hooks::engine::tunnel().and_then(|r| r.relay_from_env()))
 }
 /// Remember the relay typed on Join a friend (empty forgets it).
 pub fn save_friends_relay(relay: &str) {
-    if let Ok(dir) = std::env::current_dir() {
+    if let Ok(dir) = horizon_fs::current_dir() {
         crate::ui_theme::set_preference(&dir, "friendsRelay", (!relay.is_empty()).then_some(relay));
     }
 }
@@ -1259,7 +1259,7 @@ fn fill_known_entries(r: &mut cfg::RegistryData, resources: &Path) {
             .join(ns)
             .join(&dir)
             .join(format!("{path}.json"));
-        let json = std::fs::read(&file)
+        let json = horizon_fs::read(&file)
             .ok()
             .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok());
         if let Some(json) = json {
@@ -1538,10 +1538,10 @@ mod tests {
 
     #[test]
     fn a_known_entry_takes_its_data_from_the_clients_pack() {
-        let root = std::env::temp_dir().join(format!("hz-known-entries-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("hz-known-entries-{}", std::process::id()));
         let dir = root.join("data/minecraft/damage_type");
-        std::fs::create_dir_all(&dir).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&dir).unwrap();
+        horizon_fs::write(
             dir.join("in_fire.json"),
             br#"{"message_id": "inFire", "exhaustion": 0.1, "scaling": "when_caused_by_living_non_player"}"#,
         )
@@ -1568,7 +1568,7 @@ mod tests {
             ],
         };
         fill_known_entries(&mut r, &root);
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let Some(Tag::Compound(filled)) = &r.entries[0].data else {
             panic!("in_fire was not filled: {:?}", r.entries[0].data);
         };
@@ -1801,9 +1801,9 @@ mod tests {
     #[test]
     fn configuration_answers_the_content_identity_challenge() {
         let root =
-            std::env::temp_dir().join(format!("horizon-content-identity-{}", std::process::id()));
-        std::fs::create_dir_all(&root).unwrap();
-        std::fs::write(
+            horizon_fs::temp_dir().join(format!("horizon-content-identity-{}", std::process::id()));
+        horizon_fs::create_dir_all(&root).unwrap();
+        horizon_fs::write(
             root.join("facts.json"),
             br#"{"states":[["minecraft:stone",false,false,"Block{minecraft:stone}",{"id":"minecraft:stone"}]]}"#,
         )
@@ -1859,8 +1859,8 @@ mod tests {
             cfg::Serverbound::FinishConfiguration(Empty)
         );
         assert!(thread.join().unwrap().is_ok());
-        std::fs::remove_dir_all(
-            std::env::temp_dir().join(format!("horizon-content-identity-{}", std::process::id())),
+        horizon_fs::remove_dir_all(
+            horizon_fs::temp_dir().join(format!("horizon-content-identity-{}", std::process::id())),
         )
         .unwrap();
     }
@@ -2384,17 +2384,17 @@ mod tests {
     #[test]
     fn fill_known_entries_rejects_path_traversal_and_reads_valid_entries() {
         let temp_dir =
-            std::env::temp_dir().join(format!("horizon-net-reg-test-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&temp_dir);
+            horizon_fs::temp_dir().join(format!("horizon-net-reg-test-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&temp_dir);
         let resources = temp_dir.join("res");
         let valid_dir = resources.join("data/minecraft/worldgen/biome");
-        std::fs::create_dir_all(&valid_dir).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&valid_dir).unwrap();
+        horizon_fs::write(
             valid_dir.join("plains.json"),
             br#"{"has_precipitation":true}"#,
         )
         .unwrap();
-        std::fs::write(temp_dir.join("secret.json"), br#"{"leaked":true}"#).unwrap();
+        horizon_fs::write(temp_dir.join("secret.json"), br#"{"leaked":true}"#).unwrap();
 
         let mut reg = cfg::RegistryData {
             registry: "minecraft:worldgen/biome".into(),
@@ -2418,6 +2418,6 @@ mod tests {
         assert!(reg.entries[1].data.is_none());
         assert!(reg.entries[2].data.is_none());
 
-        let _ = std::fs::remove_dir_all(&temp_dir);
+        let _ = horizon_fs::remove_dir_all(&temp_dir);
     }
 }

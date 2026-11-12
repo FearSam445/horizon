@@ -1,11 +1,11 @@
 use crate::support::common::f32_bits;
+use horizon_fs as fs;
 use horizon_world::{
     blocking_rules::{BlockingRules, ItemDamageFunction},
     item_use::{self, ItemUseWorld},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

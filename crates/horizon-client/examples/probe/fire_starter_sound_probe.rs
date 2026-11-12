@@ -6,10 +6,8 @@ use horizon_client::{
     items::{fire_starter_pitch, fire_starter_sound},
 };
 use horizon_core::random::{LegacyRandom, RandomSource};
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use horizon_fs::File;
+use std::io::{BufRead, BufReader, BufWriter, Write};
 
 pub fn main() -> Result<()> {
     let args: Vec<String> = crate::args().collect();

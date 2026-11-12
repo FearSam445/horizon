@@ -14,7 +14,7 @@ impl Entropy for Fixed {
 }
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = std::env::args().nth(1).ok_or("INPUT")?;
-    for value in std::fs::read_to_string(input)?.lines() {
+    for value in horizon_fs::read_to_string(input)?.lines() {
         let mut raw = Properties::default();
         for key in ["max-players", "op-permission-level", "max-tick-time"] {
             raw.put(key, value.into());

@@ -5,7 +5,7 @@ use std::{error::Error, fmt::Write};
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = crate::args().collect();
     let mut output = String::new();
-    for line in std::fs::read_to_string(&args[1])?.lines() {
+    for line in horizon_fs::read_to_string(&args[1])?.lines() {
         let fields: Vec<&str> = line.split('\t').collect();
         let entries = if fields.len() == 3 {
             vec![GameRuleEntry {
@@ -35,6 +35,6 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         }
         output.push('\n');
     }
-    std::fs::write(&args[2], output)?;
+    horizon_fs::write(&args[2], output)?;
     Ok(())
 }

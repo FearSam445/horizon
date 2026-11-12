@@ -53,7 +53,7 @@ impl LevelAccess for Air {
 
 pub fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = crate::args().collect();
-    let input = std::fs::read_to_string(&args[1])?;
+    let input = horizon_fs::read_to_string(&args[1])?;
     let root = input
         .lines()
         .find_map(|l| l.strip_prefix("#resources "))
@@ -127,6 +127,6 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         }
         writeln!(output, " | {}", ticks.random_tick_value)?;
     }
-    std::fs::write(&args[2], output)?;
+    horizon_fs::write(&args[2], output)?;
     Ok(())
 }

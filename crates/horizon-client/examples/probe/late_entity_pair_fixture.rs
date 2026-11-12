@@ -33,7 +33,7 @@ fn dump(out: &mut impl Write, index: usize, phase: &str, packets: &mut Vec<Vec<u
 pub fn main() -> Result<()> {
     let args: Vec<String> = crate::args().collect();
     let kind: i32 = args[1].parse()?;
-    let mut out = std::io::BufWriter::new(std::fs::File::create(&args[2])?);
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(&args[2])?);
     writeln!(out, "type {kind}")?;
     let mut index = 0;
     for position in [[0.5, 65.5, 0.5], [-0.123456789, 64.125, -0.5]] {

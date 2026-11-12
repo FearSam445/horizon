@@ -255,7 +255,7 @@ pub(super) fn write_report(game: &Game<'_>) -> Result<()> {
             "player": game.player.as_ref().map(|p| [p.position.x, p.position.y, p.position.z]),
             "error": game.error.as_ref().map(|e| e.to_string()),
         });
-        std::fs::write(path, serde_json::to_vec_pretty(&report)?)?;
+        horizon_fs::write(path, serde_json::to_vec_pretty(&report)?)?;
     }
     Ok(())
 }

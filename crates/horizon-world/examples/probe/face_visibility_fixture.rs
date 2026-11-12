@@ -1,4 +1,5 @@
 use horizon_core::geometry::Direction;
+use horizon_fs as fs;
 use horizon_world::{
     block_render::{FaceVisibility, RenderDefinition, SkipRendering},
     collision::CachedCollisionRegistry,
@@ -8,7 +9,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeMap,
-    fs,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
 };

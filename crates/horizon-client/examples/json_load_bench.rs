@@ -1,13 +1,9 @@
 //! Compare the read + Value parse stages in BlockFacts::load and Assets::load.
 //! Usage: json_load_bench RESOURCE_ROOT [REPETITIONS]; see tools/json_load_fixtures.py.
 extern crate horizon_client_lib as horizon_client;
+use horizon_fs::{self as fs, File};
 use serde_json::Value;
-use std::{
-    fs::{self, File},
-    hint::black_box,
-    io::BufReader,
-    path::Path,
-};
+use std::{hint::black_box, io::BufReader, path::Path};
 use web_time::{Duration, Instant};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -81,7 +77,7 @@ mod tests {
     #[test]
     fn reader_and_slice_preserve_values_and_error_categories() -> Result<()> {
         let path =
-            std::env::temp_dir().join(format!("horizon-json-load-{}.json", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-json-load-{}.json", std::process::id()));
         let check = || -> Result<()> {
             fs::write(
                 &path,

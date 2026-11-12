@@ -2,6 +2,7 @@
 use crate::gfx::pack_timing::{GpuReadout, TimedFrames};
 use crate::spans::Span;
 use horizon_client_render::perf_gpu;
+use horizon_fs::File;
 use horizon_perf_format::files;
 use horizon_perf_format::v1::{
     BenchResult, GpuMode, Kind, Mark, MemorySnapshot, Options, Overhead, Side, Start, Stop,
@@ -11,10 +12,9 @@ use horizon_perf_format::{
     CounterReporter, Field, FieldSender, Gauges, HealthRecorder, Interner, SlowRecord, SlowRing,
     SlowSpan, WriterThread, counter_registry,
 };
-use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::thread::{self, JoinHandle};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 use web_time::Instant;
 
 #[cfg(test)]
@@ -597,7 +597,7 @@ impl ServerPerf {
         Some(CaptureStatus {
             path: session.path.clone(),
             elapsed_s: t - session.origin,
-            bytes: std::fs::metadata(&session.path).map_or(0, |m| m.len()),
+            bytes: horizon_fs::metadata(&session.path).map_or(0, |m| m.len()),
         })
     }
 

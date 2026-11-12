@@ -2,6 +2,8 @@
 use super::ItemEntity;
 use crate::{collisions::SceneCollisions, world::World};
 use horizon_core::geometry::{Aabb, Vec3, border::BorderGeometry};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::block_collision::BlockCollisionRegistry;
 
 impl ItemEntity {
@@ -46,7 +48,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = crate::assets::Assets::load(&root).unwrap();

@@ -110,20 +110,20 @@ fn run_in(
     ]))
     .unwrap();
     static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-    let root = std::env::temp_dir().join(format!(
+    let root = horizon_fs::temp_dir().join(format!(
         "horizon-client-arrow-{}-{}",
         std::process::id(),
         NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
     ));
-    std::fs::create_dir(&root).unwrap();
-    std::fs::write(
+    horizon_fs::create_dir(&root).unwrap();
+    horizon_fs::write(
         root.join("gameplay-facts.json"),
         serde_json::json!({"states":(0..states.len()).map(|id|serde_json::json!({"id":id})).collect::<Vec<_>>()} ).to_string(),
     )
     .unwrap();
     let behaviours = serde_json::json!({"states":(0..states.len()).map(|id|if id==1||id==20{[63,0]}else{[0,0]}).collect::<Vec<_>>(),"blocks":(["air","stone","water","bubble_column","tnt"].iter().map(|name|serde_json::json!({"name":format!("minecraft:{name}"),"class":["Block"]})).collect::<Vec<_>>())});
     let facts = BlockFacts::load_with_behaviour_json(&root, &registry, &behaviours).unwrap();
-    std::fs::remove_dir_all(root).unwrap();
+    horizon_fs::remove_dir_all(root).unwrap();
     let table = Tag::compound([
         ("DataVersion", Tag::Int(horizon_world::DATA_VERSION)),
         ("states", Tag::List(states)),
@@ -271,9 +271,9 @@ fn client_arrow_tick_waits_for_a_non_self_move_to_leave_its_block() {
 fn client_arrow_parity_fixture() {
     use std::io::Write;
     let input =
-        std::fs::read_to_string(std::env::var("HORIZON_CLIENT_ARROW_INPUT").unwrap()).unwrap();
+        horizon_fs::read_to_string(std::env::var("HORIZON_CLIENT_ARROW_INPUT").unwrap()).unwrap();
     let mut output =
-        std::fs::File::create(std::env::var("HORIZON_CLIENT_ARROW_OUTPUT").unwrap()).unwrap();
+        horizon_fs::File::create(std::env::var("HORIZON_CLIENT_ARROW_OUTPUT").unwrap()).unwrap();
     let bits = |v: Vec3| {
         format!(
             "{:016x},{:016x},{:016x}",

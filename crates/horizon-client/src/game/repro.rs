@@ -20,12 +20,14 @@ use super::input_trace::{InputOrigin, TraceEvent, TraceKind};
 use super::{Game, Screen};
 use horizon_client::{Result, gamepad::Button, keybinds, text::Text, title::world_management};
 use horizon_core::geometry::Vec3;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_system::scrub::Scrubber;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::time::SystemTime;
 use std::{
-    fs,
     io::{self, BufWriter, Write},
     path::{Path, PathBuf},
     sync::mpsc::{self, Receiver, Sender, TryRecvError},
@@ -199,7 +201,7 @@ fn bundles_dir() -> PathBuf {
     home().join("repro")
 }
 fn saves_dir() -> PathBuf {
-    std::env::current_dir()
+    horizon_fs::current_dir()
         .map(|dir| dir.join("saves"))
         .unwrap_or_else(|_| PathBuf::from("saves"))
 }
@@ -258,13 +260,13 @@ fn copy_tree(src: &Path, dst: &Path) -> io::Result<()> {
         }
         let path = entry.path();
         let kind = entry.file_type()?;
-        if kind.is_symlink() {
+        if kind.fs_is_symlink() {
             continue;
         }
         let to = dst.join(&name);
-        if kind.is_dir() {
+        if kind.fs_is_dir() {
             copy_tree(&path, &to)?;
-        } else if kind.is_file() {
+        } else if kind.fs_is_file() {
             fs::copy(&path, &to)?;
         }
     }
@@ -280,21 +282,21 @@ fn prune_dir(dir: &Path, keep: Option<&Path>, max: usize) {
         .flatten()
         .filter_map(|entry| {
             let path = entry.path();
-            let ours = if path.is_dir() {
-                path.join("session.json").is_file()
+            let ours = if path.fs_is_dir() {
+                path.join("session.json").fs_is_file()
             } else {
                 path.extension().is_some_and(|extension| extension == "zip")
             };
             if !ours || keep.is_some_and(|kept| kept == path.as_path()) {
                 return None;
             }
-            let modified = entry.metadata().ok()?.modified().ok()?;
+            let modified = entry.fs_metadata().ok()?.modified().ok()?;
             Some((modified, path))
         })
         .collect();
     items.sort_by_key(|(modified, _)| std::cmp::Reverse(*modified));
     for (_, path) in items.into_iter().skip(max) {
-        let result = if path.is_dir() {
+        let result = if path.fs_is_dir() {
             fs::remove_dir_all(&path)
         } else {
             fs::remove_file(&path)
@@ -566,7 +568,7 @@ impl Game<'_> {
         if include_world
             && !world_root
                 .as_ref()
-                .is_some_and(|root| root.join("level.dat").is_file())
+                .is_some_and(|root| root.join("level.dat").fs_is_file())
         {
             return Err(format!(
                 "the world's save folder {} is not on disk yet",
@@ -773,7 +775,7 @@ impl Game<'_> {
         let mut recordings = Vec::new();
         if let Ok(entries) = fs::read_dir(recordings_dir()) {
             for entry in entries.flatten() {
-                if !entry.file_type().is_ok_and(|t| t.is_dir()) {
+                if !entry.file_type().is_ok_and(|t| t.fs_is_dir()) {
                     continue;
                 }
                 let dir = entry.path();
@@ -790,7 +792,7 @@ impl Game<'_> {
                     "world": meta.get("world").cloned().unwrap_or(Value::Null),
                     "created": meta.get("created").cloned().unwrap_or(Value::Null),
                     "inputs": meta.get("inputs").cloned().unwrap_or(Value::Null),
-                    "has_world": dir.join("world").is_dir(),
+                    "has_world": dir.join("world").fs_is_dir(),
                 }));
             }
         }
@@ -1024,7 +1026,7 @@ impl Game<'_> {
             return Ok(Some(None));
         }
         let world = dir.join("world");
-        if !world.is_dir() {
+        if !world.fs_is_dir() {
             return Err(
                 "this recording has no world copy (it was made with --no-world or on a server)"
                     .into(),
@@ -1504,10 +1506,10 @@ fn newest_recording() -> Option<PathBuf> {
     let entries = fs::read_dir(recordings_dir()).ok()?;
     for entry in entries.flatten() {
         let path = entry.path();
-        if !path.is_dir() || !path.join("session.json").is_file() {
+        if !path.fs_is_dir() || !path.join("session.json").fs_is_file() {
             continue;
         }
-        let modified = match entry.metadata().and_then(|m| m.modified()) {
+        let modified = match entry.fs_metadata().and_then(|m| m.modified()) {
             Ok(modified) => modified,
             Err(_) => continue,
         };
@@ -1523,7 +1525,7 @@ fn newest_recording() -> Option<PathBuf> {
 fn resolve_recording(name: &str) -> Result<PathBuf> {
     let recordings = recordings_dir();
     let exact = recordings.join(name);
-    if exact.join("session.json").is_file() {
+    if exact.join("session.json").fs_is_file() {
         return Ok(exact);
     }
     let mut newest: Option<(SystemTime, PathBuf)> = None;
@@ -1531,13 +1533,13 @@ fn resolve_recording(name: &str) -> Result<PathBuf> {
         for entry in entries.flatten() {
             let path = entry.path();
             let file_name = entry.file_name().to_string_lossy().into_owned();
-            if !path.is_dir() || !file_name.ends_with(&format!("-{name}")) {
+            if !path.fs_is_dir() || !file_name.ends_with(&format!("-{name}")) {
                 continue;
             }
-            if !path.join("session.json").is_file() {
+            if !path.join("session.json").fs_is_file() {
                 continue;
             }
-            if let Ok(modified) = entry.metadata().and_then(|m| m.modified())
+            if let Ok(modified) = entry.fs_metadata().and_then(|m| m.modified())
                 && newest.as_ref().is_none_or(|(t, _)| modified > *t)
             {
                 newest = Some((modified, path));
@@ -1563,13 +1565,13 @@ fn resolve_recording(name: &str) -> Result<PathBuf> {
         if let Some(bundle) = bundle {
             let dest = recordings.join(format!("replay-{}", stamp()));
             extract_zip(&bundle, &dest)?;
-            if dest.join("session.json").is_file() {
+            if dest.join("session.json").fs_is_file() {
                 return Ok(dest);
             }
             if let Ok(entries) = fs::read_dir(&dest) {
                 for entry in entries.flatten() {
                     let path = entry.path();
-                    if path.is_dir() && path.join("session.json").is_file() {
+                    if path.fs_is_dir() && path.join("session.json").fs_is_file() {
                         return Ok(path);
                     }
                 }
@@ -1702,7 +1704,7 @@ fn bundle_scrubber(dir: &Path, status: &Value) -> Scrubber {
 }
 
 fn unique_dest(path: &Path) -> PathBuf {
-    if !path.exists() {
+    if !path.fs_exists() {
         return path.to_path_buf();
     }
     let stem = path
@@ -1715,7 +1717,7 @@ fn unique_dest(path: &Path) -> PathBuf {
         .unwrap_or_else(|| "zip".into());
     for index in 1.. {
         let candidate = path.with_file_name(format!("{stem} ({index}).{extension}"));
-        if !candidate.exists() {
+        if !candidate.fs_exists() {
             return candidate;
         }
     }
@@ -1775,7 +1777,7 @@ fn write_bundle(
         )?;
         // The world is binary and stays as it is.
         let world = dir.join("world");
-        if !no_world && world.is_dir() {
+        if !no_world && world.fs_is_dir() {
             world_management::write_tree_skipping(
                 &mut zip,
                 &world,
@@ -1785,13 +1787,13 @@ fn write_bundle(
             )?;
         }
         let log = horizon_client::logging::logs_dir(home).join("latest.log");
-        if log.is_file() {
+        if log.fs_is_file() {
             add_text_file(&mut zip, &log, "logs/latest.log", &scrubber)?;
         }
         // Only a crash from this recording is evidence for this repro.
         if let Some(crash) = horizon_client::logging::newest_crash_report(home)
             && crash
-                .metadata()
+                .fs_metadata()
                 .and_then(|m| m.modified())
                 .is_ok_and(|modified| modified >= started_at - Duration::from_secs(60))
         {
@@ -1813,7 +1815,7 @@ fn write_bundle(
                 .scrub(&serde_json::to_string_pretty(&bundle_status(status))?)
                 .as_bytes(),
         )?;
-        Ok(zip.finish()?.metadata()?.len())
+        Ok(zip.finish()?.fs_metadata()?.len())
     })();
     if result.is_err() {
         let _ = fs::remove_file(&tmp);
@@ -1860,7 +1862,8 @@ mod tests {
 
     #[test]
     fn a_world_copy_skips_the_lock_and_symlinks() {
-        let root = std::env::temp_dir().join(format!("horizon-repro-test-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-repro-test-{}", std::process::id()));
         let src = root.join("src");
         let dst = root.join("dst");
         fs::create_dir_all(src.join("region")).unwrap();
@@ -1868,9 +1871,9 @@ mod tests {
         fs::write(src.join("session.lock"), b"lock").unwrap();
         fs::write(src.join("region/world.mca"), b"region").unwrap();
         copy_tree(&src, &dst).unwrap();
-        assert!(dst.join("level.dat").is_file());
-        assert!(dst.join("region/world.mca").is_file());
-        assert!(!dst.join("session.lock").exists());
+        assert!(dst.join("level.dat").fs_is_file());
+        assert!(dst.join("region/world.mca").fs_is_file());
+        assert!(!dst.join("session.lock").fs_exists());
         let _ = fs::remove_dir_all(&root);
     }
 
@@ -1974,7 +1977,8 @@ mod tests {
 
     #[test]
     fn an_export_name_that_is_taken_gets_a_number() {
-        let root = std::env::temp_dir().join(format!("horizon-repro-dest-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-repro-dest-{}", std::process::id()));
         fs::create_dir_all(&root).unwrap();
         let first = root.join("repro.zip");
         fs::write(&first, b"x").unwrap();

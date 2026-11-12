@@ -6,6 +6,8 @@
 //! and the special model renderers submit, in pose space. A sink then draws
 //! them: [`gui`] into the HUD batch with the GUI item lighting, [`WorldSink`]
 //! into entity vertices with the level's lighting.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 pub mod cit;
 mod glint_atlas;
 #[cfg(test)]
@@ -30,11 +32,11 @@ use horizon_assets::{
     palette::PalettedPermutations,
     resolve::{MISSING_MODEL, ModelLibrary},
 };
+use horizon_fs as fs;
 use horizon_world::nbt::Tag;
 use serde_json::Value;
 use std::{
     collections::{BTreeMap, HashMap},
-    fs,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
@@ -1412,8 +1414,8 @@ mod tests {
     /// items.json still reports itself first.
     #[test]
     fn item_model_errors_wait_for_the_item_definitions() -> crate::Result<()> {
-        let root =
-            std::env::temp_dir().join(format!("horizon-item-model-errors-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-item-model-errors-{}", std::process::id()));
         let model = root.join("assets/horizon/models/INVALID.json");
         fs::create_dir_all(model.parent().unwrap())?;
         fs::write(model, "{}")?;
@@ -1439,7 +1441,7 @@ mod tests {
     /// ModelEngine's `modelengine:postman/head` does.
     #[test]
     fn item_definitions_load_from_nested_folders() -> crate::Result<()> {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-item-definitions-nested-{}",
             std::process::id()
         ));
@@ -1459,7 +1461,8 @@ mod tests {
     /// none of the client item definitions.
     #[test]
     fn a_server_keeps_prototypes_without_definitions() -> crate::Result<()> {
-        let root = std::env::temp_dir().join(format!("horizon-item-server-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-item-server-{}", std::process::id()));
         let definitions = root.join("assets/horizon/items");
         fs::create_dir_all(&definitions)?;
         fs::write(
@@ -1592,10 +1595,10 @@ mod tests {
             0x00, 0x03, 0x52, 0x29, 0x78, 0x8f, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
             0xae, 0x42, 0x60, 0x82,
         ];
-        let dir = std::env::temp_dir().join("horizon-trns-alpha");
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join("horizon-trns-alpha");
+        horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("indexed.png");
-        std::fs::write(&path, png).unwrap();
+        horizon_fs::write(&path, png).unwrap();
         let (_w, _h, rgba) = crate::hud::decode(&path).unwrap();
         let partial = rgba.chunks(4).filter(|p| matches!(p[3], 1..=254)).count();
         assert!(partial > 0, "tRNS alpha was stripped: {rgba:?}");
@@ -1621,7 +1624,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             eprintln!("no prepared resources: skipped");
             return;
         }

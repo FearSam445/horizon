@@ -2,10 +2,10 @@ use horizon_assets::blockstate::{
     BlockStateDefinition,
     bind::{Properties, PropertySchema, PropertyValues, SelectedModels},
 };
+use horizon_fs::File;
 use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
 };
 fn main() -> Result<(), Box<dyn std::error::Error>> {

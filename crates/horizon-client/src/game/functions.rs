@@ -14,6 +14,8 @@ use horizon_client::{
     scoreboard::bracketed,
     text::{self, Text},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::Tag;
 
 /// A `TimerQueue` event.
@@ -308,7 +310,7 @@ impl Game<'_> {
             .filter(|id| !self.fns.enabled.contains(id))
             .collect();
         let json = serde_json::json!({"enabled": self.fns.enabled, "disabled": disabled});
-        let _ = std::fs::write(self.datapack_settings_path(), json.to_string());
+        let _ = horizon_fs::write(self.datapack_settings_path(), json.to_string());
     }
     pub(super) fn sync_function_registries(&mut self) {
         self.sync_enchantment_registries();
@@ -449,7 +451,7 @@ impl Game<'_> {
                 ])
             })
             .collect();
-        if events.is_empty() && !self.schedule_path().exists() {
+        if events.is_empty() && !self.schedule_path().fs_exists() {
             return;
         }
         let _ = save::write_dat(
@@ -1002,7 +1004,7 @@ impl Game<'_> {
         }
         let datapacks = self.world_root.join("datapacks");
         let pack = datapacks.join(&id);
-        if pack.exists() {
+        if pack.fs_exists() {
             return Err(err("commands.datapack.create.already_exists", &[&id]));
         }
         // The data pack version (SharedConstants), written as a bare major
@@ -1015,11 +1017,11 @@ impl Game<'_> {
                 "max_format": pack_format,
             }
         });
-        let written = std::fs::create_dir_all(&datapacks)
-            .and_then(|()| std::fs::create_dir(&pack))
-            .and_then(|()| std::fs::create_dir(pack.join("data")))
+        let written = horizon_fs::create_dir_all(&datapacks)
+            .and_then(|()| horizon_fs::create_dir(&pack))
+            .and_then(|()| horizon_fs::create_dir(pack.join("data")))
             .and_then(|()| {
-                std::fs::write(
+                horizon_fs::write(
                     pack.join("pack.mcmeta"),
                     serde_json::to_string_pretty(&mcmeta).unwrap_or_default(),
                 )
@@ -1242,12 +1244,12 @@ mod tests {
         game.options.dedicated = None;
         game.player = Some(PlayerMotion::new(game.motion, Vec3::new(4.5, 202.0, 4.5)).unwrap());
         game.creative = true;
-        game.world_root = std::env::current_dir().unwrap().join("h155-causal-world");
+        game.world_root = horizon_fs::current_dir().unwrap().join("h155-causal-world");
         let pack = game.world_root.join("datapacks/h155_causal");
         let dir = pack.join("data/h155c/function");
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         let f = horizon_core::version::DATA_PACK_FORMAT;
-        std::fs::write(pack.join("pack.mcmeta"), serde_json::json!({"pack":{"description":"H155 causal controls","pack_format":f.0,"min_format":[f.0,f.1],"max_format":[f.0,f.1]}}).to_string()).unwrap();
+        horizon_fs::write(pack.join("pack.mcmeta"), serde_json::json!({"pack":{"description":"H155 causal controls","pack_format":f.0,"min_format":[f.0,f.1],"max_format":[f.0,f.1]}}).to_string()).unwrap();
         let body = "execute if score @s h155c_id matches 1 run scoreboard players operation #seen_a h155c = #r h155c\nexecute if score @s h155c_id matches 2 run scoreboard players operation #seen_b h155c = #r h155c\nscoreboard players add #calls h155c 1\nscoreboard players operation #trace h155c *= #ten h155c\nscoreboard players operation #trace h155c += @s h155c_id\n";
         for (name, tail) in [
             ("zero", "return 0\n"),
@@ -1255,7 +1257,7 @@ mod tests {
             ("fail", "return fail\n"),
             ("none", ""),
         ] {
-            std::fs::write(
+            horizon_fs::write(
                 dir.join(format!("{name}.mcfunction")),
                 format!("{body}{tail}"),
             )
@@ -1280,10 +1282,10 @@ mod tests {
                 "$scoreboard players add #macro h155c $(amount)\nreturn 0\n",
             ),
         ] {
-            std::fs::write(dir.join(format!("{name}.mcfunction")), text).unwrap();
+            horizon_fs::write(dir.join(format!("{name}.mcfunction")), text).unwrap();
         }
-        std::fs::create_dir_all(pack.join("data/h155c/tags/function")).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(pack.join("data/h155c/tags/function")).unwrap();
+        horizon_fs::write(
             pack.join("data/h155c/tags/function/pair.json"),
             r#"{"values":["h155c:zero","h155c:five"]}"#,
         )
@@ -1533,12 +1535,12 @@ mod tests {
         game.options.dedicated = None;
         game.player = Some(PlayerMotion::new(game.motion, Vec3::new(4.5, 202.0, 4.5)).unwrap());
         game.creative = true;
-        game.world_root = std::env::current_dir().unwrap().join("h155-world");
+        game.world_root = horizon_fs::current_dir().unwrap().join("h155-world");
         let pack = game.world_root.join("datapacks/h155_unit");
         let dir = pack.join("data/h155/function");
-        std::fs::create_dir_all(&dir).unwrap();
+        horizon_fs::create_dir_all(&dir).unwrap();
         let format = horizon_core::version::DATA_PACK_FORMAT;
-        std::fs::write(
+        horizon_fs::write(
             pack.join("pack.mcmeta"),
             serde_json::json!({"pack": {
                 "description":"H155 actual Game regression", "pack_format":format.0,
@@ -1554,13 +1556,13 @@ mod tests {
             ("fail", "return fail\n"),
             ("fallthrough", ""),
         ] {
-            std::fs::write(
+            horizon_fs::write(
                 dir.join(format!("{name}.mcfunction")),
                 format!("{body}{tail}"),
             )
             .unwrap();
         }
-        std::fs::write(
+        horizon_fs::write(
             dir.join("admit.mcfunction"),
             "scoreboard players add #pack h155 1\nreturn 1\n",
         )
@@ -1726,16 +1728,16 @@ mod tests {
         .unwrap();
         game.build_registries();
         game.set_allow_commands(true);
-        let dir =
-            std::env::temp_dir().join(format!("horizon-function-admission-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-function-admission-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks/admission");
         let functions = pack.join("data/h144/function");
         let predicates = pack.join("data/h144/predicate");
-        std::fs::create_dir_all(&functions).unwrap();
-        std::fs::create_dir_all(&predicates).unwrap();
-        std::fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"Function admission","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&functions).unwrap();
+        horizon_fs::create_dir_all(&predicates).unwrap();
+        horizon_fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"Function admission","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
+        horizon_fs::write(
             predicates.join("ready.json"),
             r#"{"type":"minecraft:all_of","terms":[]}"#,
         )
@@ -1764,7 +1766,7 @@ mod tests {
             ),
             ("slash", "/say invalid\n"),
         ] {
-            std::fs::write(functions.join(format!("{name}.mcfunction")), text).unwrap();
+            horizon_fs::write(functions.join(format!("{name}.mcfunction")), text).unwrap();
         }
         game.world_root = dir.clone();
         let run = |game: &mut Game<'_>, line: &str| {
@@ -1824,12 +1826,12 @@ mod tests {
         );
         assert_eq!(game.ui.registries.permission, 4);
         // A fresh same-pack predicate must be in the compilation snapshot on reload.
-        std::fs::write(
+        horizon_fs::write(
             predicates.join("reloaded.json"),
             r#"{"type":"minecraft:all_of","terms":[]}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             functions.join("good.mcfunction"),
             "execute if predicate h144:reloaded run scoreboard players add good h144 1\n",
         )
@@ -1852,7 +1854,7 @@ mod tests {
             -99
         );
         assert_eq!(game.world.game_time, clock);
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 
     #[test]
@@ -1949,24 +1951,24 @@ mod tests {
     #[test]
     fn content_overlay_follows_enabled_order() {
         for order in [["file/a", "file/b"], ["file/b", "file/a"]] {
-            let dir = std::env::temp_dir().join(format!(
+            let dir = horizon_fs::temp_dir().join(format!(
                 "horizon-overlay-{}-{}",
                 std::process::id(),
                 order[0].replace('/', "_")
             ));
-            let _ = std::fs::remove_dir_all(&dir);
+            let _ = horizon_fs::remove_dir_all(&dir);
             for name in ["a", "b"] {
                 let pack = dir.join("datapacks").join(name);
-                std::fs::create_dir_all(pack.join("data/x/recipe")).unwrap();
-                std::fs::write(
+                horizon_fs::create_dir_all(pack.join("data/x/recipe")).unwrap();
+                horizon_fs::write(
                     pack.join("pack.mcmeta"),
                     r#"{"pack":{"description":"fixture"}}"#,
                 )
                 .unwrap();
-                std::fs::write(pack.join("data/x/recipe/r.json"), name).unwrap();
+                horizon_fs::write(pack.join("data/x/recipe/r.json"), name).unwrap();
             }
             let json = serde_json::json!({"enabled": order, "disabled": []});
-            std::fs::write(dir.join("datapacks.json"), json.to_string()).unwrap();
+            horizon_fs::write(dir.join("datapacks.json"), json.to_string()).unwrap();
             let files = content_overlay(&dir, std::path::Path::new(""), true, &[]);
             let (_, versions) = files.iter().find(|(id, _)| id == "recipe/x:r").unwrap();
             let last = versions.last().unwrap();
@@ -1974,7 +1976,7 @@ mod tests {
                 last.as_slice(),
                 order[1].trim_start_matches("file/").as_bytes()
             );
-            let _ = std::fs::remove_dir_all(&dir);
+            let _ = horizon_fs::remove_dir_all(&dir);
         }
     }
 
@@ -1985,22 +1987,23 @@ mod tests {
     /// counts.
     #[test]
     fn contributed_files_join_the_load_below_the_worlds_packs() {
-        let dir = std::env::temp_dir().join(format!("horizon-contributed-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-contributed-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks").join("pack");
-        std::fs::create_dir_all(pack.join("data/pkg/tags/item")).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(pack.join("data/pkg/tags/item")).unwrap();
+        horizon_fs::write(
             pack.join("pack.mcmeta"),
             r#"{"pack":{"description":"fixture"}}"#,
         )
         .unwrap();
-        std::fs::write(
+        horizon_fs::write(
             pack.join("data/pkg/tags/item/both.json"),
             r#"{"replace": true, "values": ["pkg:from_pack"]}"#,
         )
         .unwrap();
         let settings = serde_json::json!({"enabled": ["file/pack"], "disabled": []});
-        std::fs::write(dir.join("datapacks.json"), settings.to_string()).unwrap();
+        horizon_fs::write(dir.join("datapacks.json"), settings.to_string()).unwrap();
         let tag = |entry: &str| format!(r#"{{"values": ["{entry}"]}}"#).into_bytes();
         let files = overlay_files(
             &dir,
@@ -2062,7 +2065,7 @@ mod tests {
             overlay_files(&dir, std::path::Path::new(""), true, &[], Vec::new()),
             content_overlay(&dir, std::path::Path::new(""), true, &[])
         );
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 }
 
@@ -2204,11 +2207,11 @@ mod entity_score_tests {
         .unwrap();
         game.build_registries();
         game.set_allow_commands(true);
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-game-folder-metadata-{}",
             std::process::id()
         ));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
         let cases = [
             ("broken", Some("{"), false),
             ("root_empty", Some("{}"), false),
@@ -2231,14 +2234,14 @@ mod entity_score_tests {
         ];
         for (name, metadata, _) in cases {
             let pack = dir.join("datapacks").join(name);
-            std::fs::create_dir_all(pack.join("data/h146/function")).unwrap();
-            std::fs::write(
+            horizon_fs::create_dir_all(pack.join("data/h146/function")).unwrap();
+            horizon_fs::write(
                 pack.join(format!("data/h146/function/{name}.mcfunction")),
                 format!("scoreboard players set {name} h146 17\n"),
             )
             .unwrap();
             if let Some(metadata) = metadata {
-                std::fs::write(pack.join("pack.mcmeta"), metadata).unwrap();
+                horizon_fs::write(pack.join("pack.mcmeta"), metadata).unwrap();
             }
         }
         game.world_root = dir.clone();
@@ -2291,7 +2294,7 @@ mod entity_score_tests {
             }
         }
         assert_eq!(game.world.game_time, clock);
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 }
 
@@ -2303,7 +2306,7 @@ mod required_tag_tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn real_pack_required_tag_failures_execute_no_partial_functions() {
         use crate::game::{Audio, Options, Settings, load_resources};
-        use std::time::{SystemTime, UNIX_EPOCH};
+        use std::time::UNIX_EPOCH;
         use web_time::Instant;
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let settings = Settings::default();
@@ -2332,7 +2335,7 @@ mod required_tag_tests {
             None,
         )
         .unwrap();
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-required-tags-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -2343,8 +2346,8 @@ mod required_tag_tests {
         let pack = dir.join("datapacks/h145");
         let write = |path: &str, body: &str| {
             let path = pack.join(path);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(path, body).unwrap();
+            horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+            horizon_fs::write(path, body).unwrap();
         };
         let (major, minor) = horizon_core::version::DATA_PACK_FORMAT;
         write(
@@ -2505,7 +2508,7 @@ mod required_tag_tests {
         }
         assert_eq!(game.world.game_time, clock);
         drop(game);
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
         assert!(
             failures.is_empty(),
             "required tag partial execution: {failures:#?}"
@@ -2546,17 +2549,17 @@ mod required_tag_tests {
         .unwrap();
         game.build_registries();
         game.set_allow_commands(true);
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-predicate-reference-{}",
             std::process::id()
         ));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks/references");
         let folder = pack.join("data/h121/predicate");
-        std::fs::create_dir_all(&folder).unwrap();
-        std::fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"Predicate references","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
+        horizon_fs::create_dir_all(&folder).unwrap();
+        horizon_fs::write(pack.join("pack.mcmeta"), r#"{"pack":{"description":"Predicate references","pack_format":121,"min_format":[121,0],"max_format":[121,0]}}"#).unwrap();
         let write = |name: &str, value: serde_json::Value| {
-            std::fs::write(folder.join(format!("{name}.json")), value.to_string()).unwrap();
+            horizon_fs::write(folder.join(format!("{name}.json")), value.to_string()).unwrap();
         };
         write(
             "pig",
@@ -2725,8 +2728,8 @@ mod required_tag_tests {
             }
         }
         let canonical = pack.join("data/minecraft/predicate/h121_canonical.json");
-        std::fs::create_dir_all(canonical.parent().unwrap()).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(canonical.parent().unwrap()).unwrap();
+        horizon_fs::write(
             canonical,
             r#"{"type":"minecraft:all_of","terms":["h121_canonical"]}"#,
         )
@@ -2766,7 +2769,7 @@ mod required_tag_tests {
         assert!(game.check_predicate("h121:reference").unwrap());
         game.command_source = previous;
         assert_eq!(game.world.game_time, clock);
-        std::fs::remove_dir_all(dir).unwrap();
+        horizon_fs::remove_dir_all(dir).unwrap();
     }
 }
 

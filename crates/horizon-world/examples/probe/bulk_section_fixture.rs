@@ -4,6 +4,7 @@ use horizon_world::worldgen::{
 };
 // Feature chains against a resident multi-chunk region.
 use horizon_core::position::ChunkPos;
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     heightmap::{HeightmapState, HeightmapType},
@@ -17,7 +18,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeSet,
-    fs,
     io::{self, Write},
     path::Path,
 };

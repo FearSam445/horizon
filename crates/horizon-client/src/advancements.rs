@@ -2,6 +2,8 @@
 //! progress (`PlayerAdvancements`) and the predicates criteria test
 //! (`EntityPredicate`, `ItemPredicate`, `LocationPredicate`, the loot
 //! conditions advancements use).
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 mod state_ranges;
 
 use horizon_world::lazy_json::LazyJson;
@@ -189,7 +191,7 @@ impl Tree {
     /// own: the top pack's file for each id replaces it.
     pub fn load_with(data: &Path, overlay: &horizon_world::loot::PackOverlay) -> Tree {
         let mut tree = Tree::default();
-        let Ok(namespaces) = std::fs::read_dir(data) else {
+        let Ok(namespaces) = horizon_fs::read_dir(data) else {
             return tree;
         };
         // One JSON per id, the packs' over the game's own. Through `json_folder`: from
@@ -2001,13 +2003,13 @@ mod tests {
         let tree = Tree::load(&data);
         let load = t.elapsed();
         let tags = data.join("minecraft/tags/item");
-        let tag_items: HashMap<String, Vec<String>> = std::fs::read_dir(&tags)
+        let tag_items: HashMap<String, Vec<String>> = horizon_fs::read_dir(&tags)
             .into_iter()
             .flatten()
             .flatten()
             .filter_map(|e| {
                 let v: Value =
-                    serde_json::from_str(&std::fs::read_to_string(e.path()).ok()?).ok()?;
+                    serde_json::from_str(&horizon_fs::read_to_string(e.path()).ok()?).ok()?;
                 let name = format!("minecraft:{}", e.path().file_stem()?.to_string_lossy());
                 let values = v["values"]
                     .as_array()?
@@ -2518,10 +2520,10 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(
             "../../.local/horizon-client/26.3/data/minecraft/advancement/husbandry/uh_oh.json",
         );
-        if !path.exists() {
+        if !path.fs_exists() {
             return;
         }
-        let json = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+        let json = serde_json::from_slice(&horizon_fs::read(path).unwrap()).unwrap();
         let advancement = parse("minecraft:husbandry/uh_oh", &json).unwrap();
         assert_eq!(advancement.criteria.len(), 2);
         let player = EntityView {

@@ -20,8 +20,8 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         return Err("usage: text_display_render_fixture RESOURCES INPUTS OUTPUT".into());
     };
     let atlas = HudAtlas::build(std::path::Path::new(resources))?;
-    let mut out = std::io::BufWriter::new(std::fs::File::create(output)?);
-    for line in std::fs::read_to_string(inputs)?.lines() {
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(output)?);
+    for line in horizon_fs::read_to_string(inputs)?.lines() {
         let input: Value = serde_json::from_str(line)?;
         let hex = input["wire"].as_str().unwrap_or_default();
         let bytes: Vec<u8> = (0..hex.len())

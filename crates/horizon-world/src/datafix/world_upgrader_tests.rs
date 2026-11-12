@@ -1,10 +1,12 @@
 use super::*;
 use crate::nbt::NamedTag;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 struct TempWorld(PathBuf);
 impl TempWorld {
     fn new(name: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("horizon-wu-{name}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-wu-{name}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         Self(dir)
@@ -223,7 +225,7 @@ fn recreating_rewrites_every_file_and_removes_the_new_folder() {
     let before = fs::read(&file).unwrap();
     let progress = run(&world, false, true);
     assert!(progress.is_finished());
-    assert!(!world.folder(OVERWORLD, "new_entities").exists());
+    assert!(!world.folder(OVERWORLD, "new_entities").fs_exists());
     assert_eq!(version_of(&file, ChunkPos::new(1, 0)), CURRENT);
     assert_ne!(
         fs::read(&file).unwrap(),
@@ -302,7 +304,7 @@ fn copy_tree(from: &Path, to: &Path) {
     for entry in fs::read_dir(from).unwrap() {
         let entry = entry.unwrap();
         let target = to.join(entry.file_name());
-        if entry.file_type().unwrap().is_dir() {
+        if entry.file_type().unwrap().fs_is_dir() {
             copy_tree(&entry.path(), &target);
         } else {
             fs::copy(entry.path(), target).unwrap();
@@ -316,7 +318,7 @@ fn snapshot(dir: &Path, rel: &Path, out: &mut BTreeMap<PathBuf, Vec<u8>>) {
     for entry in fs::read_dir(dir).unwrap() {
         let entry = entry.unwrap();
         let rel = rel.join(entry.file_name());
-        if entry.file_type().unwrap().is_dir() {
+        if entry.file_type().unwrap().fs_is_dir() {
             snapshot(&entry.path(), &rel, out);
         } else {
             let mut bytes = fs::read(entry.path()).unwrap();

@@ -4,6 +4,8 @@
 //! storage keeps the cleared array, with no `setData` and so no save of its
 //! own (tools/test_storage_alias_parity.py measures the same on vanilla 26.3).
 use super::*;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::{Tag, parse_snbt};
 
 fn game() -> Game<'static> {
@@ -51,11 +53,11 @@ fn snbt(text: &str) -> Tag {
 }
 /// Whether saving the storage now writes a file (it is dirty).
 fn writes(game: &mut Game<'_>, name: &str) -> bool {
-    let dir = std::env::temp_dir().join(format!("h246-{}-{name}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+    let dir = horizon_fs::temp_dir().join(format!("h246-{}-{name}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
     game.score.storage.save(&dir);
-    let wrote = dir.join("data").exists();
-    let _ = std::fs::remove_dir_all(&dir);
+    let wrote = dir.join("data").fs_exists();
+    let _ = horizon_fs::remove_dir_all(&dir);
     wrote
 }
 
@@ -111,14 +113,14 @@ fn saved(
     game: &mut Game<'_>,
     name: &str,
 ) -> Option<horizon_client::command_storage::CommandStorage> {
-    let dir = std::env::temp_dir().join(format!("h246-{}-{name}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
+    let dir = horizon_fs::temp_dir().join(format!("h246-{}-{name}", std::process::id()));
+    let _ = horizon_fs::remove_dir_all(&dir);
     game.score.storage.save(&dir);
     let back = dir
         .join("data")
-        .exists()
+        .fs_exists()
         .then(|| horizon_client::command_storage::CommandStorage::load(&dir));
-    let _ = std::fs::remove_dir_all(&dir);
+    let _ = horizon_fs::remove_dir_all(&dir);
     back
 }
 

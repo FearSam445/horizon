@@ -1,6 +1,7 @@
 //! WeatherEffectRenderer column instances and quads, without a GPU.
 use horizon_client::weather;
-use std::{fmt::Write, fs};
+use horizon_fs as fs;
+use std::fmt::Write;
 fn bits(value: f32) -> String {
     if value.is_nan() {
         "nan".into()

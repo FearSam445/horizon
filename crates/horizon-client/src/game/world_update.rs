@@ -70,7 +70,7 @@ impl Game<'_> {
                 None
             }
             // No offer from a server: draw what it sent, on this visit and before.
-            (None, None, Some(remote)) => std::env::current_dir().ok().map(|home| {
+            (None, None, Some(remote)) => horizon_fs::current_dir().ok().map(|home| {
                 use horizon_client::server_terrain as terrain;
                 let address = &remote.session.address;
                 let root = home.join("server-terrain");

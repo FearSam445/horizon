@@ -462,7 +462,7 @@ impl Game<'_> {
         // The window plays against the world's own biome table (its chunks
         // carry the packs' ids past the built-in list, `set_registries`
         // names them through it), as the server thread's copy does.
-        let world = std::env::current_dir()?.join("saves").join(folder);
+        let world = horizon_fs::current_dir()?.join("saves").join(folder);
         let enabled_features = horizon_client::save::Level::read(&world)
             .map(|l| l.enabled_features)
             .unwrap_or_default();
@@ -588,7 +588,7 @@ impl Game<'_> {
         // IntegratedServer.getWorldScreenshotFile: the client grabs the frame
         // the Select World list shows, and needs the save folder for it.
         self.world_icon = Some(WorldIcon {
-            path: std::env::current_dir()?
+            path: horizon_fs::current_dir()?
                 .join("saves")
                 .join(&folder)
                 .join("icon.png"),
@@ -855,7 +855,7 @@ impl Game<'_> {
         opening: Opening,
     ) -> Result<()> {
         // The mods' server configs, read before the server starts.
-        if let Ok(dir) = std::env::current_dir() {
+        if let Ok(dir) = horizon_fs::current_dir() {
             self.native_configs_server_start(&dir.join("saves").join(&launch.folder), false);
         }
         // MinecraftServer.loadLevel's start: nothing is loaded yet.
@@ -1420,7 +1420,7 @@ mod tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn integrated_tick_panic_saves_changed_world() {
         let mut game = super::super::native_machines::tests::server_game();
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-integrated-crash-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -1428,7 +1428,7 @@ mod tests {
                 .unwrap()
                 .as_nanos()
         ));
-        std::fs::create_dir_all(&root).unwrap();
+        horizon_fs::create_dir_all(&root).unwrap();
         game.world_root = root.clone();
         game.save = Arc::new(horizon_client::save::SaveDir::new(
             root.clone(),
@@ -1462,7 +1462,7 @@ mod tests {
         assert_eq!(saved.xp_total, 37);
         assert_eq!(flags.published.load(Ordering::Relaxed), 0);
         assert!(game.session_lock.is_none());
-        std::fs::remove_dir_all(&root).ok();
+        horizon_fs::remove_dir_all(&root).ok();
     }
 
     #[test]

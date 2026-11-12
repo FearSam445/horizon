@@ -23,8 +23,8 @@ pub(super) fn command(dir: &Path) -> io::Result<Command> {
 #[cfg(all(test, windows))]
 mod tests {
     use super::*;
+    use horizon_fs as fs;
     use std::{
-        fs,
         path::PathBuf,
         sync::atomic::{AtomicU64, Ordering},
     };
@@ -33,7 +33,7 @@ mod tests {
     struct Scratch(PathBuf);
     impl Scratch {
         fn new() -> Self {
-            let path = std::env::temp_dir().join(format!(
+            let path = horizon_fs::temp_dir().join(format!(
                 "horizon-folder-{}-{}",
                 std::process::id(),
                 NEXT.fetch_add(1, Ordering::Relaxed)

@@ -14,7 +14,7 @@ fn far_hub(
     hub.guests[0].chunks_per_tick = 2.0;
     hub.far = Some(Far::reading(24, Arc::new(move |_, x, z| read(x, z))));
     let save = Arc::new(crate::save::SaveDir::new(
-        std::env::temp_dir().join("horizon-far-send-test"),
+        horizon_fs::temp_dir().join("horizon-far-send-test"),
         crate::save::LevelShape::OVERWORLD,
     ));
     hub.far_level(&save);

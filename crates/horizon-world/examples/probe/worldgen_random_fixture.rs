@@ -5,9 +5,9 @@ use horizon_core::{
         XoroshiroRandom, slime_chunk_random,
     },
 };
+use horizon_fs as fs;
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

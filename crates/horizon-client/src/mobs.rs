@@ -5,6 +5,8 @@
 //! fly and amphibious node evaluators (`path`, `nav`), move/look/jump/body
 //! controls (`control`), `LivingEntity` physics (`living`) and per-species
 //! behaviour, models, animations and sounds.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 mod mob_slot;
 mod pending_pushes;
 pub use mob_slot::MobSlot;
@@ -127,9 +129,10 @@ use horizon_core::{
     geometry::{Aabb, Vec3},
     random::{EntityRandom, LegacyRandom, RandomSource},
 };
+use horizon_fs as fs;
 use horizon_world::block_collision::BlockCollisionRegistry;
 use serde_json::Value;
-use std::{collections::HashMap, fs, path::Path, sync::Arc};
+use std::{collections::HashMap, path::Path, sync::Arc};
 
 mod model;
 use model::ModelNormals;
@@ -5838,7 +5841,7 @@ mod effect_refusal_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let types = MobTypes::load_for_server(&root).unwrap();
@@ -5994,7 +5997,7 @@ mod effect_refusal_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return;
         }
         let types = MobTypes::load_for_server(&root).unwrap();
@@ -6026,7 +6029,7 @@ mod model_document_sharing_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-models.json").exists() {
+        if !root.join("entity-models.json").fs_exists() {
             return;
         }
         let document = EntityModelDocument::load(&root).unwrap();

@@ -6,8 +6,11 @@
 //! unless the equipment asset's `trim_overrides` pick another texture or
 //! palette (iron armour with an iron trim uses `trim/iron_darker`).
 use horizon_assets::palette::apply_palette;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use serde_json::Value;
-use std::{collections::HashMap, fs, path::Path};
+use std::{collections::HashMap, path::Path};
 
 /// Runtime trim slots and the completed ordered requests for their current atlas.
 /// A frame with more requests than slots keeps the same final residents as the
@@ -415,7 +418,7 @@ mod tests {
     #[test]
     fn vanilla_trims_are_recoloured() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3");
-        if !root.join("assets/minecraft/textures/trims").is_dir() {
+        if !root.join("assets/minecraft/textures/trims").fs_is_dir() {
             return;
         }
         let registry = TrimRegistry::load(&root);

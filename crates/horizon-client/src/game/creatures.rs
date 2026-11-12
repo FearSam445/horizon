@@ -2,6 +2,8 @@
 //! chunk-generation spawning (`NaturalSpawner`), mob events (attacks,
 //! breeding, conversions, drops), projectiles, player interactions
 //! (feeding, shearing, milking, spawn eggs, throwing) and rendering.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 mod bred_draws;
 mod effect_instance;
 use effect_instance::mob_effect_instance;
@@ -7677,7 +7679,7 @@ mod local_sound_event_tests {
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
         options.game_dir =
-            Some(std::env::temp_dir().join(format!("horizon-h069-unit-{}", std::process::id())));
+            Some(horizon_fs::temp_dir().join(format!("horizon-h069-unit-{}", std::process::id())));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,
@@ -8040,8 +8042,8 @@ mod pearl_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists()
-            || !root.join("movement-properties.nbt").exists()
+        if !root.join("entity-types.json").fs_exists()
+            || !root.join("movement-properties.nbt").fs_exists()
         {
             return;
         }
@@ -8210,7 +8212,7 @@ mod knockback_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let installed = *KNOCKBACK.get_or_init(|| hook);
@@ -8276,7 +8278,7 @@ mod dye_mix_tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("data/minecraft/recipe").is_dir() {
+        if !root.join("data/minecraft/recipe").fs_is_dir() {
             return;
         }
         let registry = horizon_world::level::data::load_registry(&root).unwrap();
@@ -8699,7 +8701,7 @@ mod chorus_projectile_drop_tests {
                 let root =
                     std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
                 let mut table: serde_json::Value = serde_json::from_slice(
-                    &std::fs::read(root.join("data/minecraft/loot_table/blocks/gravel.json"))
+                    &horizon_fs::read(root.join("data/minecraft/loot_table/blocks/gravel.json"))
                         .unwrap(),
                 )
                 .unwrap();

@@ -13,6 +13,8 @@
 //! `sampler2D(texture, sampler)` again where it is used. The vertex stage's `main` is
 //! wrapped so that clip y is negated: targets keep GL's rows (row 0 is the bottom edge),
 //! so `texCoord` reads the texel it would in vanilla.
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use naga::ShaderStage;
 use naga::front::glsl::{Frontend, Options};
 use naga::valid::{Capabilities, ValidationFlags, Validator};
@@ -69,7 +71,7 @@ fn read_source(root: &Path, id: &str, ext: &str) -> Result<String, String> {
         .join(ns)
         .join("shaders")
         .join(format!("{path}.{ext}"));
-    std::fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))
+    horizon_fs::read_to_string(&file).map_err(|e| format!("{}: {e}", file.display()))
 }
 
 fn include(root: &Path, src: &str, depth: u32) -> Result<String, String> {
@@ -92,7 +94,7 @@ fn include(root: &Path, src: &str, depth: u32) -> Result<String, String> {
                 .join("shaders")
                 .join("include")
                 .join(path);
-            let text = std::fs::read_to_string(&file)
+            let text = horizon_fs::read_to_string(&file)
                 .map_err(|e| format!("#include <{name}>: {}: {e}", file.display()))?;
             out.push_str(&include(root, &text, depth + 1)?);
         } else if t.starts_with("#version") || t.starts_with("#extension") {
@@ -272,7 +274,7 @@ mod tests {
             .nth(2)?
             .join(".local/horizon-client/26.3");
         dir.join("assets/minecraft/shaders/post/blit.fsh")
-            .exists()
+            .fs_exists()
             .then_some(dir)
     }
 

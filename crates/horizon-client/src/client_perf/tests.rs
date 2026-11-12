@@ -1,14 +1,17 @@
 use super::*;
 use crate::spans::Span;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_perf_format::files;
 use horizon_perf_format::v1::{Capture, GpuMode, Kind, Side, StopReason as R, Unit, WarningCode};
-use std::fs;
 
 struct Scratch(PathBuf);
 
 impl Scratch {
     fn new(tag: &str) -> Self {
-        let dir = std::env::temp_dir().join(format!("hz-client-perf-{tag}-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("hz-client-perf-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         Self(dir)
@@ -618,7 +621,7 @@ fn finishing_applies_the_retention_of_thirty_files() {
     perf.stop(0.0, R::Normal);
     let saved = perf.take_saved(true).pop().unwrap().unwrap();
     assert_eq!(saved.deleted, [old[0].clone()]);
-    assert!(renamed.exists() && saved.path.exists());
+    assert!(renamed.fs_exists() && saved.path.fs_exists());
 }
 
 #[test]

@@ -16,6 +16,9 @@
 //! content mod the root is the base root itself.
 use crate::{Result, blocks::MAP_COLORS};
 use horizon_core::geometry::{Aabb, Axis, ShapeOp, Vec3, VoxelShape};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_mods::content::{
     Block, BlockShapes, Content, CreativeTab, EntityType, Fluid, MenuType, MobEffect, Rarity,
     StateProperty, StateValues,
@@ -24,7 +27,7 @@ use horizon_world::nbt::{self, Compound, JavaString, Tag};
 use serde::{Deserialize, Serialize, de};
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fmt, fs,
+    fmt,
     ops::Range,
     path::{Path, PathBuf},
 };
@@ -675,7 +678,7 @@ struct Plan<'a> {
 /// Component types present in the vanilla item table.
 pub fn known_components(base: &Path) -> Result<BTreeSet<String>> {
     let path = base.join("items.json");
-    if !path.exists() {
+    if !path.fs_exists() {
         return Ok(BTreeSet::new());
     }
     Ok(component_types(&read_json(&path)?))
@@ -917,7 +920,7 @@ fn mod_entity_row(
 
 impl<'a> Plan<'a> {
     fn new(base: &Path, mods: &'a [ContentMod]) -> Result<Self> {
-        let vanilla_items = match base.join("items.json").exists() {
+        let vanilla_items = match base.join("items.json").fs_exists() {
             true => match read_json(&base.join("items.json"))? {
                 J::Obj(entries) => entries.into_iter().map(|(id, _)| id).collect(),
                 _ => return Err("items.json is not an object".into()),
@@ -2108,7 +2111,7 @@ fn place_in_biomes(
     let bundle = |doc: Option<J>, name: &str| -> Result<BTreeMap<String, String>> {
         let doc = match doc {
             Some(doc) => doc,
-            None if base.join(name).exists() => read_json(&base.join(name))?,
+            None if base.join(name).fs_exists() => read_json(&base.join(name))?,
             None => return Ok(BTreeMap::new()),
         };
         let J::Obj(entries) = doc else {
@@ -2122,7 +2125,7 @@ fn place_in_biomes(
             })
             .collect())
     };
-    if !base.join(BIOMES).exists() {
+    if !base.join(BIOMES).fs_exists() {
         return Err(format!("biome modifiers need {BIOMES}").into());
     }
     let mut doc = read_json(&base.join(BIOMES))?;
@@ -2130,7 +2133,7 @@ fn place_in_biomes(
     let placed: BTreeSet<String> = bundle(placed, PLACED_FEATURES)?.into_keys().collect();
     let feature_tags = bundle(None, FEATURE_TAGS)?;
     let entities_path = out_path(overlay, "entity-types.json");
-    let entity_categories: BTreeMap<String, String> = match entities_path.exists() {
+    let entity_categories: BTreeMap<String, String> = match entities_path.fs_exists() {
         true => match read_json(&entities_path)? {
             J::Obj(entries) => entries
                 .into_iter()
@@ -2149,7 +2152,7 @@ fn place_in_biomes(
     };
     let mut entity_tags = BTreeMap::new();
     let vanilla_entity_tags = base.join("data/minecraft/tags/entity_type");
-    if vanilla_entity_tags.is_dir() {
+    if vanilla_entity_tags.fs_is_dir() {
         for file in &crate::json_folder::read(&vanilla_entity_tags)?.files {
             let text = std::str::from_utf8(file.bytes()?)
                 .map_err(|e| format!("entity_type/{}: {e}", file.name))?;
@@ -2182,7 +2185,7 @@ fn place_in_biomes(
         }
         if let Some((ns, path)) = id.split_once(':') {
             let file = format!("data/{ns}/worldgen/biome/{path}.json");
-            if out_path(overlay, &file).exists() {
+            if out_path(overlay, &file).fs_exists() {
                 overlay.write(&file, text.as_bytes())?;
             }
         }
@@ -2375,7 +2378,7 @@ impl Overlay<'_> {
             let meta = fs::symlink_metadata(&path);
             if meta
                 .as_ref()
-                .is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
+                .is_ok_and(|m| m.fs_is_dir() && !m.file_type().fs_is_symlink())
             {
                 continue;
             }
@@ -2540,11 +2543,11 @@ fn only_files(root: &Path, dir: &Path, found: &mut BTreeSet<String>) -> bool {
             return false;
         };
         let path = entry.path();
-        if kind.is_dir() {
+        if kind.fs_is_dir() {
             if !only_files(root, &path, found) {
                 return false;
             }
-        } else if kind.is_file() {
+        } else if kind.fs_is_file() {
             let Some(rel) = path
                 .strip_prefix(root)
                 .ok()
@@ -2568,7 +2571,7 @@ fn link(target: &Path, at: &Path) -> std::io::Result<()> {
 }
 #[cfg(not(unix))]
 fn link(target: &Path, at: &Path) -> std::io::Result<()> {
-    if target.is_dir() {
+    if target.fs_is_dir() {
         fs::create_dir_all(at)?;
         for entry in fs::read_dir(target)?.flatten() {
             link(&entry.path(), &at.join(entry.file_name()))?;
@@ -2589,7 +2592,7 @@ fn link_file(
     at: &Path,
     hard_link: impl FnOnce(&Path, &Path) -> std::io::Result<()>,
 ) -> std::io::Result<()> {
-    let symlink = fs::symlink_metadata(target).is_ok_and(|m| m.file_type().is_symlink());
+    let symlink = fs::symlink_metadata(target).is_ok_and(|m| m.file_type().fs_is_symlink());
     if !symlink && hard_link(target, at).is_ok() {
         return Ok(());
     }
@@ -2647,7 +2650,7 @@ impl Known {
         }
         items.extend(plan.items.iter().map(|i| i.rename.to.clone()));
         let keys = |name: &str| -> Result<std::collections::BTreeSet<String>> {
-            Ok(match base.join(name).exists() {
+            Ok(match base.join(name).fs_exists() {
                 true => match read_json(&base.join(name))? {
                     J::Obj(o) => o.into_iter().map(|(k, _)| k).collect(),
                     _ => Default::default(),
@@ -2902,7 +2905,7 @@ pub fn build(base: &Path, mods: &[ContentMod], out: &Path) -> Result<Vec<String>
     }
     let mut bundles: Vec<(&str, J)> = Vec::new();
     for name in TAG_BUNDLES {
-        if base.join(name).exists() {
+        if base.join(name).fs_exists() {
             bundles.push((name, read_json(&base.join(name))?));
         }
     }
@@ -2946,7 +2949,7 @@ pub fn build(base: &Path, mods: &[ContentMod], out: &Path) -> Result<Vec<String>
         })
         .collect();
     let mut biome_tag_doc = None;
-    if !biome_tags.is_empty() && base.join(BIOME_TAGS).exists() {
+    if !biome_tags.is_empty() && base.join(BIOME_TAGS).fs_exists() {
         let mut doc = read_json(&base.join(BIOME_TAGS))?;
         for (id, merge) in biome_tags {
             let text = match doc.get(&id) {
@@ -2967,7 +2970,7 @@ pub fn build(base: &Path, mods: &[ContentMod], out: &Path) -> Result<Vec<String>
     }
     let mut placed_doc = None;
     for (bundle, entries) in &worldgen {
-        if !base.join(bundle).exists() {
+        if !base.join(bundle).fs_exists() {
             continue;
         }
         let mut doc = read_json(&base.join(bundle))?;
@@ -3127,7 +3130,7 @@ fn prune_roots(roots: &Path, current: &Path, keep: web_time::Duration) {
     let Ok(entries) = fs::read_dir(roots) else {
         return;
     };
-    let old_layout = roots.join(STAMP).exists();
+    let old_layout = roots.join(STAMP).fs_exists();
     for entry in entries.flatten() {
         let path = entry.path();
         if path == current {
@@ -3139,7 +3142,7 @@ fn prune_roots(roots: &Path, current: &Path, keep: web_time::Duration) {
                 .to_string_lossy()
                 .bytes()
                 .all(|b| b.is_ascii_hexdigit())
-            && path.is_dir();
+            && path.fs_is_dir();
         let age = |file: PathBuf| {
             fs::metadata(file)
                 .and_then(|m| m.modified())
@@ -3159,7 +3162,7 @@ fn prune_roots(roots: &Path, current: &Path, keep: web_time::Duration) {
         if !stale {
             continue;
         }
-        let removed = match path.is_dir() {
+        let removed = match path.fs_is_dir() {
             true => fs::remove_dir_all(&path).inspect(|_| {
                 let _ = fs::remove_file(used_path(&path));
             }),
@@ -3229,13 +3232,13 @@ fn stamp(base: &Path, mods: &[ContentMod]) -> Result<String> {
         ))
     };
     let mut parts = vec!["horizon mod content 1".to_owned()];
-    parts.push(meta(&std::env::current_exe()?)?);
+    parts.push(meta(&horizon_fs::current_exe()?)?);
     let base = std::path::absolute(base)?;
     parts.push(
         String::from_utf8_lossy(&fs::read(base.join("horizon-resources.json"))?).into_owned(),
     );
     for name in JSON_TABLES.iter().chain(&NBT_TABLES).chain(&TAG_BUNDLES) {
-        if base.join(name).exists() {
+        if base.join(name).fs_exists() {
             parts.push(meta(&base.join(name))?);
         }
     }
@@ -3246,7 +3249,7 @@ fn stamp(base: &Path, mods: &[ContentMod]) -> Result<String> {
         let source = m.content.source();
         if m.content.files.is_empty() {
             // Declared in code only: nothing to read.
-        } else if source.is_dir() {
+        } else if source.fs_is_dir() {
             for file in &m.content.files {
                 parts.push(meta(&source.join(file))?);
             }

@@ -1,4 +1,5 @@
 use horizon_core::{position::ChunkPos, random::RandomSource};
+use horizon_fs as fs;
 use horizon_world::{
     heightmap::HeightmapType,
     worldgen::{
@@ -10,7 +11,6 @@ use horizon_world::{
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

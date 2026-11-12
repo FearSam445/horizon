@@ -2776,7 +2776,7 @@ mod tests {
         if let Some(path) = std::env::var_os("HORIZON_PERSISTENCE_ORACLE") {
             assert_eq!(
                 trace.join("\n"),
-                std::fs::read_to_string(path).unwrap().trim()
+                horizon_fs::read_to_string(path).unwrap().trim()
             );
         }
         game.world.chunks.clear();
@@ -3254,7 +3254,7 @@ mod interaction_saved_defaults_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(std::env::current_dir().unwrap().join("game"));
+        options.game_dir = Some(horizon_fs::current_dir().unwrap().join("game"));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,
@@ -6007,7 +6007,7 @@ mod camel_pose_saved_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(std::env::current_dir().unwrap().join("game"));
+        options.game_dir = Some(horizon_fs::current_dir().unwrap().join("game"));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,

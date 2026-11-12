@@ -6,9 +6,9 @@ use horizon_client::{
     Result, arrows, assets::Assets, blocks::BlockFacts, collisions, world::World,
 };
 use horizon_core::geometry::Vec3;
+use horizon_fs as fs;
 use serde_json::Value;
 use std::{
-    fs,
     io::{BufRead, Write},
     path::PathBuf,
 };

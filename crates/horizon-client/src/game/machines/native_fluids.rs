@@ -809,7 +809,7 @@ mod tests {
         }
         let base = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
         let scratch =
-            std::env::temp_dir().join(format!("horizon-fluid-provider-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-fluid-provider-{}", std::process::id()));
         let mut content = Content::declared("fixture");
         content
             .declare(
@@ -911,7 +911,7 @@ mod tests {
         assert!(game.native_fluid_extract(DIM, POS, top, 50).is_none());
         assert_eq!(tank.0.lock().unwrap().amount, 700);
         drop(game);
-        std::fs::remove_dir_all(scratch).unwrap();
+        horizon_fs::remove_dir_all(scratch).unwrap();
     }
 
     /// Tanks hold vanilla's two fluids and any of a mod's own; not a

@@ -145,7 +145,7 @@ fn a_0_2_prelude_declares_only_the_names_on_its_list() {
             env!("CARGO_MANIFEST_DIR"),
             kind.name()
         );
-        let list = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
+        let list = horizon_fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
         let listed: BTreeSet<String> = list
             .lines()
             .map(str::trim)

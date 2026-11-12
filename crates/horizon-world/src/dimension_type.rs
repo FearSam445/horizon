@@ -1,5 +1,7 @@
 //! The parts of vanilla's `DimensionType` Horizon reads, and the attributes keyed on the level today.
 
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::sync::LazyLock;
 
 use horizon_core::level_key::LevelKey;
@@ -345,12 +347,12 @@ mod tests {
                 Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/horizon-client/26.3")
             });
         root.join("data/minecraft/dimension_type")
-            .is_dir()
+            .fs_is_dir()
             .then_some(root)
     }
 
     fn read(path: &Path) -> Value {
-        serde_json::from_str(&std::fs::read_to_string(path).expect("file")).expect("json")
+        serde_json::from_str(&horizon_fs::read_to_string(path).expect("file")).expect("json")
     }
 
     fn bounds(p: &IntProvider) -> (i32, i32) {

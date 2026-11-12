@@ -225,7 +225,7 @@ mod tests {
             None,
         )
         .unwrap();
-        let scratch = std::env::temp_dir().join(format!(
+        let scratch = horizon_fs::temp_dir().join(format!(
             "horizon-building-turn-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -233,7 +233,7 @@ mod tests {
                 .unwrap()
                 .as_nanos()
         ));
-        std::fs::create_dir_all(&scratch).unwrap();
+        horizon_fs::create_dir_all(&scratch).unwrap();
         game.world_root = scratch.clone();
         game.player = Some(PlayerMotion::new(game.motion, Vec3::new(10.5, 64.0, 0.5)).unwrap());
         let original = game.player.as_ref().unwrap().bounds();
@@ -308,7 +308,7 @@ mod tests {
             Vec3::new(10.5, 64.0, 0.5)
         );
         drop(game);
-        assert!(scratch.starts_with(std::env::temp_dir()));
-        std::fs::remove_dir_all(scratch).unwrap();
+        assert!(scratch.starts_with(horizon_fs::temp_dir()));
+        horizon_fs::remove_dir_all(scratch).unwrap();
     }
 }

@@ -34,6 +34,8 @@ use horizon_client::{
     world::World,
 };
 use horizon_core::{geometry::Vec3, random::RandomSource};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::{
     entity_data::{ITEM_ENTITY_ITEM, Value},
     item::{Hashed, Stack},
@@ -951,7 +953,7 @@ impl Game<'_> {
             if self.title.is_none() {
                 self.title = Some(
                     horizon_client::title::Title::new(
-                        std::env::current_dir()?.join("saves"),
+                        horizon_fs::current_dir()?.join("saves"),
                         &self.options.resources,
                     )
                     .with_user(|| self.options.player_name()),
@@ -1075,7 +1077,7 @@ impl Game<'_> {
         self.streaming = streaming;
         self.world = World::new(self.res.facts().air, 0);
         self.save = Arc::new(SaveDir::new(
-            std::env::temp_dir().join("horizon-remote-unused"),
+            horizon_fs::temp_dir().join("horizon-remote-unused"),
             horizon_client::save::LevelShape::OVERWORLD,
         ));
         self.inventory = vec![None; 36];
@@ -1330,7 +1332,7 @@ impl Game<'_> {
         self.streaming = streaming;
         self.world = World::new(self.res.facts().air, 0);
         self.save = Arc::new(SaveDir::new(
-            std::env::temp_dir().join("horizon-replay-unused"),
+            horizon_fs::temp_dir().join("horizon-replay-unused"),
             horizon_client::save::LevelShape::OVERWORLD,
         ));
         self.inventory = vec![None; 36];
@@ -1612,7 +1614,7 @@ impl Game<'_> {
         if let Some(r) = self.renderer.as_mut() {
             r.clear_sections(self.world.layout());
         }
-        let saves = std::env::current_dir()?.join("saves");
+        let saves = horizon_fs::current_dir()?.join("saves");
         let mut title = horizon_client::title::Title::new(saves.clone(), &self.options.resources)
             .with_user(|| self.options.player_name());
         title.last_server = self.settings.file.string("lastServer");
@@ -2582,7 +2584,7 @@ impl Game<'_> {
         if self.integrated.is_some() {
             return;
         }
-        if let Ok(dir) = std::env::current_dir() {
+        if let Ok(dir) = horizon_fs::current_dir() {
             horizon_client::multiplayer::save_server_icon(
                 &dir.join("saves"),
                 &r.session.address,
@@ -11712,7 +11714,8 @@ mod tests {
         let base = PathBuf::from(
             std::env::var_os("HORIZON_TEST_RESOURCES").expect("prepared resources required"),
         );
-        let root = std::env::temp_dir().join(format!("horizon-alias-game-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-alias-game-{}", std::process::id()));
         let mut content = Content::declared("ruby");
         content
             .declare(
@@ -11821,7 +11824,7 @@ mod tests {
             "adventure refusal keeps the alias stack"
         );
         drop(game);
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     use horizon_client::{

@@ -9,6 +9,8 @@ use crate::{
     pose::{Dimensions, Pose},
 };
 use horizon_core::geometry::{Aabb, Vec3};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::{
     attachment_sync,
     item::Stack,
@@ -2230,7 +2232,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             eprintln!("skipped: prepared resources unavailable");
             return None;
         }

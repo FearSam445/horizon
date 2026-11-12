@@ -60,10 +60,10 @@ pub fn identity(root: &Path) -> Result<[u8; 32], IdentityError> {
     if let Some(hash) = identities.get(root) {
         return Ok(*hash);
     }
-    let bytes = std::fs::read(root.join("facts.json")).map_err(IdentityError::Read)?;
+    let bytes = horizon_fs::read(root.join("facts.json")).map_err(IdentityError::Read)?;
     let mut hash = hash_facts(&bytes)?;
     // A root without mod entries keeps its block-only identity.
-    if let Ok(registries) = std::fs::read(root.join("registries.json")) {
+    if let Ok(registries) = horizon_fs::read(root.join("registries.json")) {
         let report = parse_registries(&registries)?;
         for registry in REGISTRIES {
             let entries = mod_entries(&report, registry);
@@ -188,19 +188,19 @@ mod tests {
     #[test]
     fn a_mod_menu_type_joins_the_identity() {
         let root = |name: &str, extra: &str| {
-            let root = std::env::temp_dir().join(format!(
+            let root = horizon_fs::temp_dir().join(format!(
                 "horizon-content-identity-menu-{name}-{}",
                 std::process::id()
             ));
-            std::fs::create_dir_all(&root).unwrap();
+            horizon_fs::create_dir_all(&root).unwrap();
             let facts = br#"{"states":[["minecraft:stone",false,false,"Block{minecraft:stone}",{"id":"minecraft:stone"}]]}"#;
-            std::fs::write(root.join("facts.json"), facts).unwrap();
+            horizon_fs::write(root.join("facts.json"), facts).unwrap();
             let report = format!(
                 r#"{{"minecraft:menu":{{"entries":{{"minecraft:generic_9x1":{{"protocol_id":0}}{extra}}}}}}}"#
             );
-            std::fs::write(root.join("registries.json"), report).unwrap();
+            horizon_fs::write(root.join("registries.json"), report).unwrap();
             let hash = identity(&root).unwrap();
-            std::fs::remove_dir_all(&root).unwrap();
+            horizon_fs::remove_dir_all(&root).unwrap();
             hash
         };
         let vanilla = root("vanilla", "");
@@ -214,19 +214,19 @@ mod tests {
     #[test]
     fn a_mod_fluid_joins_the_identity() {
         let root = |name: &str, extra: &str| {
-            let root = std::env::temp_dir().join(format!(
+            let root = horizon_fs::temp_dir().join(format!(
                 "horizon-content-identity-fluid-{name}-{}",
                 std::process::id()
             ));
-            std::fs::create_dir_all(&root).unwrap();
+            horizon_fs::create_dir_all(&root).unwrap();
             let facts = br#"{"states":[["minecraft:stone",false,false,"Block{minecraft:stone}",{"id":"minecraft:stone"}]]}"#;
-            std::fs::write(root.join("facts.json"), facts).unwrap();
+            horizon_fs::write(root.join("facts.json"), facts).unwrap();
             let report = format!(
                 r#"{{"minecraft:fluid":{{"entries":{{"minecraft:water":{{"protocol_id":2}}{extra}}}}}}}"#
             );
-            std::fs::write(root.join("registries.json"), report).unwrap();
+            horizon_fs::write(root.join("registries.json"), report).unwrap();
             let hash = identity(&root).unwrap();
-            std::fs::remove_dir_all(&root).unwrap();
+            horizon_fs::remove_dir_all(&root).unwrap();
             (hash, hash_facts(facts).unwrap())
         };
         let (vanilla, blocks) = root("vanilla", "");
@@ -238,21 +238,21 @@ mod tests {
 
     #[test]
     fn a_root_without_mod_entries_keeps_its_block_identity() {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-content-identity-vanilla-{}",
             std::process::id()
         ));
-        std::fs::create_dir_all(&root).unwrap();
+        horizon_fs::create_dir_all(&root).unwrap();
         let facts = br#"{"states":[["minecraft:stone",false,false,"Block{minecraft:stone}",{"id":"minecraft:stone"}]]}"#;
-        std::fs::write(root.join("facts.json"), facts).unwrap();
-        std::fs::write(
+        horizon_fs::write(root.join("facts.json"), facts).unwrap();
+        horizon_fs::write(
             root.join("registries.json"),
             br#"{"minecraft:item":{"entries":{"minecraft:air":{"protocol_id":0}}},
             "minecraft:mob_effect":{"entries":{"minecraft:speed":{"protocol_id":0}}}}"#,
         )
         .unwrap();
         assert_eq!(identity(&root).unwrap(), hash_facts(facts).unwrap());
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
     }
 
     #[test]

@@ -23,9 +23,9 @@ use crate::{
     mesher::{SectionMesh, Sides, TerrainVertex, Vertex},
 };
 use glam::{DVec3, Mat4, Vec3};
+use horizon_fs::{self as fs, File};
 use serde::{Deserialize, Serialize};
 use std::{
-    fs::{self, File},
     io::{BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
 };

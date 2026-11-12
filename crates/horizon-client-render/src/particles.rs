@@ -17,6 +17,8 @@ use horizon_core::{
     geometry::{Aabb, Axis, Vec3, trig},
     random::{LegacyRandom, RandomSource},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::entity_data::PositionSource;
 use horizon_world::block_collision::BlockCollisionRegistry;
 use std::{
@@ -1586,10 +1588,10 @@ impl ParticleEngine {
     /// and a native mod's (`assets/<namespace>/particles/<name>.json`).
     fn load_sprites(&mut self, root: &Path) {
         let assets = root.join("assets");
-        if let Ok(namespaces) = std::fs::read_dir(&assets) {
+        if let Ok(namespaces) = horizon_fs::read_dir(&assets) {
             for namespace in namespaces.flatten() {
                 let ns = namespace.file_name().to_string_lossy().into_owned();
-                if ns == "minecraft" || !namespace.path().is_dir() {
+                if ns == "minecraft" || !namespace.path().fs_is_dir() {
                     continue;
                 }
                 self.load_mod_sprites(&ns, &namespace.path().join("particles"));
@@ -1625,7 +1627,7 @@ impl ParticleEngine {
     /// A namespace's particle JSONs that vanilla has no type for: each becomes
     /// one sprite set under `<ns>:<file name>`.
     fn load_mod_sprites(&mut self, ns: &str, dir: &Path) {
-        let Ok(files) = std::fs::read_dir(dir) else {
+        let Ok(files) = horizon_fs::read_dir(dir) else {
             return;
         };
         for file in files.flatten() {
@@ -1640,7 +1642,7 @@ impl ParticleEngine {
             if ParticleType::from_name(&key).is_some() {
                 continue;
             }
-            let Ok(bytes) = std::fs::read(&path) else {
+            let Ok(bytes) = horizon_fs::read(&path) else {
                 continue;
             };
             let Ok(json) = serde_json::from_slice::<serde_json::Value>(&bytes) else {
@@ -5232,15 +5234,15 @@ mod tests {
     #[test]
     fn a_mod_particles_json_becomes_its_sprite_set() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-mod-particles-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-mod-particles-{}", std::process::id()));
         let particles = dir.join("assets/mymod/particles");
-        std::fs::create_dir_all(&particles).unwrap();
-        std::fs::write(
+        horizon_fs::create_dir_all(&particles).unwrap();
+        horizon_fs::write(
             particles.join("spark.json"),
             br#"{"textures":["mymod:spark/1","mymod:spark/2"]}"#,
         )
         .unwrap();
-        assert!(particles.join("spark.json").exists());
+        assert!(particles.join("spark.json").fs_exists());
         let mut engine = ParticleEngine::new(&dir, &HashMap::new(), &HashSet::new());
         let (set, _) = *engine
             .mod_sets
@@ -5268,7 +5270,7 @@ mod tests {
                 )
                 .is_none()
         );
-        std::fs::write(
+        horizon_fs::write(
             particles.join("spark.json"),
             br#"{"textures":["mymod:spark/1"],"horizon:behaviour":{
                 "velocity":[0,0.5,0],"gravity":-1,"friction":0.5,
@@ -5292,7 +5294,7 @@ mod tests {
         assert_eq!(custom.size, 0.25);
         assert_eq!(custom.rgba[3], 0.75);
         for suffix in [r#", "horizon:behaviour": {"lifetime":0}"#, ""] {
-            std::fs::write(
+            horizon_fs::write(
                 particles.join("spark.json"),
                 format!(r#"{{"textures":["mymod:spark/1","mymod:spark/2"]{suffix}}}"#,),
             )
@@ -5316,7 +5318,7 @@ mod tests {
         }
         assert_eq!(custom.lifetime, 4);
         assert_eq!(custom.size, 0.25);
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     #[test]

@@ -5,8 +5,11 @@
 //! costs. The first reader lists and reads the folder; later readers share
 //! those bytes for as long as one of them holds the [`Folder`], then it is
 //! gone (nothing is kept past the load).
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
-    fs, io,
+    io,
     path::{Path, PathBuf},
     sync::{Arc, Condvar, Mutex, OnceLock, Weak},
 };
@@ -170,7 +173,7 @@ pub fn list(dir: &Path) -> io::Result<Vec<(String, PathBuf)>> {
                 }
             };
             let path = entry.path();
-            if path.is_dir() {
+            if path.fs_is_dir() {
                 match fs::read_dir(&path) {
                     Ok(list) => stack.push(list),
                     Err(e) => log::warn!("Horizon: failed to list {}: {e}", path.display()),
@@ -200,8 +203,8 @@ mod tests {
     use super::*;
 
     fn folder(tag: &str) -> PathBuf {
-        let dir =
-            std::env::temp_dir().join(format!("horizon-json-folder-{tag}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-json-folder-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(dir.join("brewing")).unwrap();
         fs::write(dir.join("stick.json"), b"{\"a\":1}").unwrap();
@@ -232,7 +235,7 @@ mod tests {
     #[test]
     fn a_prepared_root_reads_the_folder_from_its_data_file() {
         let root =
-            std::env::temp_dir().join(format!("horizon-json-folder-root-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-json-folder-root-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let recipes = root.join("data/minecraft/recipe");
         fs::create_dir_all(recipes.join("crushing")).unwrap();
@@ -262,7 +265,7 @@ mod tests {
     #[test]
     fn a_folder_that_cannot_be_listed_is_an_error() {
         let dir =
-            std::env::temp_dir().join(format!("horizon-json-folder-none-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-json-folder-none-{}", std::process::id()));
         assert!(read(&dir).is_err());
     }
 }

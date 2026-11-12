@@ -9,7 +9,7 @@ use super::WorldCounts;
 /// The disk the game runs from, where its worlds are saved: used and total MiB.
 pub(super) fn disk_mb() -> Option<(u64, u64)> {
     const MIB: u64 = 1 << 20;
-    let dir = std::env::current_dir().ok()?;
+    let dir = horizon_fs::current_dir().ok()?;
     let total = fs4::total_space(&dir).ok()?;
     let free = fs4::available_space(&dir).ok()?;
     Some((total.saturating_sub(free) / MIB, total / MIB))
@@ -25,7 +25,7 @@ impl SystemProbe {
     pub(super) fn read(&mut self, t: f64, counts: WorldCounts) -> Gauges {
         let pid = std::process::id();
         let cpu_s = horizon_bench::cpu_seconds(pid);
-        let stat = std::fs::read_to_string("/proc/stat")
+        let stat = horizon_fs::read_to_string("/proc/stat")
             .ok()
             .and_then(|s| parse_cpu_stat(&s));
         let threads = std::thread::available_parallelism().map_or(1, |n| n.get()) as f64;
@@ -36,7 +36,7 @@ impl SystemProbe {
             entities: counts.entities,
             ..Gauges::default()
         };
-        if let Some((used, swap)) = std::fs::read_to_string("/proc/meminfo")
+        if let Some((used, swap)) = horizon_fs::read_to_string("/proc/meminfo")
             .ok()
             .and_then(|s| parse_meminfo(&s))
         {
@@ -163,7 +163,7 @@ pub fn hardware() -> Option<&'static horizon_bench::Hardware> {
 
 /// What the machine and its container give the process, for `Start.machine`.
 pub fn machine(hardware: Option<&horizon_bench::Hardware>) -> Machine {
-    let cgroup = |name: &str| std::fs::read_to_string(format!("/sys/fs/cgroup/{name}")).ok();
+    let cgroup = |name: &str| horizon_fs::read_to_string(format!("/sys/fs/cgroup/{name}")).ok();
     let mut m = Machine {
         os: std::env::consts::OS.to_owned(),
         arch: std::env::consts::ARCH.to_owned(),

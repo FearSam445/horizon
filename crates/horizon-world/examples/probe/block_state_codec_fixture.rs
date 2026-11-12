@@ -1,5 +1,6 @@
 //! Original JSON block-state codec comparison transport.
 use crate::support::common::tag;
+use horizon_fs as fs;
 use horizon_world::{
     DATA_VERSION,
     nbt::Tag,
@@ -8,7 +9,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     collections::BTreeSet,
-    fs,
     io::{self, Write},
     path::Path,
 };

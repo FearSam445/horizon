@@ -599,7 +599,7 @@ mod tests {
                     .join("../../.local/horizon-client/26.3")
             });
         let path = root.join(format!("worldgen/biome_parameters/{name}.json"));
-        let Ok(report) = std::fs::read_to_string(&path) else {
+        let Ok(report) = horizon_fs::read_to_string(&path) else {
             eprintln!("skipping the {name} list: no {}", path.display());
             return None;
         };

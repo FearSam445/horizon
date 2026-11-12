@@ -9,6 +9,8 @@ use horizon_client::{
     first_person::Hand,
     mobs::{Mob, Species, armadillo, equine, llama, nautilus, panda, villager},
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 
 impl Game<'_> {
     /// Whether mob `i` takes a right click with `hand`'s item on this
@@ -336,7 +338,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("entity-types.json").exists() {
+        if !root.join("entity-types.json").fs_exists() {
             return None;
         }
         let data = horizon_client::mobs::MobTypes::load(&root).ok()?;

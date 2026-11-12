@@ -6,5 +6,9 @@ license.workspace = true
 rust-version.workspace = true
 description = "The machine the game runs on, as the OS describes it: OS, CPU, memory, drive, power, GPU maker and memory"
 
+[dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
+
 [lints]
 workspace = true

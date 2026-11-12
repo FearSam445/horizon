@@ -357,13 +357,13 @@ mod tests {
 
     #[test]
     fn the_first_global_file_wins() {
-        let root = std::env::temp_dir().join(format!("horizon-cit-glint-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&root);
+        let root = horizon_fs::temp_dir().join(format!("horizon-cit-glint-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&root);
         assert_eq!(load_global(&root), Global::default());
         let write = |path: &str, text: &[u8]| {
             let file = root.join(path);
-            std::fs::create_dir_all(file.parent().unwrap()).unwrap();
-            std::fs::write(file, text).unwrap();
+            horizon_fs::create_dir_all(file.parent().unwrap()).unwrap();
+            horizon_fs::write(file, text).unwrap();
         };
         // Saved as Latin-1 (`é` is not UTF-8 alone), in the OptiFine doc's `cit/` folder.
         write(
@@ -380,7 +380,7 @@ mod tests {
         assert_eq!(load_global(&root).method, Method::Layered);
         write("assets/minecraft/citresewn/cit.properties", b"cap=1");
         let g = load_global(&root);
-        let _ = std::fs::remove_dir_all(&root);
+        let _ = horizon_fs::remove_dir_all(&root);
         assert_eq!((g.method, g.cap), (Method::Average, Some(1)));
     }
 }

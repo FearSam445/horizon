@@ -130,18 +130,19 @@ impl Session {
             );
         };
         if cmd.name == "screenshot" {
-            let path = std::env::temp_dir().join(format!("horizon-ctl-{}.png", std::process::id()));
+            let path =
+                horizon_fs::temp_dir().join(format!("horizon-ctl-{}.png", std::process::id()));
             let result = self
                 .run(&["screenshot".to_owned(), path.display().to_string()])
                 .and_then(|reply| {
-                    std::fs::read(&path)
+                    horizon_fs::read(&path)
                         .map(|png| (reply, png))
                         .map_err(|e| crate::Failure {
                             reply: json!({ "error": format!("{}: {e}", path.display()) }),
                             status: 1,
                         })
                 });
-            let _ = std::fs::remove_file(&path);
+            let _ = horizon_fs::remove_file(&path);
             return match result {
                 Ok((reply, png)) => (
                     vec![
@@ -305,7 +306,10 @@ mod tests {
 
     #[test]
     fn protocol_basics() {
-        let mut s = Session::new(std::env::temp_dir().join("horizon-ctl-mcp-test.sock"), None);
+        let mut s = Session::new(
+            horizon_fs::temp_dir().join("horizon-ctl-mcp-test.sock"),
+            None,
+        );
         let mut app = |method: &str, params: &Value| s.handle(method, params);
         let server = server();
         let line = |method: &str, params: Value| {

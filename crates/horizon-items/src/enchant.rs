@@ -1023,7 +1023,7 @@ pub mod tests {
 
     #[test]
     fn world_pack_definitions_join_catalog_in_overlay_priority() {
-        let root = std::env::temp_dir().join(format!(
+        let root = horizon_fs::temp_dir().join(format!(
             "horizon-enchantment-overlay-{}-{}",
             std::process::id(),
             horizon_clock::system_now()
@@ -1033,9 +1033,9 @@ pub mod tests {
         ));
         let write = |path: &str, value: &Value| {
             let path = root.join(path);
-            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-            std::fs::write(&path, serde_json::to_vec(value).unwrap()).unwrap();
-            std::fs::read(path).unwrap()
+            horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+            horizon_fs::write(&path, serde_json::to_vec(value).unwrap()).unwrap();
+            horizon_fs::read(path).unwrap()
         };
         let definition = |description: &str, max_level| {
             json!({
@@ -1128,7 +1128,7 @@ pub mod tests {
             3.0
         );
         assert!(Enchantments::load(&root).get("wpenchant:loaded").is_none());
-        std::fs::remove_dir_all(root).unwrap();
+        horizon_fs::remove_dir_all(root).unwrap();
     }
 
     /// A small registry built from literal JSON matching the vanilla files.

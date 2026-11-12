@@ -9,11 +9,9 @@ use horizon_client::{
     options_file::{OptionsFile, V},
     window::{self, FrameContext, InactivityFpsLimit},
 };
+use horizon_fs::File;
 use serde_json::Value;
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, BufWriter, Write},
-};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 
 fn fl(v: &Value) -> f32 {
     f32::from_bits(u32::from_str_radix(v.as_str().unwrap(), 16).unwrap())

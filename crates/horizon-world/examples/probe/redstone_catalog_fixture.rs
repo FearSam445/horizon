@@ -225,8 +225,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
             _ => Kind::Other,
         })
         .collect();
-    let mut out = std::io::BufWriter::new(std::fs::File::create(output)?);
-    for line in std::io::BufReader::new(std::fs::File::open(cases)?).lines() {
+    let mut out = std::io::BufWriter::new(horizon_fs::File::create(output)?);
+    for line in std::io::BufReader::new(horizon_fs::File::open(cases)?).lines() {
         let case: Value = serde_json::from_str(&line?)?;
         let size = ints(&case["size"]);
         let mut ticks = Ticks::new(0);

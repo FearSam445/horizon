@@ -3,10 +3,10 @@ use horizon_core::{
     geometry::{Aabb, Axis, Vec3},
     position::BlockPos,
 };
+use horizon_fs as fs;
 use horizon_world::ground_support::GroundState;
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

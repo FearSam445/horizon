@@ -14,8 +14,10 @@ use crate::compression::Compression;
 use crate::nbt::{Limits, Tag};
 use crate::region::{ChunkRecord, RegionFile};
 use horizon_core::position::ChunkPos;
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::{BTreeMap, HashSet};
-use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -389,7 +391,7 @@ impl RegionStorageUpgrader {
         open.reader = None;
         let new_file = resolve_recreate_directory(file.parent().unwrap_or(Path::new(".")))
             .join(file.file_name().unwrap_or_default());
-        if new_file.exists() {
+        if new_file.fs_exists() {
             if let Err(e) = fs::remove_file(file).and_then(|()| fs::rename(&new_file, file)) {
                 eprintln!("Failed to replace an old region file: {e}");
             }

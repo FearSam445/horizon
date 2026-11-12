@@ -19,6 +19,8 @@ use horizon_client::command::{Arg, Dispatcher, PROFILER_GPU, Registries};
 use horizon_client::perf_net::Link;
 use horizon_client::server_perf::{self, TickDetail, WorldCounts};
 use horizon_client::spans::{self, Span};
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_perf_format::{
     files,
     v1::{BenchResult, StopReason, Trigger},
@@ -256,7 +258,7 @@ impl Profile {
             bytes: client
                 .as_ref()
                 .map(|s| s.bytes)
-                .or_else(|| alone.and_then(|s| Some(std::fs::metadata(&s.path).ok()?.len()))),
+                .or_else(|| alone.and_then(|s| Some(horizon_fs::metadata(&s.path).ok()?.len()))),
         }
     }
 
@@ -314,7 +316,7 @@ fn gpu_readout(
 }
 
 fn read_bench(path: &str) -> Result<BenchResult> {
-    let text = std::fs::read_to_string(path).map_err(|e| format!("cannot read {path}: {e}"))?;
+    let text = horizon_fs::read_to_string(path).map_err(|e| format!("cannot read {path}: {e}"))?;
     Ok(client_perf::bench_result(text).map_err(|e| format!("{path}: {e}"))?)
 }
 
@@ -371,7 +373,7 @@ fn resolve_capture(
     }
     let name = format!("{id}.hzperf");
     let path = reports.join(&name);
-    if files::is_capture_name(&name) && path.is_file() {
+    if files::is_capture_name(&name) && path.fs_is_file() {
         Ok(path)
     } else {
         Err(Missing::Named(id.to_owned()))
@@ -1166,11 +1168,11 @@ mod tests {
 
     #[test]
     fn open_and_share_find_a_named_capture_in_the_reports_folder_or_the_last_one() {
-        let dir = std::env::temp_dir().join(format!("horizon-resolve-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
+        let dir = horizon_fs::temp_dir().join(format!("horizon-resolve-{}", std::process::id()));
+        horizon_fs::create_dir_all(&dir).unwrap();
         let name = "profile-20251107-143844Z";
-        std::fs::write(dir.join(format!("{name}.hzperf")), b"x").unwrap();
-        std::fs::write(dir.join("notes.hzperf"), b"x").unwrap();
+        horizon_fs::write(dir.join(format!("{name}.hzperf")), b"x").unwrap();
+        horizon_fs::write(dir.join("notes.hzperf"), b"x").unwrap();
         let found = |id| resolve_capture(None, &dir, id);
         assert_eq!(found(Some(name)), Ok(dir.join(format!("{name}.hzperf"))));
         assert_eq!(found(None), Err(Missing::Last));
@@ -1180,7 +1182,7 @@ mod tests {
         let last = dir.join("trace.hzperf");
         assert_eq!(resolve_capture(Some(&last), &dir, None), Ok(last.clone()));
         assert_eq!(resolve_capture(Some(&last), &dir, Some("trace")), Ok(last));
-        let _ = std::fs::remove_dir_all(&dir);
+        let _ = horizon_fs::remove_dir_all(&dir);
     }
 
     fn start<'a>(
@@ -1234,9 +1236,9 @@ mod tests {
 
     fn scratch(tag: &str) -> PathBuf {
         let dir =
-            std::env::temp_dir().join(format!("hz-profile-route-{tag}-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
+            horizon_fs::temp_dir().join(format!("hz-profile-route-{tag}-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
+        horizon_fs::create_dir_all(&dir).unwrap();
         dir
     }
 
@@ -1291,7 +1293,7 @@ mod tests {
         let (client, server) = profile.mark(Some(ProfileSide::Client), "mine");
         assert!(client.is_some());
         assert_eq!(server, None);
-        let _ = std::fs::remove_dir_all(dir);
+        let _ = horizon_fs::remove_dir_all(dir);
     }
 
     #[test]
@@ -1310,7 +1312,7 @@ mod tests {
         ));
         assert_eq!(profile.mark(Some(ProfileSide::Server), "x"), (None, None));
         assert_eq!(Profile::new(50.0).mark(None, "x"), (None, None));
-        let _ = std::fs::remove_dir_all(dir);
+        let _ = horizon_fs::remove_dir_all(dir);
     }
 
     #[test]
@@ -1328,7 +1330,7 @@ mod tests {
     fn status_reports_only_captures_that_are_running() {
         let dir = scratch("status");
         let file = dir.join("capture.hzperf");
-        std::fs::write(&file, [0u8; 7]).unwrap();
+        horizon_fs::write(&file, [0u8; 7]).unwrap();
         let mut profile = Profile::new(50.0);
         profile.server_only = Some(server_only(
             Phase::Running,
@@ -1348,7 +1350,7 @@ mod tests {
         assert!(!done.capturing);
         assert!(done.sides.is_empty());
         assert_eq!((done.path, done.elapsed_s, done.bytes), (None, None, None));
-        let _ = std::fs::remove_dir_all(dir);
+        let _ = horizon_fs::remove_dir_all(dir);
     }
 
     #[test]
@@ -1365,7 +1367,7 @@ mod tests {
             profile.served(),
             "an ended server side still holds its part of the file"
         );
-        let _ = std::fs::remove_dir_all(dir);
+        let _ = horizon_fs::remove_dir_all(dir);
     }
 
     #[test]
@@ -1406,6 +1408,6 @@ mod tests {
         for side in [None, Some(ProfileSide::Server)] {
             assert!(server.stop_route(side).is_err(), "{side:?}");
         }
-        let _ = std::fs::remove_dir_all(dir);
+        let _ = horizon_fs::remove_dir_all(dir);
     }
 }

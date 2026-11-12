@@ -8,6 +8,8 @@ use horizon_client::{
     text::Text,
 };
 use horizon_core::random::RandomSource;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::packets::play::{self, Clientbound as C};
 use horizon_world::attribute_map::ValueKind;
 use horizon_world::nbt::Tag;
@@ -2547,7 +2549,7 @@ mod vehicle_damage_command_tests {
         use horizon_protocol::packets::configuration::ClientInformation;
         use std::sync::{atomic::AtomicI32, mpsc};
         game.world_root = game.options.game_dir.as_ref().unwrap().join("h082-world");
-        std::fs::create_dir_all(&game.world_root).unwrap();
+        horizon_fs::create_dir_all(&game.world_root).unwrap();
         game.lan_host(
             crate::game::lan::LanSettings {
                 port: 0,

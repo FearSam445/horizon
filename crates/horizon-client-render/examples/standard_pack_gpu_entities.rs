@@ -47,7 +47,7 @@ impl native_render::RenderHooks for Observer {
 
 fn pack(renderer: &mut Renderer, folder: &Path, valid: bool) {
     let shaders = folder.join("shaders");
-    std::fs::create_dir_all(&shaders).unwrap();
+    horizon_fs::create_dir_all(&shaders).unwrap();
     let vertex = "#version 120\nvarying vec2 uv; void main(){gl_Position=ftransform();uv=gl_MultiTexCoord0.xy;}\n";
     let fragment = "#version 120\nuniform int entityId; uniform int blockEntityId; uniform vec4 entityColor; void main(){gl_FragData[0]=vec4(float(entityId)/255.0,entityColor.a,float(blockEntityId)/255.0,1.0);}\n";
     // The terrain programs keep the load free of "nothing draws it" notes; this
@@ -59,8 +59,8 @@ fn pack(renderer: &mut Renderer, folder: &Path, valid: bool) {
         "gbuffers_terrain",
         "gbuffers_water",
     ] {
-        std::fs::write(shaders.join(format!("{program}.vsh")), vertex).unwrap();
-        std::fs::write(
+        horizon_fs::write(shaders.join(format!("{program}.vsh")), vertex).unwrap();
+        horizon_fs::write(
             shaders.join(format!("{program}.fsh")),
             if valid {
                 fragment
@@ -70,9 +70,9 @@ fn pack(renderer: &mut Renderer, folder: &Path, valid: bool) {
         )
         .unwrap();
     }
-    std::fs::write(shaders.join("final.vsh"), vertex).unwrap();
-    std::fs::write(shaders.join("final.fsh"), "#version 120\nvarying vec2 uv; uniform sampler2D colortex0; void main(){gl_FragColor=texture2D(colortex0,uv);}\n").unwrap();
-    std::fs::write(
+    horizon_fs::write(shaders.join("final.vsh"), vertex).unwrap();
+    horizon_fs::write(shaders.join("final.fsh"), "#version 120\nvarying vec2 uv; uniform sampler2D colortex0; void main(){gl_FragColor=texture2D(colortex0,uv);}\n").unwrap();
+    horizon_fs::write(
         shaders.join("shaders.properties"),
         "oldLighting=false\nshadow.enabled=false\n",
     )
@@ -94,7 +94,9 @@ fn pack(renderer: &mut Renderer, folder: &Path, valid: bool) {
 }
 
 fn read(path: &Path) -> Vec<u8> {
-    let decoder = png::Decoder::new(std::io::BufReader::new(std::fs::File::open(path).unwrap()));
+    let decoder = png::Decoder::new(std::io::BufReader::new(
+        horizon_fs::File::open(path).unwrap(),
+    ));
     let mut reader = decoder.read_info().unwrap();
     let mut bytes = vec![0; reader.output_buffer_size().unwrap()];
     let info = reader.next_frame(&mut bytes).unwrap();
@@ -106,7 +108,7 @@ fn read(path: &Path) -> Vec<u8> {
 fn fixture(window: Arc<Window>) -> Result<(), Box<dyn std::error::Error>> {
     let out = std::env::args().nth(1).ok_or("output directory required")?;
     let out = Path::new(&out);
-    std::fs::create_dir_all(out)?;
+    horizon_fs::create_dir_all(out)?;
     native_render::install(Box::new([&Observer])).map_err(|_| "observer already installed")?;
     let white = [255; 16 * 16 * 4];
     let zero = [0; 4];
@@ -284,7 +286,7 @@ fn fixture(window: Arc<Window>) -> Result<(), Box<dyn std::error::Error>> {
         "ordinary path returns when the pack is dropped"
     );
     assert_eq!(renderer.skins_tagged(), unmodified_tagged);
-    std::fs::write(
+    horizon_fs::write(
         out.join("result.json"),
         serde_json::to_vec_pretty(&serde_json::json!({
             "cpu_gpu_pixels_equal": true, "entity_id_hurt_pixels": matches, "hidden_subject_pixels": 0,

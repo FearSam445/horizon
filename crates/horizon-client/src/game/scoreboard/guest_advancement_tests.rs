@@ -39,7 +39,7 @@ fn selector_reads_independent_host_and_guest_progress() {
         None,
     )
     .unwrap();
-    let scratch = std::env::temp_dir().join(format!(
+    let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-guest-selector-{}-{}",
         std::process::id(),
         horizon_clock::system_now()
@@ -47,7 +47,7 @@ fn selector_reads_independent_host_and_guest_progress() {
             .unwrap()
             .as_nanos()
     ));
-    std::fs::create_dir_all(&scratch).unwrap();
+    horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.player = Some(PlayerMotion::new(game.motion, Vec3::new(10.5, 64.0, 0.5)).unwrap());
     let net = NetConfig {
@@ -152,5 +152,5 @@ fn selector_reads_independent_host_and_guest_progress() {
         vec![Target::Guest(2)]
     );
     drop(game);
-    std::fs::remove_dir_all(scratch).unwrap();
+    horizon_fs::remove_dir_all(scratch).unwrap();
 }

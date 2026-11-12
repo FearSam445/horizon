@@ -2,6 +2,8 @@
 use super::PackAtlas;
 use crate::gfx::{section_instance, section_visibility};
 use crate::mesher::TerrainVertex;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::path::PathBuf;
 use web_time::{Duration, Instant};
 use wgpu::util::DeviceExt;
@@ -9,7 +11,7 @@ use wgpu::util::DeviceExt;
 struct ProbePack(PathBuf);
 impl Drop for ProbePack {
     fn drop(&mut self) {
-        std::fs::remove_dir_all(&self.0).unwrap();
+        horizon_fs::remove_dir_all(&self.0).unwrap();
     }
 }
 
@@ -44,9 +46,9 @@ fn terrain_fade_reaches_pack_pixels_through_real_instances() {
     atlas.separate_ao = true;
     queue.submit([encoder.finish()]);
     let folder = ProbePack(
-        std::env::temp_dir().join(format!("horizon-terrain-fade-{}", std::process::id())),
+        horizon_fs::temp_dir().join(format!("horizon-terrain-fade-{}", std::process::id())),
     );
-    std::fs::create_dir_all(folder.0.join("shaders")).unwrap();
+    horizon_fs::create_dir_all(folder.0.join("shaders")).unwrap();
     // The initializer, varying and integer output are independent probe code. The program reads
     // `mc_chunkFade` unguarded: Horizon defines no `IRIS_FEATURE_*` (spec OQ-2).
     let vertex = "#version 330\nout vec4 observation;\n\
@@ -69,7 +71,7 @@ fn terrain_fade_reaches_pack_pixels_through_real_instances() {
         EmitVertex();\n}\nEndPrimitive();\n}";
     for name in ["gbuffers_terrain", "gbuffers_water", "shadow"] {
         for (extension, code) in [("vsh", vertex), ("fsh", fragment)] {
-            std::fs::write(folder.0.join(format!("shaders/{name}.{extension}")), code).unwrap();
+            horizon_fs::write(folder.0.join(format!("shaders/{name}.{extension}")), code).unwrap();
         }
     }
     let uploaded = Instant::now();
@@ -84,7 +86,7 @@ fn terrain_fade_reaches_pack_pixels_through_real_instances() {
     ];
     let mut count = 0;
     for requested in [false, true] {
-        std::fs::write(
+        horizon_fs::write(
             folder.0.join("shaders/shaders.properties"),
             if requested {
                 "shadow.enabled=true\niris.features.optional=FADE_VARIABLE\niris.features.required=FADE_VARIABLE\n"
@@ -101,11 +103,11 @@ fn terrain_fade_reaches_pack_pixels_through_real_instances() {
             for geometry in [false, true].into_iter().filter(|g| !*g || flat) {
                 let geometry_path = folder.0.join("shaders/shadow.gsh");
                 if geometry {
-                    std::fs::write(&geometry_path, geometry_shader).unwrap();
-                } else if geometry_path.exists() {
-                    std::fs::remove_file(&geometry_path).unwrap();
+                    horizon_fs::write(&geometry_path, geometry_shader).unwrap();
+                } else if geometry_path.fs_exists() {
+                    horizon_fs::remove_file(&geometry_path).unwrap();
                 }
-                std::fs::write(
+                horizon_fs::write(
                     folder.0.join("shaders/shadow.vsh"),
                     if geometry {
                         geometry_vertex.as_str()
@@ -213,17 +215,17 @@ fn terrain_tier_reaches_pack_pixels() {
     let atlas = PackAtlas::new(&device, &mut encoder, &[array], 1, 1, 2).unwrap();
     queue.submit([encoder.finish()]);
     let folder = ProbePack(
-        std::env::temp_dir().join(format!("horizon-terrain-tier-{}", std::process::id())),
+        horizon_fs::temp_dir().join(format!("horizon-terrain-tier-{}", std::process::id())),
     );
-    std::fs::create_dir_all(folder.0.join("shaders")).unwrap();
-    std::fs::write(
+    horizon_fs::create_dir_all(folder.0.join("shaders")).unwrap();
+    horizon_fs::write(
         folder.0.join("shaders/gbuffers_terrain.vsh"),
         "#version 330\nin float horizonTier;\nout vec4 observation;\n\
          void main() {\nobservation = vec4(horizonTier, 0.0, 0.0, 0.0);\n\
          gl_Position = vec4(0.0, 0.0, 0.0, 1.0);\n}",
     )
     .unwrap();
-    std::fs::write(
+    horizon_fs::write(
         folder.0.join("shaders/gbuffers_terrain.fsh"),
         "#version 330\nin vec4 observation;\nlayout(location = 0) out uvec4 pixel;\n\
          void main() { pixel = floatBitsToUint(observation); }",

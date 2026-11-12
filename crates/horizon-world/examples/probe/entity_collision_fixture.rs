@@ -1,12 +1,12 @@
 use crate::support::shapes::{box_values, emit};
 use horizon_core::geometry::{Aabb, Vec3};
+use horizon_fs as fs;
 use horizon_world::{
     entity_collision::{CollisionCandidate, EntityCollisionWorld, entity_collision_shapes},
     entity_obstruction::EntityIdentity,
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

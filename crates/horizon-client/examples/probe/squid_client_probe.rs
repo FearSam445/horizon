@@ -3,9 +3,9 @@ use horizon_client::{
     mobs::{Mob, MobTypes, aquatic},
 };
 use horizon_core::geometry::Vec3;
+use horizon_fs::File;
 use serde_json::Value;
 use std::{
-    fs::File,
     io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
     sync::Arc,

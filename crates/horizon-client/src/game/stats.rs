@@ -5,6 +5,8 @@
 use super::{Dim, Game};
 use horizon_core::geometry::Vec3;
 use horizon_core::random::RandomSource;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     collections::{BTreeMap, BTreeSet},
     path::{Path, PathBuf},
@@ -114,7 +116,7 @@ impl Stats {
     }
     /// `ServerStatsCounter.parseLocal`: the counters of a stats file.
     pub(super) fn read(path: &Path) -> Self {
-        let json = std::fs::read_to_string(path)
+        let json = horizon_fs::read_to_string(path)
             .ok()
             .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
             .unwrap_or_default();
@@ -163,10 +165,10 @@ impl Stats {
     pub(super) fn write(&self, path: &Path) {
         let json = self.to_json();
         if let Some(dir) = path.parent() {
-            let _ = std::fs::create_dir_all(dir);
+            let _ = horizon_fs::create_dir_all(dir);
         }
         if let Ok(text) = serde_json::to_string_pretty(&json) {
-            let _ = std::fs::write(path, text);
+            let _ = horizon_fs::write(path, text);
         }
     }
 }
@@ -200,7 +202,7 @@ fn valid_path_segment(segment: &str) -> bool {
 /// that fails leaves the old one in place.
 pub(super) fn locate_player_json(world: &Path, dir: &str, uuid: [i32; 4], name: &str) -> PathBuf {
     let uuid_file = player_json(world, dir, uuid);
-    if uuid_file.exists() {
+    if uuid_file.fs_exists() {
         return uuid_file;
     }
     let file = format!("{name}.json");
@@ -208,10 +210,10 @@ pub(super) fn locate_player_json(world: &Path, dir: &str, uuid: [i32; 4], name: 
         return uuid_file;
     }
     let named = uuid_file.with_file_name(&file);
-    if !named.is_file() {
+    if !named.fs_is_file() {
         return uuid_file;
     }
-    match std::fs::rename(&named, &uuid_file) {
+    match horizon_fs::rename(&named, &uuid_file) {
         Ok(()) => uuid_file,
         Err(e) => {
             log::warn!(
@@ -523,28 +525,28 @@ mod tests {
     /// a name vanilla would not write as a path segment is not looked for at all.
     #[test]
     fn an_old_stats_file_named_after_the_player_moves_to_its_uuid() {
-        let world = std::env::temp_dir().join(format!(
+        let world = horizon_fs::temp_dir().join(format!(
             "horizon-stats-file-{}-{:?}",
             std::process::id(),
             std::thread::current().id()
         ));
         let stats = world.join("players").join("stats");
-        std::fs::create_dir_all(&stats).unwrap();
+        horizon_fs::create_dir_all(&stats).unwrap();
         let uuid = [1, 2, 3, 4];
         let located = player_json(&world, "stats", uuid);
         // Nothing to move: the uuid name is the answer, and looking writes nothing.
         assert_eq!(locate_player_json(&world, "stats", uuid, "notch"), located);
-        assert!(!located.exists(), "looking for the file writes none");
+        assert!(!located.fs_exists(), "looking for the file writes none");
         // The old name-based file is moved onto the uuid name, and not left behind.
         let old = stats.join("notch.json");
-        std::fs::write(&old, "{}").unwrap();
+        horizon_fs::write(&old, "{}").unwrap();
         assert_eq!(locate_player_json(&world, "stats", uuid, "notch"), located);
-        assert!(located.is_file(), "the old file landed on the uuid name");
-        assert!(!old.exists(), "and is not left behind");
+        assert!(located.fs_is_file(), "the old file landed on the uuid name");
+        assert!(!old.fs_exists(), "and is not left behind");
         // A uuid file that exists is the answer, whether or not an old one does.
-        std::fs::write(&old, "{}").unwrap();
+        horizon_fs::write(&old, "{}").unwrap();
         assert_eq!(locate_player_json(&world, "stats", uuid, "notch"), located);
-        assert!(old.is_file(), "the old file is left alone");
+        assert!(old.fs_is_file(), "the old file is left alone");
         // FileUtil.isValidPathSegment on the file name: capitals and separators are not a segment,
         // while a lowercase name with dashes, dots or digits is.
         for name in ["Notch", "no/tch", "no tch"] {
@@ -559,7 +561,7 @@ mod tests {
                 "{name:?} is a path segment"
             );
         }
-        let _ = std::fs::remove_dir_all(&world);
+        let _ = horizon_fs::remove_dir_all(&world);
     }
 
     /// ServerPlayer.die zeroes the two timers (and only them) and sends the new zero.

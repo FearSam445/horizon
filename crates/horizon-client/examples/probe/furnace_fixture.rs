@@ -14,8 +14,9 @@ use horizon_client_render::{
     chunk::block_entity::{Furnace, FurnaceKind},
     providers::Providers,
 };
+use horizon_fs as fs;
 use horizon_world::loot::PackOverlay;
-use std::{collections::HashMap, fmt::Write as _, fs};
+use std::{collections::HashMap, fmt::Write as _};
 
 pub fn main() -> horizon_client::Result<()> {
     let args: Vec<String> = crate::args().collect();

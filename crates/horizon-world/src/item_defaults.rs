@@ -6,10 +6,11 @@
 //! come through [`read`], so a mod's change reaches each of them, and stacks
 //! are saved and sent against the changed defaults as against vanilla's.
 
+use horizon_fs as fs;
 use serde_json::{Map, Value};
 use std::{
     collections::BTreeMap,
-    fs, io,
+    io,
     path::{Path, PathBuf},
     sync::{Arc, Condvar, Mutex, OnceLock, Weak},
 };
@@ -186,12 +187,12 @@ pub fn read(root: &Path) -> io::Result<BTreeMap<String, Value>> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
+    use horizon_fs as fs;
 
     #[test]
     fn a_load_shares_one_snapshot_and_the_next_load_reads_changes() {
         let root =
-            std::env::temp_dir().join(format!("horizon-default-snapshot-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-default-snapshot-{}", std::process::id()));
         fs::create_dir_all(&root).unwrap();
         let write = |size| {
             fs::write(
@@ -229,7 +230,8 @@ mod tests {
     /// count the wire and the save carry).
     #[test]
     fn data_pack_sizes_stay_in_vanilla_range() {
-        let root = std::env::temp_dir().join(format!("horizon-stack-sizes-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-stack-sizes-{}", std::process::id()));
         fs::create_dir_all(&root).unwrap();
         let items = r#"{"a:none": {"minecraft:max_stack_size": 0},
             "a:less": {"minecraft:max_stack_size": -5},
@@ -278,7 +280,7 @@ mod tests {
             loot_function: |_, _, _, _| {},
             loot_condition: |_, _, _, _| {},
         });
-        let root = std::env::temp_dir().join(format!("horizon-mod-sizes-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-mod-sizes-{}", std::process::id()));
         fs::create_dir_all(&root).unwrap();
         let items = r#"{"a:raised": {"minecraft:max_stack_size": 64},
             "a:zero": {"minecraft:max_stack_size": 16},

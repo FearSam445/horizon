@@ -3,8 +3,11 @@
 //! The option screens live in `options_ui`.
 use crate::keybinds::KeyBinds;
 use crate::options_file::{OptionsFile, V};
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::packets::configuration::ClientInformation;
-use std::{fs, path::Path};
+use std::path::Path;
 
 pub use horizon_client_core::sound_source::SOUND_SOURCES;
 
@@ -974,7 +977,7 @@ mod tests {
     fn three_d_skin_layers_move_from_options_txt_to_the_extras_file() {
         // #8091 wrote the switch into options.txt; a player who had it on keeps
         // it, and the next options.txt is vanilla's again.
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-skin-layers-{}-{:?}",
             std::process::id(),
             std::thread::current().id()
@@ -996,7 +999,7 @@ mod tests {
         let _ = fs::remove_dir_all(&dir);
     }
     fn scratch(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!(
+        let dir = horizon_fs::temp_dir().join(format!(
             "horizon-{name}-{}-{:?}",
             std::process::id(),
             std::thread::current().id()
@@ -1026,7 +1029,7 @@ mod tests {
         let options = dir.join("options.txt");
         // Untouched: no extras file is made for it.
         Settings::default().save(&options);
-        assert!(!dir.join(crate::extras::FILE).exists());
+        assert!(!dir.join(crate::extras::FILE).fs_exists());
         assert_eq!(
             Settings::load(&options).keys.get("key.emote"),
             "key.keyboard.b"

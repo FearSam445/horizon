@@ -163,7 +163,7 @@ impl Game<'_> {
     /// elsewhere. API @API:server_files@.
     pub(super) fn native_server_dir(&self) -> Option<PathBuf> {
         self.options.dedicated.as_ref()?;
-        std::env::current_dir().ok()
+        horizon_fs::current_dir().ok()
     }
 
     /// The log file this run writes (`logs/latest.log` of the server's or the game's folder),

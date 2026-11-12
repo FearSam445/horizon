@@ -1,3 +1,4 @@
+use horizon_fs as fs;
 use horizon_world::{
     active_effects::{ActiveEffects, EffectHooks},
     java_hash_map::JavaKey,
@@ -6,7 +7,6 @@ use horizon_world::{
 use serde_json::Value;
 use std::{
     cmp::Ordering,
-    fs,
     io::{self, Write},
     path::Path,
 };

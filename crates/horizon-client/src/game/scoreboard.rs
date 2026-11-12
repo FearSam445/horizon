@@ -18,6 +18,8 @@ use horizon_client::{
     tab_list::TabPlayer,
     text::Text,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::nbt::Tag;
 use std::collections::{HashMap, HashSet};
 
@@ -161,7 +163,7 @@ impl Game<'_> {
         // The border is saved with its level (`save_level`).
         let path = self.scoreboard_path();
         let board = &self.score.board;
-        if board == &Scoreboard::default() && !path.exists() {
+        if board == &Scoreboard::default() && !path.fs_exists() {
             return;
         }
         if let Err(e) = save::write_dat(

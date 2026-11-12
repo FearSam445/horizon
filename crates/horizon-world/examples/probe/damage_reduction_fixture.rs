@@ -1,11 +1,11 @@
 use crate::support::common::f32_bits;
+use horizon_fs as fs;
 use horizon_world::{
     combat_rules::ArmorWorld,
     damage_reduction::{self, Bypass, DamageReductionWorld},
 };
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

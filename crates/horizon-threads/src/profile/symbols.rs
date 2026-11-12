@@ -1,8 +1,8 @@
 //! In-process symbolization: the running binary's own DWARF line tables (inlined frames included), then its symbol table.
 
+use horizon_fs::File;
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fs::File;
 
 use addr2line::gimli::{self, EndianSlice, RunTimeEndian};
 use object::{Object, ObjectSection, ObjectSymbol, SymbolKind};
@@ -47,7 +47,7 @@ pub enum SymbolQuality {
 
 /// How well [`symbolize`] can name the functions of the running executable.
 pub fn symbol_quality() -> SymbolQuality {
-    let opened = std::env::current_exe().and_then(File::open).ok();
+    let opened = horizon_fs::current_exe().and_then(File::open).ok();
     // SAFETY: the mapping is read-only and dropped before this returns; see `resolve_module`.
     let map = opened.and_then(|f| unsafe { memmap2::Mmap::map(&f) }.ok());
     let Some(object) = map.as_deref().and_then(|m| object::File::parse(m).ok()) else {

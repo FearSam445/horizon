@@ -1571,7 +1571,7 @@ mod tests {
         const CHILD: &str = "HORIZON_TEST_SPLIT_SETUP_LOCALE";
         if std::env::var_os(CHILD).is_none() {
             let module = module_path!().split_once("::").unwrap().1;
-            let output = std::process::Command::new(std::env::current_exe().unwrap())
+            let output = std::process::Command::new(horizon_fs::current_exe().unwrap())
                 .args([
                     "--exact",
                     &format!("{module}::locale_switch_and_pack_overrides_keep_the_same_draft"),

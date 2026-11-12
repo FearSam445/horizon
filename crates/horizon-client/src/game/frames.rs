@@ -22,7 +22,7 @@ pub(super) fn bake_frame(root: &std::path::Path, name: &str) -> FrameModel {
             continue;
         };
         let Ok(text) =
-            std::fs::read_to_string(root.join(format!("assets/{ns}/models/{path}.json")))
+            horizon_fs::read_to_string(root.join(format!("assets/{ns}/models/{path}.json")))
         else {
             continue;
         };

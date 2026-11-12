@@ -14,9 +14,9 @@ use crate::sound_events::{Sound, SoundRegistry};
 #[cfg(feature = "audio")]
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use horizon_core::random::{LegacyRandom, RandomSource};
+use horizon_fs as fs;
 use std::{
     collections::HashMap,
-    fs,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
@@ -554,7 +554,11 @@ fn decode(path: &Path) -> Option<(Vec<f32>, u32, u16)> {
         audio::SampleBuffer, codecs::DecoderOptions, formats::FormatOptions, io::MediaSourceStream,
         meta::MetadataOptions, probe::Hint,
     };
+    #[cfg(not(target_arch = "wasm32"))]
     let file = fs::File::open(path).ok()?;
+    // The browser build's files are in memory: symphonia reads them as bytes.
+    #[cfg(target_arch = "wasm32")]
+    let file = std::io::Cursor::new(fs::read(path).ok()?);
     let stream = MediaSourceStream::new(Box::new(file), Default::default());
     let mut hint = Hint::new();
     hint.with_extension("ogg");
@@ -1265,7 +1269,7 @@ fn default_output_name() -> Option<String> {
 fn card_fingerprint() -> Option<String> {
     #[cfg(target_os = "linux")]
     {
-        std::fs::read_to_string("/proc/asound/cards").ok()
+        horizon_fs::read_to_string("/proc/asound/cards").ok()
     }
     #[cfg(target_os = "macos")]
     {

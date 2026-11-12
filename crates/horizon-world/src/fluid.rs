@@ -197,7 +197,7 @@ pub fn set_mod_fluids(fluids: &[ModFluid]) -> io::Result<()> {
 /// Reads `root`'s [`MOD_FLUIDS_FILE`] into the fluid table; a root without
 /// one (no mod declares a fluid) leaves vanilla's alone.
 pub fn load_mod_fluids(root: &Path) -> io::Result<()> {
-    let fluids: Vec<ModFluid> = match std::fs::read(root.join(MOD_FLUIDS_FILE)) {
+    let fluids: Vec<ModFluid> = match horizon_fs::read(root.join(MOD_FLUIDS_FILE)) {
         Ok(bytes) => serde_json::from_slice(&bytes).map_err(|e| invalid(e.to_string()))?,
         Err(e) if e.kind() == io::ErrorKind::NotFound => Vec::new(),
         Err(e) => return Err(e),
@@ -790,15 +790,16 @@ mod tests {
             template: "minecraft:lava".into(),
             ..ModFluid::default()
         };
-        let root = std::env::temp_dir().join(format!("horizon-mod-fluids-{}", std::process::id()));
-        std::fs::create_dir_all(&root).unwrap();
-        std::fs::write(
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-mod-fluids-{}", std::process::id()));
+        horizon_fs::create_dir_all(&root).unwrap();
+        horizon_fs::write(
             root.join(MOD_FLUIDS_FILE),
             serde_json::to_vec(&[honey, tar]).unwrap(),
         )
         .unwrap();
         load_mod_fluids(&root).unwrap();
-        std::fs::remove_dir_all(&root).unwrap();
+        horizon_fs::remove_dir_all(&root).unwrap();
         let names: Vec<_> = FluidKind::all().map(|k| k.name()).collect();
         assert_eq!(
             names[5..],

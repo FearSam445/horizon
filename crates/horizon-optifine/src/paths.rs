@@ -2,8 +2,10 @@
 //! resource paths inside the overlay resource root (`assets/<namespace>/...`, `/`-separated),
 //! the tree `horizon_client::packs::resource_root` builds from the enabled packs.
 
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::collections::HashSet;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 /// The resource path a value of the properties file at `props` names:
@@ -142,7 +144,7 @@ fn walk(
         let rel = format!("{rel}/{name}");
         // `metadata` follows links: overlay folders are links into the packs and vanilla.
         match fs::metadata(e.path()) {
-            Ok(m) if m.is_dir() => walk(&e.path(), &rel, endings, depth + 1, seen, out),
+            Ok(m) if m.fs_is_dir() => walk(&e.path(), &rel, endings, depth + 1, seen, out),
             Ok(_) if endings.iter().any(|end| name.ends_with(end)) => out.push(rel),
             _ => {}
         }
@@ -198,7 +200,7 @@ mod tests {
 
     #[test]
     fn finds_both_folders_in_every_namespace() {
-        let root = std::env::temp_dir().join(format!("horizon-optifine-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-optifine-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         for f in [
             "assets/minecraft/optifine/ctm/glass/glass.properties",
@@ -226,7 +228,7 @@ mod tests {
     #[test]
     fn a_link_loop_is_read_once() {
         let root =
-            std::env::temp_dir().join(format!("horizon-optifine-loop-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-optifine-loop-{}", std::process::id()));
         let _ = fs::remove_dir_all(&root);
         let ctm = root.join("assets/minecraft/optifine/ctm");
         fs::create_dir_all(&ctm).unwrap();

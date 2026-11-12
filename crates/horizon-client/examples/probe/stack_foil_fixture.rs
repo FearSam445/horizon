@@ -3,9 +3,10 @@ use horizon_assets::item_model::{
     ClientItem, Context, DisplayContext, FoilType, ItemModels, LayerContent, NoEnv,
 };
 use horizon_client::{item_data::decode_components, item_render::stack_view, items::ItemStack};
+use horizon_fs as fs;
 use horizon_world::nbt::Tag;
 use serde_json::{Value, json};
-use std::{collections::BTreeMap, fs};
+use std::collections::BTreeMap;
 
 fn model_flags(input: &Value) -> horizon_client::Result<Value> {
     let text = input["nbt"].as_str().ok_or("missing NBT text")?;

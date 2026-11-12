@@ -12,6 +12,8 @@ use horizon_core::{
     position::BlockPos,
     random::RandomSource,
 };
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_world::level::flags as level_flags;
 
 #[derive(Clone, Debug)]
@@ -929,7 +931,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = horizon_client::assets::Assets::load(&root).unwrap();
@@ -984,7 +986,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = horizon_client::assets::Assets::load(&root).unwrap();
@@ -1055,7 +1057,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = horizon_client::assets::Assets::load(&root).unwrap();
@@ -1154,7 +1156,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = horizon_client::assets::Assets::load(&root).unwrap();
@@ -1243,7 +1245,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client")
             .join(horizon_core::VANILLA_VERSION);
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return;
         }
         let assets = horizon_client::assets::Assets::load(&root).unwrap();
@@ -1323,7 +1325,7 @@ mod tests {
                     .join("../../.local/horizon-client")
                     .join(horizon_core::VANILLA_VERSION)
             });
-        if !root.join("movement-properties.nbt").exists() {
+        if !root.join("movement-properties.nbt").fs_exists() {
             return None;
         }
         let settings = Settings::default();
@@ -1733,7 +1735,7 @@ mod tests {
 
     fn write_silence_output(name: &str, rows: &[String]) {
         if let Some(root) = std::env::var_os("HORIZON_SOURCE_SILENCE_OUTPUT") {
-            std::fs::write(
+            horizon_fs::write(
                 std::path::Path::new(&root).join(format!("{name}.txt")),
                 rows.join("\n") + "\n",
             )
@@ -2016,7 +2018,7 @@ mod entity_collision_tests {
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
         options.game_dir = Some(
-            std::env::temp_dir().join(format!("horizon-tnt-boat-unit-{}", std::process::id())),
+            horizon_fs::temp_dir().join(format!("horizon-tnt-boat-unit-{}", std::process::id())),
         );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(

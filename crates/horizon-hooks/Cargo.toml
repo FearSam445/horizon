@@ -6,5 +6,9 @@ license.workspace = true
 rust-version.workspace = true
 description = "The game's extension points for crates above the engine: hooks and the platform registries (docs/layers.md)"
 
+[dependencies]
+# std::fs, in memory in the browser build (web/).
+horizon-fs = { path = "../../web/fs" }
+
 [lints]
 workspace = true

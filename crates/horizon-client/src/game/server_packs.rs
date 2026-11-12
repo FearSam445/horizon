@@ -16,6 +16,8 @@ use horizon_client::{
     ui,
 };
 use horizon_core::jmath;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use horizon_protocol::{packets::configuration::ResourcePackPush, servers};
 use std::{
     path::PathBuf,
@@ -205,7 +207,7 @@ fn human_readable(bytes: u64) -> String {
 }
 
 pub(super) fn saves() -> PathBuf {
-    std::env::current_dir().unwrap_or_default().join("saves")
+    horizon_fs::current_dir().unwrap_or_default().join("saves")
 }
 
 /// `WorldOpenFlows.WORLD_PACK_ID`: the id of a world's own resource pack.
@@ -220,7 +222,7 @@ impl Game<'_> {
             .join(folder)
             .join("resourcepacks")
             .join("resources.zip");
-        if path.is_file() {
+        if path.fs_is_file() {
             self.server_packs.packs.local_world();
             self.server_packs.packs.push_local(WORLD_PACK_ID, path);
         }
@@ -428,7 +430,7 @@ impl Game<'_> {
     fn start_pack_downloads(&mut self, requests: Vec<horizon_client::server_packs::Request>) {
         let state = &mut self.server_packs;
         if state.queue.is_none() {
-            let dir = std::env::current_dir()
+            let dir = horizon_fs::current_dir()
                 .unwrap_or_default()
                 .join("downloads");
             match download::Queue::open(dir) {

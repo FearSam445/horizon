@@ -11,7 +11,7 @@ fn fixtures() -> PathBuf {
 }
 
 fn sample() -> Index {
-    Index::parse(&std::fs::read_to_string(fixtures().join("index-v1.json")).unwrap()).unwrap()
+    Index::parse(&horizon_fs::read_to_string(fixtures().join("index-v1.json")).unwrap()).unwrap()
 }
 
 fn hud_entry() -> String {
@@ -108,10 +108,10 @@ struct Scratch(PathBuf);
 impl Scratch {
     fn new(name: &str) -> Scratch {
         let dir =
-            std::env::temp_dir().join(format!("horizon-registry-{name}-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
+            horizon_fs::temp_dir().join(format!("horizon-registry-{name}-{}", std::process::id()));
+        let _ = horizon_fs::remove_dir_all(&dir);
         for sub in ["repo/mods", "repo/icons", "files"] {
-            std::fs::create_dir_all(dir.join(sub)).unwrap();
+            horizon_fs::create_dir_all(dir.join(sub)).unwrap();
         }
         let s = Scratch(dir);
         s.write("mods/coords_hud.toml", &hud_entry());
@@ -126,19 +126,19 @@ impl Scratch {
             ("cozy-1.0.0.hpack", HPACK),
             ("glow-1.0.0.hshader", HSHADER),
         ] {
-            std::fs::copy(fixtures().join(name), s.0.join("files").join(hash)).unwrap();
+            horizon_fs::copy(fixtures().join(name), s.0.join("files").join(hash)).unwrap();
         }
         s
     }
 
     fn write(&self, path: &str, text: &str) {
-        std::fs::write(self.0.join("repo").join(path), text).unwrap();
+        horizon_fs::write(self.0.join("repo").join(path), text).unwrap();
     }
 
     fn write_bytes(&self, path: &str, bytes: &[u8]) {
         let path = self.0.join("repo").join(path);
-        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-        std::fs::write(path, bytes).unwrap();
+        horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();
+        horizon_fs::write(path, bytes).unwrap();
     }
 
     fn build(&self) -> Result<Index, Vec<String>> {
@@ -155,7 +155,7 @@ impl Scratch {
 
 impl Drop for Scratch {
     fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
+        let _ = horizon_fs::remove_dir_all(&self.0);
     }
 }
 
@@ -176,7 +176,7 @@ fn lists_every_problem_of_a_registry() {
     let s = Scratch::new("bad");
     // A file that isn't the one its hash names, an unsigned version of a
     // signed project, a shader pack, and a mod whose file is another mod.
-    std::fs::write(s.0.join("files").join(HPACK), b"other bytes").unwrap();
+    horizon_fs::write(s.0.join("files").join(HPACK), b"other bytes").unwrap();
     s.write(
         "mods/coords_hud.toml",
         &hud_entry().replace("signature = \"\"\"", "changelog = \"\"\""),
@@ -421,8 +421,8 @@ fn a_mod_may_turn_native_once() {
         file_kind(&native, &native.versions[0], none),
         Kind::NativeMod
     );
-    let unified = std::env::temp_dir().join(format!("unified-{}.hmod", std::process::id()));
-    let mut zip = zip::ZipWriter::new(std::fs::File::create(&unified).unwrap());
+    let unified = horizon_fs::temp_dir().join(format!("unified-{}.hmod", std::process::id()));
+    let mut zip = zip::ZipWriter::new(horizon_fs::File::create(&unified).unwrap());
     zip.start_file(
         super::super::native::MANIFEST,
         zip::write::SimpleFileOptions::default(),
@@ -433,7 +433,7 @@ fn a_mod_may_turn_native_once() {
         file_kind(&native, &native.versions[1], &unified),
         Kind::NativeMod
     );
-    std::fs::remove_file(unified).unwrap();
+    horizon_fs::remove_file(unified).unwrap();
     // And never back.
     let r = review(&[native], &[base], "ludovic111");
     assert!(
@@ -516,7 +516,7 @@ fn only_open_kinds_are_taken() {
     assert!(open(&Kind::Other("world".into())).is_err());
     let mut submit: Entry = toml::from_str(COZY).unwrap();
     submit.id = "submit".into();
-    let dir = std::env::temp_dir();
+    let dir = horizon_fs::temp_dir();
     let src = Sources {
         registry: &dir,
         files: &dir,
@@ -595,7 +595,7 @@ fn a_project_listed_by_its_repository_takes_its_versions_from_releases() {
         page,
         versions: vec![v.clone()],
     };
-    std::fs::create_dir_all(s.0.join("repo").join(CACHE)).unwrap();
+    horizon_fs::create_dir_all(s.0.join("repo").join(CACHE)).unwrap();
     s.write(
         "versions/cozy.json",
         &serde_json::to_string(&cache).unwrap(),

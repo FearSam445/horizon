@@ -144,9 +144,10 @@ fn the_validation_error_still_fails_the_load_first() {
     let expected = serde_json::from_slice::<Value>(facts)
         .unwrap_err()
         .to_string();
-    let root = std::env::temp_dir().join(format!("horizon-facts-validate-{}", std::process::id()));
-    std::fs::create_dir_all(&root).unwrap();
-    std::fs::write(root.join("gameplay-facts.json"), facts).unwrap();
+    let root =
+        horizon_fs::temp_dir().join(format!("horizon-facts-validate-{}", std::process::id()));
+    horizon_fs::create_dir_all(&root).unwrap();
+    horizon_fs::write(root.join("gameplay-facts.json"), facts).unwrap();
     let registry = horizon_world::registry::BlockRegistry::from_facts_json(
         &br#"{"states":[["minecraft:air",true,false,"","minecraft:air"]],"defaults":{"minecraft:air":0}}"#[..],
     )
@@ -163,7 +164,7 @@ fn the_validation_error_still_fails_the_load_first() {
         .unwrap();
         assert_eq!(error.to_string(), expected, "parallel: {parallel}");
     }
-    std::fs::remove_dir_all(&root).unwrap();
+    horizon_fs::remove_dir_all(&root).unwrap();
 }
 
 #[test]
@@ -172,9 +173,9 @@ fn a_state_past_the_registry_has_airs_facts() {
         &br#"{"states":[["minecraft:air",true,false,"","minecraft:air"],["minecraft:stone",true,false,"","minecraft:stone"]],"defaults":{"minecraft:air":0,"minecraft:stone":1}}"#[..],
     )
     .unwrap();
-    let root = std::env::temp_dir().join(format!("horizon-facts-unknown-{}", std::process::id()));
-    std::fs::create_dir_all(&root).unwrap();
-    std::fs::write(
+    let root = horizon_fs::temp_dir().join(format!("horizon-facts-unknown-{}", std::process::id()));
+    horizon_fs::create_dir_all(&root).unwrap();
+    horizon_fs::write(
         root.join("gameplay-facts.json"),
         br#"{"states":[{"id":0},{"id":1}]}"#,
     )
@@ -188,7 +189,7 @@ fn a_state_past_the_registry_has_airs_facts() {
     });
     let facts =
         super::super::BlockFacts::load_with_behaviour_json(&root, &registry, &behaviours).unwrap();
-    std::fs::remove_dir_all(&root).unwrap();
+    horizon_fs::remove_dir_all(&root).unwrap();
 
     let id = horizon_world::registry::BlockStateId;
     assert_eq!(&*facts.get(id(1)).name, "minecraft:stone");

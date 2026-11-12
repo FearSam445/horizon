@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::hint::black_box;
 use std::sync::mpsc;
 use std::thread;
-use std::time::SystemTime;
 use web_time::Duration;
 
 use horizon_perf_format::v1::{
@@ -515,10 +514,10 @@ fn a_converted_profile_written_to_a_file_reads_back_through_the_queries() {
         t: 10.0,
         ..Default::default()
     }));
-    let dir = std::env::temp_dir().join(format!("horizon-render-perf-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = horizon_fs::temp_dir().join(format!("horizon-render-perf-{}", std::process::id()));
+    horizon_fs::create_dir_all(&dir).unwrap();
     let file = dir.join("real.hzperf");
-    let mut writer = CaptureWriter::new(std::fs::File::create(&file).unwrap()).unwrap();
+    let mut writer = CaptureWriter::new(horizon_fs::File::create(&file).unwrap()).unwrap();
     for field in fields {
         writer.write(field).unwrap();
     }
@@ -546,7 +545,7 @@ fn a_converted_profile_written_to_a_file_reads_back_through_the_queries() {
         })
         .collect();
     assert_eq!(values, [(Some("t:worker".to_owned()), 30.0)]);
-    std::fs::remove_dir_all(&dir).unwrap();
+    horizon_fs::remove_dir_all(&dir).unwrap();
 }
 
 #[test]

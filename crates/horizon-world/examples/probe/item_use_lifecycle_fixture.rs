@@ -4,9 +4,9 @@ use horizon_world::{
     item_use_lifecycle::{self, UseLifecycleWorld, UseState},
 };
 type Stack = StackRef<usize, u8, i32>;
+use horizon_fs as fs;
 use serde_json::Value;
 use std::{
-    fs,
     io::{self, Write},
     path::Path,
 };

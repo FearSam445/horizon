@@ -4,9 +4,11 @@ use horizon_assets::{
     model::CuboidModel,
     resolve::{AssetReader, ModelLibrary},
 };
+use horizon_fs as fs;
+#[allow(unused_imports)]
+use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 use std::{
     collections::BTreeMap,
-    fs,
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -63,8 +65,8 @@ impl ParsedModels {
                     // The entry's own type saves a stat per file; a link
                     // (content roots link into the base) is followed.
                     let is_dir = match e.file_type() {
-                        Ok(t) if !t.is_symlink() => t.is_dir(),
-                        _ => path.is_dir(),
+                        Ok(t) if !t.fs_is_symlink() => t.fs_is_dir(),
+                        _ => path.fs_is_dir(),
                     };
                     if is_dir {
                         stack.push(path);
@@ -180,7 +182,7 @@ mod tests {
     #[test]
     fn shared_views_preserve_resolution_errors_builtins_and_reload() -> Result<()> {
         let fixture = Fixture(
-            std::env::temp_dir().join(format!("horizon-shared-models-{}", std::process::id())),
+            horizon_fs::temp_dir().join(format!("horizon-shared-models-{}", std::process::id())),
         );
         fixture.write("horizon:parent", r##"{"textures":{"side":"#all","all":"block/stone"},"elements":[{"from":[0,0,0],"to":[16,8,16],"faces":{"up":{"texture":"#side"}}}]}"##);
         fixture.write("horizon:nested/child", r#"{"parent":"horizon:parent","textures":{"all":"block/glass"},"display":{"gui":{"rotation":[30,45,0]}}}"#);
@@ -276,7 +278,8 @@ mod tests {
     /// file outside the content root.
     #[test]
     fn root_assets_stay_inside_the_content_root() {
-        let root = std::env::temp_dir().join(format!("horizon-root-assets-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-root-assets-{}", std::process::id()));
         let inside = root.join("content");
         fs::create_dir_all(inside.join("assets/m/models")).unwrap();
         fs::write(inside.join("assets/m/models/a.mtl"), "newmtl a").unwrap();
