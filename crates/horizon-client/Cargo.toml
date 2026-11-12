@@ -82,11 +82,7 @@ zip = { version = "9.1.3", default-features = false, features = ["deflate"] }
 gilrs = { version = "0.11", optional = true }
 # The DualSense's rumble, adaptive triggers and lights over HID (gilrs only reads it).
 horizon-dualsense = { path = "../horizon-dualsense", optional = true }
-# HTTPS to the Minecraft services (online-mode session join).
-ureq = { version = "2", default-features = false, features = ["tls"] }
 unicode-bidi = "0.3.18"
-# `LevelStorageAccess.estimateDiskSpace`: usable disk space, without unsafe code on Windows.
-fs4 = { version = "1.1.0", default-features = false, features = ["sync"] }
 
 [target.'cfg(unix)'.dependencies]
 # The server thread's CPU time per tick (`HORIZON_SPIKES`, spans.rs).
@@ -113,6 +109,16 @@ objc2-foundation = { version = "0.3", default-features = false, features = ["std
 # OpenGL (WGL on Windows, EGL on Linux), the last fallback, for GPUs with no Vulkan or
 # DirectX 12 driver (`graphicsApi`, graphics.rs).
 wgpu = { version = "30.0.1", default-features = false, features = ["gles"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# `LevelStorageAccess.estimateDiskSpace`: usable disk space, without unsafe code on Windows.
+fs4 = { version = "1.1.0", default-features = false, features = ["sync"] }
+# HTTPS to the Minecraft services (online-mode session join).
+ureq = { version = "2", default-features = false, features = ["tls"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+horizon-web-fs4 = { path = "../../web/shims/fs4" }
+horizon-web-ureq = { path = "../../web/shims/ureq" }
 
 [features]
 default = ["audio", "controllers", "horizon-extras"]

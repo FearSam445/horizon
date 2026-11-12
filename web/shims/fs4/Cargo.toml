@@ -1,0 +1,7 @@
+[package]
+name = "horizon-web-fs4"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Stands in for fs4 in the browser build: disk space can't be asked"
+publish = false

@@ -9,6 +9,10 @@
 //! style is a small mark and a line colour, with no model. This crate
 //! reads and checks items and poses them; the game draws them.
 
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_ureq as ureq;
+
 pub mod account;
 mod emote;
 mod feed;

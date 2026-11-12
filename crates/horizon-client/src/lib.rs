@@ -1,4 +1,12 @@
 //! Gameplay and startup, above the reusable client library.
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_fs4 as fs4;
+
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_ureq as ureq;
+
 // No `#![recursion_limit]` or other inner attribute horizon-mixins doesn't know here: the
 // launcher's horizon-mixins then rejects every native mod targeting this crate (#8169).
 #![forbid(unsafe_code)]

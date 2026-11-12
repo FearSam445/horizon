@@ -1,6 +1,10 @@
 //! The client's world data, rendering and screens: chunks, meshing, light, streaming, the renderer,
 //! the HUD, menus and settings. Gameplay (horizon-client) builds on it; nothing here reaches gameplay.
 #![forbid(unsafe_code)]
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_ureq as ureq;
+
 pub mod android_gamepad;
 pub mod android_runtime;
 pub mod assets;

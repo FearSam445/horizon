@@ -3,6 +3,10 @@
 //! options. horizon-client re-exports each module under its old path
 //! (`horizon_client::keybinds`, ...).
 #![forbid(unsafe_code)]
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_arboard as arboard;
+
 pub mod actions;
 pub mod clipboard;
 pub mod gamepad;

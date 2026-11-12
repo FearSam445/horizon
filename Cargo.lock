@@ -1542,6 +1542,8 @@ dependencies = [
  "horizon-telemetry",
  "horizon-theme",
  "horizon-threads",
+ "horizon-web-fs4",
+ "horizon-web-ureq",
  "horizon-world",
  "log",
  "miniz_oxide 0.8.9",
@@ -1581,6 +1583,7 @@ dependencies = [
  "arboard",
  "horizon-client-core",
  "horizon-theme",
+ "horizon-web-arboard",
  "png",
  "winit",
 ]
@@ -1624,6 +1627,9 @@ dependencies = [
  "horizon-telemetry",
  "horizon-theme",
  "horizon-threads",
+ "horizon-web-fs4",
+ "horizon-web-mio",
+ "horizon-web-ureq",
  "horizon-world",
  "log",
  "miniz_oxide 0.8.9",
@@ -1680,6 +1686,7 @@ dependencies = [
  "horizon-system",
  "horizon-theme",
  "horizon-threads",
+ "horizon-web-ureq",
  "horizon-world",
  "image-webp",
  "log",
@@ -1727,6 +1734,7 @@ dependencies = [
  "base64 0.22.1",
  "glam",
  "horizon-addresses",
+ "horizon-web-ureq",
  "png",
  "serde",
  "serde_json",
@@ -2075,6 +2083,7 @@ dependencies = [
  "getrandom 0.3.4",
  "horizon-core",
  "horizon-protocol",
+ "horizon-web-ureq",
  "horizon-world",
  "log",
  "ureq",
@@ -2144,11 +2153,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "horizon-web-arboard"
+version = "0.1.0"
+
+[[package]]
+name = "horizon-web-fs4"
+version = "0.1.0"
+
+[[package]]
 name = "horizon-web-libmimalloc-sys"
 version = "0.1.0"
 
 [[package]]
 name = "horizon-web-mimalloc"
+version = "0.1.0"
+
+[[package]]
+name = "horizon-web-mio"
+version = "0.1.0"
+
+[[package]]
+name = "horizon-web-ureq"
 version = "0.1.0"
 
 [[package]]

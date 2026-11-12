@@ -1,6 +1,18 @@
 //! Horizon native client: resources, world streaming, rendering and the
 //! bindings between the validated simulation pieces and the game loop.
 #![forbid(unsafe_code)]
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_mio as mio;
+
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_fs4 as fs4;
+
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_ureq as ureq;
+
 extern crate self as horizon_client;
 pub mod advancements;
 pub mod ambience;

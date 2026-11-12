@@ -1,0 +1,7 @@
+[package]
+name = "horizon-web-mio"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Stands in for mio in the browser build: a page can't poll sockets, so a poll can't be made"
+publish = false

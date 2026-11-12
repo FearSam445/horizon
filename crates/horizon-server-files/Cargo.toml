@@ -15,7 +15,12 @@ getrandom = "0.3"
 # Online mode: finding accounts by name (the services' profiles endpoint).
 # Secure chat: the services' public keys arrive base64-encoded.
 base64 = "0.22"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 ureq = { version = "2", default-features = false, features = ["tls"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+horizon-web-ureq = { path = "../../web/shims/ureq" }
 
 [lints]
 workspace = true

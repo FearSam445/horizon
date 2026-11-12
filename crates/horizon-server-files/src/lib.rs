@@ -4,6 +4,10 @@
 //! looking players up by name. The game's dedicated server
 //! (`horizon-client --dedicated`) reads them, and `horizon-server` manages
 //! them; this crate needs neither a window nor the game.
+// The browser build's stand-in (web/shims).
+#[cfg(target_arch = "wasm32")]
+extern crate horizon_web_ureq as ureq;
+
 pub mod chat_guard;
 pub mod duration;
 pub mod eula;

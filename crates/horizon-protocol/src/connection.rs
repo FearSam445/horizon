@@ -272,6 +272,14 @@ pub struct Connection {
 }
 fn configure_stream(stream: &TcpStream) -> Result<()> {
     stream.set_nodelay(true)?;
+    // The browser build has no sockets to tune (web/).
+    #[cfg(not(target_arch = "wasm32"))]
+    keepalive(stream);
+    Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn keepalive(stream: &TcpStream) {
     let sock = socket2::SockRef::from(stream);
     let keepalive = socket2::TcpKeepalive::new()
         .with_time(Duration::from_secs(10))
@@ -283,7 +291,6 @@ fn configure_stream(stream: &TcpStream) -> Result<()> {
     {
         let _ = sock.set_quickack(true);
     }
-    Ok(())
 }
 
 impl Connection {
