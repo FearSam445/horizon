@@ -3,6 +3,8 @@
 [alias]
 xtask = "run --package xtask --"
 
-# The browser build (web/): getrandom reads the browser's crypto.getRandomValues.
+# The browser build (web/): getrandom reads the browser's crypto.getRandomValues, and the
+# stack is 8 MiB, as a desktop thread's, instead of wasm's 1 MiB: the renderer's and the
+# game's large structs overflowed it (the page crashed with SEGV_ACCERR).
 [target.wasm32-unknown-unknown]
-rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"', '-C', 'link-arg=-zstack-size=8388608']

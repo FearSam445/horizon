@@ -1,4 +1,5 @@
-//! `std::thread` for one thread: spawning runs the closure at once.
+//! `std::thread` for one thread: `spawn` and scoped threads run the closure at
+//! once; `Builder::spawn` fails as std's does here.
 
 use std::io;
 use std::marker::PhantomData;
@@ -123,12 +124,19 @@ impl Builder {
     pub fn no_hooks(self) -> Builder {
         self
     }
-    pub fn spawn<F, T>(self, f: F) -> io::Result<JoinHandle<T>>
+    /// Fails, as std's does on wasm32: a named thread is most often a worker that
+    /// loops until it is told to stop, which would hold the page's only thread.
+    /// Callers fall back to doing the work themselves; one that can't uses
+    /// [`spawn`], which runs the closure at once.
+    pub fn spawn<F, T>(self, _f: F) -> io::Result<JoinHandle<T>>
     where
         F: FnOnce() -> T + Send + 'static,
         T: Send + 'static,
     {
-        Ok(spawn(f))
+        Err(io::Error::new(
+            io::ErrorKind::Unsupported,
+            "no threads in the browser build",
+        ))
     }
     pub fn spawn_scoped<'scope, 'env, F, T>(
         self,

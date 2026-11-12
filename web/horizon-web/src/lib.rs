@@ -5,9 +5,11 @@
 //! The page hands over the player's prepared game files (a zip of the `26.3`
 //! folder the launcher or `horizon-prepare` makes) in pieces with
 //! [`game_files_begin`] and [`game_files_chunk`], then calls [`boot`].
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 // Only the page runs it: on the desktop the crate is empty.
 #![cfg(target_arch = "wasm32")]
+
+mod big_allocations;
 
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;

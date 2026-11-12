@@ -452,6 +452,14 @@ impl ApplicationHandler for App {
                 }
             }
         };
+        // A page has nowhere to exit to: the browser build stays, saying why it stopped.
+        #[cfg(target_arch = "wasm32")]
+        if let Step::Failed(e) = &step {
+            log::error!("Horizon: {e}");
+            horizon_client::logging::show_on_page(&e.to_string());
+            event_loop.set_control_flow(ControlFlow::Wait);
+            return;
+        }
         match step {
             Step::Waiting => {}
             Step::Ready(game) => *self = App::Ready(game),

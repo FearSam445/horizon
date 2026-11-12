@@ -388,30 +388,36 @@ pub(super) fn spawn_loader(
     let dev_mods = options.dev_mods.clone();
     let world = launch_world(options).map(str::to_owned);
     let progress = progress.clone();
+    let load = move || {
+        let (root, pack_error) = startup_resource_root(&vanilla_root, &settings, &dev_mods);
+        let result = load_resources(
+            root,
+            world.as_deref(),
+            &vanilla_root,
+            &settings,
+            started,
+            true,
+            false,
+            &progress,
+            &mut |gui, root| {
+                let _ = sender.send(LoaderMsg::Ui(gui, root.to_path_buf()));
+            },
+        )
+        .map(|mut loaded| {
+            loaded.pack_error = loaded.pack_error.or(pack_error);
+            loaded
+        })
+        .map_err(|error| error.to_string());
+        let _ = sender.send(LoaderMsg::Done(result));
+    };
+    // The browser build has one thread: the load runs here, and the loading
+    // screen finds its result waiting.
+    #[cfg(target_arch = "wasm32")]
+    let handle = horizon_thread::spawn(load);
+    #[cfg(not(target_arch = "wasm32"))]
     let handle = horizon_thread::Builder::new()
         .name("resource-loader".into())
-        .spawn(move || {
-            let (root, pack_error) = startup_resource_root(&vanilla_root, &settings, &dev_mods);
-            let result = load_resources(
-                root,
-                world.as_deref(),
-                &vanilla_root,
-                &settings,
-                started,
-                true,
-                false,
-                &progress,
-                &mut |gui, root| {
-                    let _ = sender.send(LoaderMsg::Ui(gui, root.to_path_buf()));
-                },
-            )
-            .map(|mut loaded| {
-                loaded.pack_error = loaded.pack_error.or(pack_error);
-                loaded
-            })
-            .map_err(|error| error.to_string());
-            let _ = sender.send(LoaderMsg::Done(result));
-        })?;
+        .spawn(load)?;
     Ok((receiver, handle))
 }
 

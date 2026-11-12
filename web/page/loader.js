@@ -11,6 +11,12 @@
     text.nodeValue = message;
     if (progress != null) bar.style.width = Math.round(progress * 100) + '%';
   }
+  // The game calls this when it stops (logging::show_on_page): the page stays.
+  window.horizonFailed = function (message) {
+    status.style.display = '';
+    bar.parentNode.style.display = 'none';
+    say('Horizon stopped:\n' + message);
+  };
   function fail(error) {
     console.error(error);
     status.style.display = '';

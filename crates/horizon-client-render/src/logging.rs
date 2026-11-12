@@ -270,6 +270,8 @@ pub fn open_latest(dir: &Path) -> io::Result<Option<Latest>> {
 }
 
 /// What the writer thread is told.
+// The browser build has no writer thread (its lines go to the console).
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 enum Out {
     /// Lines for the file, dated, and the message for stderr (Horizon's own).
     Write {
@@ -287,6 +289,8 @@ enum Out {
 /// format and a channel send, never a write that can wait (a full stderr pipe, a slow disk):
 /// written on the game thread, a line could hold the tick for milliseconds while the CPU sat
 /// idle.
+// The browser build has no writer thread (its lines go to the console).
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 struct Writer {
     file: Option<Latest>,
     dir: PathBuf,
@@ -295,6 +299,7 @@ struct Writer {
 }
 
 impl Writer {
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn run(mut self, out: mpsc::Receiver<Out>) {
         let stderr = io::stderr();
         let mut hook_alive = true;
@@ -425,7 +430,9 @@ fn ours(target: &str) -> bool {
 
 impl log::Log for Logger {
     fn enabled(&self, meta: &log::Metadata) -> bool {
+        // Debug and trace lines only from the game and the renderer: naga's would bury them.
         meta.level() <= log::Level::Info
+            || (meta.level() <= LEVEL && !meta.target().starts_with("naga"))
     }
 
     fn log(&self, record: &log::Record) {
@@ -545,6 +552,38 @@ impl Logger {
     }
 }
 
+/// The most detailed messages logged: Info, or in a browser build made with
+/// `HORIZON_WEB_LOG=debug` (or `trace`) those too, the renderer's included.
+const LEVEL: log::Level = match option_env!("HORIZON_WEB_LOG") {
+    Some(level) if cfg!(target_arch = "wasm32") && level.eq_ignore_ascii_case("trace") => {
+        log::Level::Trace
+    }
+    Some(level) if cfg!(target_arch = "wasm32") && level.eq_ignore_ascii_case("debug") => {
+        log::Level::Debug
+    }
+    _ => log::Level::Info,
+};
+
+/// Shows `message` on the page, over the game, in the browser build: a page has
+/// nowhere to exit to, so a failure that would end the program says so there.
+/// Does nothing on the desktop.
+pub fn show_on_page(message: &str) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        use wasm_bindgen::{JsCast, JsValue};
+        let Some(window) = web_sys::window() else {
+            return;
+        };
+        if let Ok(say) = js_sys::Reflect::get(&window, &JsValue::from_str("horizonFailed"))
+            && let Some(say) = say.dyn_ref::<js_sys::Function>()
+        {
+            let _ = say.call1(&JsValue::NULL, &JsValue::from_str(message));
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    let _ = message;
+}
+
 /// The `latest.log` this run writes, once `init` opened it.
 static LATEST_PATH: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
@@ -586,6 +625,11 @@ pub fn init(home: &Path, main_thread: &'static str) {
             dir,
             date: Local::now().date_naive(),
         };
+        // The browser build writes no file: its lines go to the page's console as they
+        // are logged (`send`), and the writer, a loop, would hold its only thread.
+        #[cfg(target_arch = "wasm32")]
+        drop((writer, receive));
+        #[cfg(not(target_arch = "wasm32"))]
         if let Err(e) = horizon_thread::Builder::new()
             .name("Log writer".into())
             .spawn(move || writer.run(receive))
@@ -600,7 +644,7 @@ pub fn init(home: &Path, main_thread: &'static str) {
         }
     });
     if log::set_logger(logger).is_ok() {
-        log::set_max_level(log::LevelFilter::Info);
+        log::set_max_level(LEVEL.to_level_filter());
     }
 }
 
