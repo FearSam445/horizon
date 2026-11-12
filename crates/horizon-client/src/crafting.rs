@@ -2097,8 +2097,10 @@ mod tests {
     /// used to drop the file whole.
     #[test]
     fn a_neoforge_ingredient_recipe_loads() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-neo-ingredient-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-neo-ingredient-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::create_dir_all(root.join("data/mymod/recipe")).unwrap();
@@ -2300,8 +2302,10 @@ mod tests {
     /// `minecraft` type the game doesn't know is dropped.
     #[test]
     fn custom_recipes_load_by_type_with_pack_override() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-custom-recipes-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-custom-recipes-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::create_dir_all(root.join("data/mymod/recipe")).unwrap();
@@ -2392,8 +2396,8 @@ mod tests {
     }
     #[test]
     fn a_shapeless_recipe_makes_the_item_its_bare_result_names() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-bare-result-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-bare-result-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(
@@ -2414,8 +2418,8 @@ mod tests {
     /// for the crafting grid and the furnaces alike.
     #[test]
     fn recipe_selection_follows_resource_file_order() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-recipe-order-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-recipe-order-{}", horizon_fs::process_id()));
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         let items = Items::for_tests(HashMap::new());
         let crafting = |item: &str| {
@@ -2485,7 +2489,7 @@ mod tests {
     #[test]
     fn load_conditions_gate_recipes() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-conditions-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-conditions-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(
@@ -2544,7 +2548,8 @@ mod tests {
     /// in the loaded tables, after the packs are merged.
     #[test]
     fn recipe_filters_remove_and_swap() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-filters-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-filters-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         let crusher = |input: &str| {

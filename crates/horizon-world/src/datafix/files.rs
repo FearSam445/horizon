@@ -1146,7 +1146,8 @@ mod upgrade_tests {
     /// file fixing does not open the screen.
     #[test]
     fn upgrade_reports_one_operation_per_file() {
-        let base = horizon_fs::temp_dir().join(format!("horizon-progress-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-progress-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let level = Tag::compound([("Data", Tag::compound([("DataVersion", Tag::Int(4899))]))]);
         write_dat(&base.join("level.dat"), &level).unwrap();
@@ -1168,7 +1169,8 @@ mod upgrade_tests {
     /// next file, and the DataVersion stays old so the next open retries.
     #[test]
     fn cancel_stops_the_data_upgrade_and_keeps_the_version() {
-        let base = horizon_fs::temp_dir().join(format!("horizon-cancel-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-cancel-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let level = Tag::compound([("Data", Tag::compound([("DataVersion", Tag::Int(4899))]))]);
         write_dat(&base.join("level.dat"), &level).unwrap();
@@ -1191,7 +1193,8 @@ mod upgrade_tests {
     /// retries, and a later successful run stamps the current one.
     #[test]
     fn failed_upgrade_keeps_old_data_version() {
-        let base = horizon_fs::temp_dir().join(format!("horizon-upgrade-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-upgrade-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let old = 4899;
         let level = Tag::compound([("Data", Tag::compound([("DataVersion", Tag::Int(old))]))]);
@@ -1264,8 +1267,8 @@ mod upgrade_tests {
     /// every chunk at the current version.
     #[test]
     fn parallel_region_upgrade_matches_one_thread() {
-        let base =
-            horizon_fs::temp_dir().join(format!("horizon-par-regions-{}", std::process::id()));
+        let base = horizon_fs::temp_dir()
+            .join(format!("horizon-par-regions-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let mut outputs = Vec::new();
         for threads in [1, 4] {
@@ -1302,7 +1305,8 @@ mod upgrade_tests {
     /// hand: at most one file each is converted, the rest stay old.
     #[test]
     fn cancel_stops_every_region_worker_after_its_file() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-par-cancel-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-par-cancel-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&dir);
         old_region_folder(&dir, 9, 20);
         let progress = UpgradeProgress::new();

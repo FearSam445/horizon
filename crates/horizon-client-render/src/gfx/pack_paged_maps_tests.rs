@@ -22,7 +22,8 @@ fn a_pack_reads_paged_maps_at_the_colours_coordinates() {
         ..Default::default()
     }))
     .unwrap();
-    let root = horizon_fs::temp_dir().join(format!("horizon-paged-pack-{}", std::process::id()));
+    let root =
+        horizon_fs::temp_dir().join(format!("horizon-paged-pack-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(root.join("shaders")).unwrap();
     horizon_fs::write(
         root.join("shaders/gbuffers_terrain.vsh"),

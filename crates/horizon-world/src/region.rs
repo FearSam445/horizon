@@ -466,7 +466,7 @@ impl RegionWriter {
         let (temporary, file) = loop {
             let path = parent.join(format!(
                 ".horizon-{}-{}.tmp",
-                std::process::id(),
+                horizon_fs::process_id(),
                 NEXT_TEMP.fetch_add(1, Ordering::Relaxed)
             ));
             match OpenOptions::new()
@@ -603,8 +603,10 @@ mod tests {
 
     #[test]
     fn allocation_matches_first_fit_from_zero() {
-        let dir = horizon_fs::temp_dir()
-            .join(format!("horizon-region-first-free-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-region-first-free-{}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("r.0.0.mca");
         let mut region = RegionFile::open_writable(&path, true).unwrap();

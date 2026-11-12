@@ -66,7 +66,7 @@ fn files_pass_against_their_entries() {
 #[test]
 fn a_changed_file_key_or_manifest_is_refused() {
     let index = sample();
-    let dir = horizon_fs::temp_dir().join(format!("horizon-index-{}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!("horizon-index-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&dir).unwrap();
     let hmod = fixtures().join("coords_hud-0.1.0.hmod");
     let mut bytes = horizon_fs::read(&hmod).unwrap();
@@ -165,7 +165,7 @@ fn refuses_broken_indexes() {
 #[test]
 fn resource_packs_need_a_pack_mcmeta() {
     use std::io::Write;
-    let dir = horizon_fs::temp_dir().join(format!("horizon-index-rp-{}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!("horizon-index-rp-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&dir).unwrap();
     let pack = |files: &[(&str, &str)]| {
         let path = dir.join("look.zip");
@@ -195,7 +195,7 @@ fn resource_packs_need_a_pack_mcmeta() {
 #[test]
 fn data_packs_and_shader_folder_packs_are_read_by_their_content() {
     use std::io::Write;
-    let dir = horizon_fs::temp_dir().join(format!("horizon-index-dp-{}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!("horizon-index-dp-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&dir).unwrap();
     let mut n = 0;
     let mut pack = |files: &[&str]| {
@@ -288,7 +288,8 @@ fn shader_packs_pass_the_game_s_own_check() {
             .package()
             .unwrap()
     };
-    let dir = horizon_fs::temp_dir().join(format!("horizon-mods-shader-{}", std::process::id()));
+    let dir =
+        horizon_fs::temp_dir().join(format!("horizon-mods-shader-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&dir).unwrap();
     let good = dir.join("glow-1.0.0.hshader");
     horizon_fs::write(

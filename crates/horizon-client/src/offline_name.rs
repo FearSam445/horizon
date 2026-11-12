@@ -53,7 +53,7 @@ fn seed() -> u64 {
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_nanos() as u64);
     // Two players starting the game in the same millisecond still differ.
-    let mut x = nanos ^ u64::from(std::process::id()).rotate_left(32);
+    let mut x = nanos ^ u64::from(horizon_fs::process_id()).rotate_left(32);
     x ^= x >> 33;
     x = x.wrapping_mul(0xff51_afd7_ed55_8ccd);
     x ^ (x >> 33)
@@ -66,7 +66,7 @@ mod tests {
     fn dir(name: &str) -> std::path::PathBuf {
         let d = horizon_fs::temp_dir().join(format!(
             "horizon-offline-name-{name}-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = fs::remove_dir_all(&d);
         fs::create_dir_all(&d).unwrap();

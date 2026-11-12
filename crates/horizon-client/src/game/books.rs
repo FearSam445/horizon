@@ -1790,8 +1790,10 @@ mod lectern_books_tag_tests {
     #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
     fn a_packs_lectern_books_entry_goes_onto_the_lectern() {
         let mut game = server_game();
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-lectern-books-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-lectern-books-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         let tags = dir.join("datapacks/books/data/minecraft/tags/item");
         horizon_fs::create_dir_all(&tags).unwrap();

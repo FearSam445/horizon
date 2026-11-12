@@ -1957,8 +1957,10 @@ mod tests {
     }
 
     fn scratch(name: &str, json: &str) -> PathBuf {
-        let root = horizon_fs::temp_dir()
-            .join(format!("horizon-post-chain-{}-{name}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-post-chain-{}-{name}",
+            horizon_fs::process_id()
+        ));
         let dir = root.join("assets/minecraft/post_effect");
         horizon_fs::create_dir_all(&dir).unwrap();
         horizon_fs::write(dir.join(format!("{name}.json")), json).unwrap();

@@ -2204,7 +2204,7 @@ mod namespace_tests {
     #[test]
     fn loot_tables_are_shared_per_root_and_packs() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-loot-share-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-loot-share-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/loot_table/chests")).unwrap();
         fs::write(
@@ -2246,7 +2246,8 @@ mod namespace_tests {
     /// the load.
     #[test]
     fn loot_tables_read_back_as_loaded() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-loot-text-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-text-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let dir = root.join("data/minecraft/loot_table/blocks");
         fs::create_dir_all(&dir).unwrap();
@@ -2271,7 +2272,8 @@ mod namespace_tests {
     /// vanilla's, under their own namespaces.
     #[test]
     fn loads_every_namespace() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-loot-ns-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-ns-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let files = [
             ("items.json", r#"{"minecraft:bread": {}}"#),
@@ -2320,7 +2322,8 @@ mod namespace_tests {
     /// them.
     #[test]
     fn set_custom_model_data_applies_each_list_operation() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-loot-cmd-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-cmd-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let table = r#"{"pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "minecraft:stick",
             "modifier": [
@@ -2384,7 +2387,8 @@ mod namespace_tests {
     /// for the tooltip.
     #[test]
     fn set_lore_appends_and_replaces_the_lore_lines() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-loot-lore-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-lore-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let table = r#"{"pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "minecraft:stick",
             "modifier": [
@@ -2436,8 +2440,8 @@ mod namespace_tests {
     /// function appends, and alone when it does not.
     #[test]
     fn set_banner_pattern_writes_the_layers() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-loot-banner-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-loot-banner-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let table = r#"{"pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "minecraft:white_banner",
             "modifier": [
@@ -2497,7 +2501,8 @@ mod namespace_tests {
     /// already there, keeping its pages.
     #[test]
     fn set_book_cover_titles_the_written_book() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-loot-book-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-book-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let table = r#"{"pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "minecraft:written_book",
             "modifier": [
@@ -2538,7 +2543,7 @@ mod namespace_tests {
     #[test]
     fn set_written_book_pages_applies_the_page_operation() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-loot-pages-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-loot-pages-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let table = r#"{"pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "minecraft:written_book",
             "modifier": [
@@ -2599,7 +2604,8 @@ mod namespace_tests {
     /// `SetInstrumentFunction`: a goat horn from a loot table gets one of the options as its instrument.
     #[test]
     fn set_instrument_picks_one_of_its_options() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-loot-horn-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-horn-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let table = r##"{"pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "minecraft:goat_horn",
             "modifier": [{"type": "minecraft:set_instrument", "options": ["minecraft:ponder_goat_horn", "minecraft:sing_goat_horn"]}]}]}]}"##;
@@ -2660,7 +2666,8 @@ mod namespace_tests {
     /// `replace` drops what the lower sources put in.
     #[test]
     fn pack_tags_join_and_replace_the_game_own() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-loot-tag-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-tag-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/tags/item")).unwrap();
         fs::write(root.join("items.json"), "{}").unwrap();
@@ -2689,8 +2696,8 @@ mod namespace_tests {
     /// `minecraft:tooltip_display` component back for its tooltip.
     #[test]
     fn toggle_tooltips_rewrites_the_hidden_components() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-loot-tooltip-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-loot-tooltip-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let table = r#"{"pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "minecraft:stick",
             "modifier": [
@@ -2728,7 +2735,8 @@ mod namespace_tests {
     /// object or as SNBT text; the item layer reads the component from `other`.
     #[test]
     fn set_custom_data_merges_into_the_component() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-loot-data-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-loot-data-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let table = r#"{"pools": [{"rolls": 1, "entries": [{"type": "minecraft:item", "name": "minecraft:stick",
             "modifier": [
@@ -2767,7 +2775,7 @@ mod native_kinds_tests {
     use super::*;
 
     fn table(name: &str, json: &str) -> LootData {
-        let root = horizon_fs::temp_dir().join(format!("loot-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("loot-{name}-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("data/minecraft/loot_table");
         horizon_fs::create_dir_all(&dir).unwrap();
@@ -2965,7 +2973,7 @@ mod location_check_biome_tests {
     /// jungle biome tag of the game's own and `packs` over it.
     fn table(name: &str, biomes: &str, packs: &[(String, Vec<Vec<u8>>)]) -> LootData {
         let root =
-            horizon_fs::temp_dir().join(format!("loot-biomes-{name}-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("loot-biomes-{name}-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let dir = root.join("data/minecraft/loot_table");
         fs::create_dir_all(&dir).unwrap();
@@ -3202,7 +3210,7 @@ mod custom_data_predicate_tests {
             .collect();
         let root = horizon_fs::temp_dir().join(format!(
             "loot-custom-data-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             data.map_or(0, str::len)
         ));
         let _ = horizon_fs::remove_dir_all(&root);

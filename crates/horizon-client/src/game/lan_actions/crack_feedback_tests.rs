@@ -86,8 +86,10 @@ fn crack_packets_follow_start_clock_and_strict_observer_radius() {
         None,
     )
     .unwrap();
-    let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-crack-feedback-{}", std::process::id()));
+    let scratch = horizon_fs::temp_dir().join(format!(
+        "horizon-crack-feedback-{}",
+        horizon_fs::process_id()
+    ));
     horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.world

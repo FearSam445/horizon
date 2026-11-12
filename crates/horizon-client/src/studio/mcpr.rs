@@ -128,7 +128,7 @@ fn sibling(dest: &Path, suffix: &str) -> PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_nanos());
     let mut name = dest.file_name().unwrap_or_default().to_os_string();
-    name.push(format!(".{}-{nanos}.{suffix}", std::process::id()));
+    name.push(format!(".{}-{nanos}.{suffix}", horizon_fs::process_id()));
     dest.with_file_name(name)
 }
 
@@ -648,7 +648,7 @@ impl TemporaryStream {
                 .map_or(0, |duration| duration.as_nanos());
             let path = horizon_fs::temp_dir().join(format!(
                 "horizon-mcpr-{}-{nanos}-{attempt}.tmcpr",
-                std::process::id()
+                horizon_fs::process_id()
             ));
             match create_private_file(&path) {
                 Ok(file) => {
@@ -1012,7 +1012,7 @@ pub fn recover_crashed_recordings(dir: &Path) -> io::Result<RecoveryReport> {
 /// Err on the side of yes: packaging a live recording would take the stream from
 /// under its writer.
 fn writer_may_be_alive(stream: &Path, pid: u32) -> bool {
-    if pid == std::process::id() {
+    if pid == horizon_fs::process_id() {
         return true;
     }
     #[cfg(target_os = "linux")]
@@ -1140,7 +1140,8 @@ mod tests {
 
     #[test]
     fn mcpr_roundtrip_metadata_and_packets() {
-        let temp_dir = horizon_fs::temp_dir().join(format!("mcpr_test_{}", std::process::id()));
+        let temp_dir =
+            horizon_fs::temp_dir().join(format!("mcpr_test_{}", horizon_fs::process_id()));
         let _ = fs::create_dir_all(&temp_dir);
         let mcpr_path = temp_dir.join("test_recording.mcpr");
 
@@ -1200,7 +1201,8 @@ mod tests {
     struct Scratch(PathBuf);
     impl Scratch {
         fn new(name: &str) -> Self {
-            let dir = horizon_fs::temp_dir().join(format!("mcpr_{name}_{}", std::process::id()));
+            let dir =
+                horizon_fs::temp_dir().join(format!("mcpr_{name}_{}", horizon_fs::process_id()));
             let _ = fs::remove_dir_all(&dir);
             fs::create_dir_all(&dir).unwrap();
             Self(dir)

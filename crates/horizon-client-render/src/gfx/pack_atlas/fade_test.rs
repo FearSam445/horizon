@@ -46,7 +46,7 @@ fn terrain_fade_reaches_pack_pixels_through_real_instances() {
     atlas.separate_ao = true;
     queue.submit([encoder.finish()]);
     let folder = ProbePack(
-        horizon_fs::temp_dir().join(format!("horizon-terrain-fade-{}", std::process::id())),
+        horizon_fs::temp_dir().join(format!("horizon-terrain-fade-{}", horizon_fs::process_id())),
     );
     horizon_fs::create_dir_all(folder.0.join("shaders")).unwrap();
     // The initializer, varying and integer output are independent probe code. The program reads
@@ -215,7 +215,7 @@ fn terrain_tier_reaches_pack_pixels() {
     let atlas = PackAtlas::new(&device, &mut encoder, &[array], 1, 1, 2).unwrap();
     queue.submit([encoder.finish()]);
     let folder = ProbePack(
-        horizon_fs::temp_dir().join(format!("horizon-terrain-tier-{}", std::process::id())),
+        horizon_fs::temp_dir().join(format!("horizon-terrain-tier-{}", horizon_fs::process_id())),
     );
     horizon_fs::create_dir_all(folder.0.join("shaders")).unwrap();
     horizon_fs::write(

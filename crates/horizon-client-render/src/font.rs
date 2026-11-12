@@ -1433,8 +1433,8 @@ mod tests {
 
     /// A resource root with these font definitions and files.
     fn root(name: &str, files: &[(&str, &[u8])]) -> PathBuf {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-font-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-font-{name}-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         for (path, bytes) in files {
             let path = root.join(path);

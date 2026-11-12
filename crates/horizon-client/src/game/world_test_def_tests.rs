@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 /// A world folder with one data pack holding `h275:broken`.
 fn world_with_pack(tag: &str) -> std::path::PathBuf {
-    let world = horizon_fs::temp_dir().join(format!("h275-{tag}-{}", std::process::id()));
+    let world = horizon_fs::temp_dir().join(format!("h275-{tag}-{}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&world);
     let pack = world.join("datapacks/fixture");
     let tests = pack.join("data/h275/test_instance");
@@ -122,7 +122,7 @@ fn a_test_instance_from_an_enabled_world_pack_is_found_and_runs() {
 
 /// A world folder with one pack holding these `test_instance` files.
 fn world_with(tag: &str, files: &[(&str, &str)]) -> std::path::PathBuf {
-    let world = horizon_fs::temp_dir().join(format!("h275-{tag}-{}", std::process::id()));
+    let world = horizon_fs::temp_dir().join(format!("h275-{tag}-{}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&world);
     let pack = world.join("datapacks/fixture");
     horizon_fs::create_dir_all(&pack).unwrap();

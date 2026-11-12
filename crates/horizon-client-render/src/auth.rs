@@ -734,7 +734,8 @@ mod tests {
 
     #[test]
     fn session_files_are_read_once_and_must_be_private() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-auth-test-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-auth-test-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let text = r#"{"name":"Notch","uuid":"069a79f4-44e9-4726-a5be-fca90e38aaf5","access_token":"mock-token","user_type":"msa"}"#;
         let path = write(&dir, text, 0o600);

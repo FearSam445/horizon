@@ -2259,6 +2259,8 @@ version = "0.1.0"
 dependencies = [
  "horizon-client",
  "horizon-fs",
+ "horizon-thread",
+ "horizon-threads",
  "log",
  "wasm-bindgen",
  "web-sys",

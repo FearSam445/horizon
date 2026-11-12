@@ -440,8 +440,10 @@ mod tests {
 
     #[test]
     fn the_file_keeps_a_profile_or_the_statuses() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-debug-profile-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-debug-profile-{}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(&dir).unwrap();
         let mut e = DebugEntries::load(&dir);
         assert!(e.is_using_profile(Profile::Default));

@@ -967,8 +967,10 @@ mod tests {
     }
     #[test]
     fn companion_grid_and_static_map_follow_colour_frame_selection() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-companion-grid-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-companion-grid-{}",
+            horizon_fs::process_id()
+        ));
         fs::create_dir_all(&root).unwrap();
         let write = |name: &str, width, height, pixels: &[u8]| {
             let mut encoder =
@@ -1028,8 +1030,8 @@ mod tests {
     }
     #[test]
     fn files_outside_textures_load_by_path() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-sprite-file-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-sprite-file-{}", horizon_fs::process_id()));
         let tile = "assets/minecraft/optifine/ctm/glass/0.png";
         fs::create_dir_all(root.join(tile).parent().unwrap()).unwrap();
         let mut encoder = png::Encoder::new(File::create(root.join(tile)).unwrap(), 16, 16);
@@ -1056,8 +1058,8 @@ mod tests {
     }
     #[test]
     fn tile_sheets_cut_into_a_layer_per_tile() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-sprite-tiles-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-sprite-tiles-{}", horizon_fs::process_id()));
         let file = root.join("assets/minecraft/textures/block/sheet.png");
         fs::create_dir_all(file.parent().unwrap()).unwrap();
         // 3 columns of 2 x 2 tiles over 4 rows of pixels: the pixel at (x, y) has red x, green
@@ -1126,7 +1128,7 @@ mod tests {
     #[test]
     fn custom_item_texture_ids_load_with_their_animation() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-sprite-cit-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-sprite-cit-{}", horizon_fs::process_id()));
         let file = root.join("assets/minecraft/optifine/cit/a.png");
         fs::create_dir_all(file.parent().unwrap()).unwrap();
         let mut encoder = png::Encoder::new(File::create(&file).unwrap(), 16, 48);
@@ -1150,8 +1152,10 @@ mod tests {
     }
     #[test]
     fn custom_item_textures_skip_the_disk_cache() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-sprite-cit-disk-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-sprite-cit-disk-{}",
+            horizon_fs::process_id()
+        ));
         // A realistic root: the cache's fingerprint walks the `textures` trees.
         let vanilla = root.join("assets/minecraft/textures/item/stick.png");
         let file = root.join("assets/minecraft/optifine/cit/a.png");
@@ -1184,8 +1188,10 @@ mod tests {
     }
     #[test]
     fn custom_item_textures_mip_as_items() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-sprite-cit-mip-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-sprite-cit-mip-{}",
+            horizon_fs::process_id()
+        ));
         let write = |rel: &str| {
             let path = root.join(rel);
             fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -1219,8 +1225,10 @@ mod tests {
     }
     #[test]
     fn prefetched_textures_take_the_layers_inserting_alone_gives() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-sprite-prefetch-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-sprite-prefetch-{}",
+            horizon_fs::process_id()
+        ));
         let png = |path: &str, side: u32, seed: u8| {
             let file = root.join(path);
             fs::create_dir_all(file.parent().unwrap()).unwrap();
@@ -1292,8 +1300,8 @@ mod tests {
     }
     #[test]
     fn identical_still_textures_share_a_layer() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-sprite-share-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-sprite-share-{}", horizon_fs::process_id()));
         let directory = root.join("assets/a/textures/block");
         fs::create_dir_all(&directory).unwrap();
         let write = |name: &str, red: u8| {
@@ -1335,8 +1343,8 @@ mod tests {
         // A resource pack's transparent placeholders: a model's layer and a tile another
         // connected-texture rule chains onto (`matchTiles=./19.png`) have the same pixels. The
         // rule finds its faces by layer, so the one it names can't share the others'.
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-sprite-apart-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-sprite-apart-{}", horizon_fs::process_id()));
         let directory = root.join("assets/a/textures/block");
         fs::create_dir_all(&directory).unwrap();
         let write = |name: &str| {
@@ -1443,7 +1451,7 @@ mod tests {
     fn native_32_pixel_animation_frames_keep_every_texel() {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-sprite-detail-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()

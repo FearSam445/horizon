@@ -1556,7 +1556,7 @@ fn create_temporary_world(world: &CreatedWorld) -> std::result::Result<PathBuf, 
     static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     let dir = horizon_fs::temp_dir().join(format!(
         "horizon-realms-world-upload-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         NEXT.fetch_add(1, Ordering::Relaxed)
     ));
     let _ = horizon_fs::remove_dir_all(&dir);

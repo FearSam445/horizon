@@ -807,7 +807,7 @@ fn write_snapshot(
     let path = dir.join(file_name);
     let tmp = dir.join(format!(
         "{file_name}.tmp-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         NEXT_TEMP.fetch_add(1, Ordering::Relaxed)
     ));
     let result = (|| {
@@ -933,7 +933,7 @@ mod tests {
         }
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-behaviour-cache-test-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed),
         ));
         fs::create_dir_all(dir.join("data/minecraft/tags/fluid")).unwrap();
@@ -1091,7 +1091,7 @@ mod tests {
         }
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-registry-cache-test-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed),
         ));
         fs::create_dir_all(&dir).unwrap();

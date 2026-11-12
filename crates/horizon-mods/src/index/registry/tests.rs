@@ -107,8 +107,10 @@ struct Scratch(PathBuf);
 
 impl Scratch {
     fn new(name: &str) -> Scratch {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-registry-{name}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-registry-{name}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         for sub in ["repo/mods", "repo/icons", "files"] {
             horizon_fs::create_dir_all(dir.join(sub)).unwrap();
@@ -421,7 +423,7 @@ fn a_mod_may_turn_native_once() {
         file_kind(&native, &native.versions[0], none),
         Kind::NativeMod
     );
-    let unified = horizon_fs::temp_dir().join(format!("unified-{}.hmod", std::process::id()));
+    let unified = horizon_fs::temp_dir().join(format!("unified-{}.hmod", horizon_fs::process_id()));
     let mut zip = zip::ZipWriter::new(horizon_fs::File::create(&unified).unwrap());
     zip.start_file(
         super::super::native::MANIFEST,

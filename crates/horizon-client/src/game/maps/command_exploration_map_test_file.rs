@@ -23,7 +23,7 @@ mod command_exploration_map_tests {
         // A world of its own under the temporary folder, removed at the end.
         game.world_root = horizon_fs::temp_dir().join(format!(
             "horizon-command-exploration-map-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = horizon_fs::remove_dir_all(&game.world_root);
         let root = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());

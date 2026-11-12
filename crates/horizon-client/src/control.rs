@@ -474,8 +474,8 @@ mod tests {
     #[test]
     fn the_fallback_socket_folder_must_be_private() {
         use std::os::unix::fs::PermissionsExt;
-        let base =
-            horizon_fs::temp_dir().join(format!("horizon-control-dir-{}", std::process::id()));
+        let base = horizon_fs::temp_dir()
+            .join(format!("horizon-control-dir-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&base);
         horizon_fs::create_dir_all(&base).unwrap();
         // Made 0700 when missing, and then fine to reach.
@@ -508,7 +508,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn check_path_says_what_bind_does() {
-        let dir = horizon_fs::temp_dir().join(format!("hz-sock-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("hz-sock-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let (mut fits, mut too_long) = (false, false);
         for len in 1..=150 {
@@ -526,7 +526,7 @@ mod tests {
     /// A `.json` endpoint is a file and TCP: the socket limit is not its limit.
     #[test]
     fn long_tcp_endpoint_opens() {
-        let dir = horizon_fs::temp_dir().join(format!("hz-long-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("hz-long-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join(format!("{}.json", "x".repeat(150)));
         let server = Server::start(&path);
@@ -537,8 +537,10 @@ mod tests {
 
     #[test]
     fn tcp_endpoint_round_trip() {
-        let path =
-            horizon_fs::temp_dir().join(format!("horizon-ctl-test-{}.json", std::process::id()));
+        let path = horizon_fs::temp_dir().join(format!(
+            "horizon-ctl-test-{}.json",
+            horizon_fs::process_id()
+        ));
         let server = Server::start(&path).unwrap();
         let text = horizon_fs::read_to_string(&path).unwrap();
         assert!(text.contains("\"tcp\""));
@@ -562,8 +564,10 @@ mod tests {
     /// A request past the limit is answered with an error and never reaches the game.
     #[test]
     fn a_request_longer_than_the_limit_is_refused() {
-        let path =
-            horizon_fs::temp_dir().join(format!("horizon-ctl-long-{}.json", std::process::id()));
+        let path = horizon_fs::temp_dir().join(format!(
+            "horizon-ctl-long-{}.json",
+            horizon_fs::process_id()
+        ));
         let server = Server::start(&path).unwrap();
         let client = connect(&path).unwrap();
         let mut writing = client.try_clone().unwrap();
@@ -590,8 +594,8 @@ mod tests {
 
     #[test]
     fn tcp_refuses_a_wrong_token() {
-        let path =
-            horizon_fs::temp_dir().join(format!("horizon-ctl-bad-{}.json", std::process::id()));
+        let path = horizon_fs::temp_dir()
+            .join(format!("horizon-ctl-bad-{}.json", horizon_fs::process_id()));
         let _server = Server::start(&path).unwrap();
         let (port, _) = read_endpoint(&path).unwrap();
         let mut stream = TcpStream::connect((Ipv4Addr::LOCALHOST, port)).unwrap();

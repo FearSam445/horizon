@@ -14,7 +14,10 @@ fn terrain_material_samplers_preserve_surface_and_encoded_bytes() {
         ..Default::default()
     }))
     .unwrap();
-    let root = horizon_fs::temp_dir().join(format!("horizon-material-pack-{}", std::process::id()));
+    let root = horizon_fs::temp_dir().join(format!(
+        "horizon-material-pack-{}",
+        horizon_fs::process_id()
+    ));
     horizon_fs::create_dir_all(root.join("shaders")).unwrap();
     horizon_fs::write(
         root.join("shaders/gbuffers_terrain.vsh"),

@@ -477,7 +477,7 @@ mod tests {
     fn test_studio_recorder_lifecycle() {
         let temp_dir = horizon_fs::temp_dir().join(format!(
             "studio_rec_{}_{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()

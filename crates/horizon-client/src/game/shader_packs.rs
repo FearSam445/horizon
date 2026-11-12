@@ -1088,8 +1088,8 @@ mod native_pack_tests {
             dev: false,
             native: Some(NativePage::default()),
         });
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-frame-policy-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-frame-policy-{}", horizon_fs::process_id()));
         let path = root.join("native-frame_owner");
         horizon_fs::create_dir_all(&path).unwrap();
         horizon_fs::write(path.join(horizon_shader_api::MANIFEST),
@@ -1144,7 +1144,7 @@ mod native_pack_tests {
     #[test]
     fn shaders_packs_and_packs_with_a_shadow_pass_draw_flat() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-flat-packs-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-flat-packs-{}", horizon_fs::process_id()));
         // A folder without a manifest is a `shaders/` pack; with one, a pack of Horizon's own.
         let pack = |name: &str, manifest: Option<&str>| {
             let dir = root.join(name);
@@ -1181,8 +1181,10 @@ mod native_pack_tests {
         assert_eq!(active_pack(owned, &mods), owned);
         mods.disabled.insert("horizon_better_visuals".into());
         assert_eq!(active_pack(owned, &mods), "");
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-bundled-shader-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-bundled-shader-{}",
+            horizon_fs::process_id()
+        ));
         let pack = root.join(owned);
         horizon_fs::create_dir_all(&pack).unwrap();
         horizon_fs::write(pack.join(horizon_shader_api::MANIFEST),

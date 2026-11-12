@@ -1105,7 +1105,8 @@ mod tests {
         use horizon_fs as fs;
         use std::sync::Arc;
 
-        let root = horizon_fs::temp_dir().join(format!("horizon-baby-flag-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-baby-flag-{}", horizon_fs::process_id()));
         fs::create_dir_all(&root).unwrap();
         fs::write(
             root.join("entity-types.json"),
@@ -1161,8 +1162,10 @@ mod tests {
         use std::{collections::HashMap, sync::Arc};
 
         // Original minimal resources keep this regression runnable without vanilla data.
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-bat-animation-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-bat-animation-{}",
+            horizon_fs::process_id()
+        ));
         fs::create_dir(&root).unwrap();
         fs::write(root.join("entity-types.json"), r#"{"minecraft:bat": {}}"#).unwrap();
         fs::write(
@@ -1515,7 +1518,7 @@ mod tests {
         use std::sync::Arc;
 
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-boost-sync-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-boost-sync-{}", horizon_fs::process_id()));
         fs::create_dir_all(&root).unwrap();
         fs::write(
             root.join("entity-types.json"),

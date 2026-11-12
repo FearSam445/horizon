@@ -979,7 +979,7 @@ mod tests {
         // it, and the next options.txt is vanilla's again.
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-skin-layers-{}-{:?}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_thread::current().id()
         ));
         fs::create_dir_all(&dir).unwrap();
@@ -1001,7 +1001,7 @@ mod tests {
     fn scratch(name: &str) -> std::path::PathBuf {
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-{name}-{}-{:?}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_thread::current().id()
         ));
         let _ = fs::remove_dir_all(&dir);

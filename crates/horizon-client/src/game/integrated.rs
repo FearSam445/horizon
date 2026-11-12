@@ -1623,7 +1623,7 @@ mod tests {
         let mut game = super::super::native_machines::tests::server_game();
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-integrated-crash-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()

@@ -197,7 +197,8 @@ fn offline_keeps_the_last_answers_and_backs_off() {
 
 #[test]
 fn item_files_are_kept_on_disk() {
-    let dir = horizon_fs::temp_dir().join(format!("horizon-cosmetics-{}", std::process::id()));
+    let dir =
+        horizon_fs::temp_dir().join(format!("horizon-cosmetics-{}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&dir);
     let (fake, mut c, _) = setup(Some(dir.clone()));
     let _ = c.frame().worn(5);
@@ -271,7 +272,10 @@ fn the_thread_answers_a_frame() {
 
 #[test]
 fn a_new_game_shows_the_last_outfits_while_the_service_is_down() {
-    let dir = horizon_fs::temp_dir().join(format!("horizon-cosmetics-worn-{}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!(
+        "horizon-cosmetics-worn-{}",
+        horizon_fs::process_id()
+    ));
     let _ = horizon_fs::remove_dir_all(&dir);
     let (fake, mut c, _) = setup(Some(dir.clone()));
     let _ = c.frame().worn(5);

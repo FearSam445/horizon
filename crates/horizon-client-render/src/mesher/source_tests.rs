@@ -15,7 +15,7 @@ impl Drop for Scratch {
 fn fixture() -> (Scratch, Assets, RenderAssets, MeshTables, Biomes) {
     let path = horizon_fs::temp_dir().join(format!(
         "terrain-source-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()

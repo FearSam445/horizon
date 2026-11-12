@@ -53,7 +53,7 @@ fn snbt(text: &str) -> Tag {
 }
 /// Whether saving the storage now writes a file (it is dirty).
 fn writes(game: &mut Game<'_>, name: &str) -> bool {
-    let dir = horizon_fs::temp_dir().join(format!("h246-{}-{name}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!("h246-{}-{name}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&dir);
     game.score.storage.save(&dir);
     let wrote = dir.join("data").fs_exists();
@@ -113,7 +113,7 @@ fn saved(
     game: &mut Game<'_>,
     name: &str,
 ) -> Option<horizon_client::command_storage::CommandStorage> {
-    let dir = horizon_fs::temp_dir().join(format!("h246-{}-{name}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!("h246-{}-{name}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&dir);
     game.score.storage.save(&dir);
     let back = dir

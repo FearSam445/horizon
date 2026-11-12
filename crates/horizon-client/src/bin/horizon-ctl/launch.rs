@@ -277,7 +277,8 @@ mod tests {
     }
 
     fn temp(name: &str) -> PathBuf {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-ctl-{name}-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-ctl-{name}-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         dir

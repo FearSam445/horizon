@@ -144,8 +144,10 @@ fn the_validation_error_still_fails_the_load_first() {
     let expected = serde_json::from_slice::<Value>(facts)
         .unwrap_err()
         .to_string();
-    let root =
-        horizon_fs::temp_dir().join(format!("horizon-facts-validate-{}", std::process::id()));
+    let root = horizon_fs::temp_dir().join(format!(
+        "horizon-facts-validate-{}",
+        horizon_fs::process_id()
+    ));
     horizon_fs::create_dir_all(&root).unwrap();
     horizon_fs::write(root.join("gameplay-facts.json"), facts).unwrap();
     let registry = horizon_world::registry::BlockRegistry::from_facts_json(
@@ -173,7 +175,10 @@ fn a_state_past_the_registry_has_airs_facts() {
         &br#"{"states":[["minecraft:air",true,false,"","minecraft:air"],["minecraft:stone",true,false,"","minecraft:stone"]],"defaults":{"minecraft:air":0,"minecraft:stone":1}}"#[..],
     )
     .unwrap();
-    let root = horizon_fs::temp_dir().join(format!("horizon-facts-unknown-{}", std::process::id()));
+    let root = horizon_fs::temp_dir().join(format!(
+        "horizon-facts-unknown-{}",
+        horizon_fs::process_id()
+    ));
     horizon_fs::create_dir_all(&root).unwrap();
     horizon_fs::write(
         root.join("gameplay-facts.json"),

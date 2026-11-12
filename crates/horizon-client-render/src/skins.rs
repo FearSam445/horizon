@@ -1485,8 +1485,8 @@ mod tests {
                 .unwrap();
             (out, rgba)
         };
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-offline-skin-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-offline-skin-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let file = dir.join("steve.png");
         for (h, model, slim) in [(64, "slim", true), (32, "classic", false), (64, "", false)] {
@@ -1947,8 +1947,10 @@ mod tests {
     /// cached file is fetched again and replaced. A failed fetch writes nothing.
     #[test]
     fn the_texture_cache_holds_only_what_decodes() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-test-skin-cache-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-test-skin-cache-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         let body = png([7, 8, 9, 255]);
         let file = root.join("ab").join("abcdef");
@@ -2027,8 +2029,10 @@ mod tests {
                 }
             }
         });
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-test-skin-retry-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-test-skin-retry-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         let mut d = super::Downloader::new(root);
         let url = format!("{base}/texture/retry.png");
@@ -2057,8 +2061,10 @@ mod download_bound_tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     fn downloader(name: &str, bounds: Bounds, fetch: fn(&str) -> Option<Vec<u8>>) -> Downloader {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-test-skin-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-test-skin-{name}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         let mut d = Downloader::new(root);
         d.fetch = fetch;

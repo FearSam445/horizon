@@ -452,7 +452,7 @@ mod tests {
     fn a_world_open_reuses_loot_data_of_the_same_packs() {
         use horizon_world::loot::PackOverlay;
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-loot-reuse-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-loot-reuse-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
         horizon_fs::write(root.join("items.json"), "{}").unwrap();
         let mut slot = None;

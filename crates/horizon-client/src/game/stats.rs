@@ -527,7 +527,7 @@ mod tests {
     fn an_old_stats_file_named_after_the_player_moves_to_its_uuid() {
         let world = horizon_fs::temp_dir().join(format!(
             "horizon-stats-file-{}-{:?}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_thread::current().id()
         ));
         let stats = world.join("players").join("stats");

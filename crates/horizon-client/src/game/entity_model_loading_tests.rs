@@ -66,7 +66,7 @@ impl FixtureRoot {
         let next = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-entity-models-{}-{next}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         fs::create_dir(&root).unwrap();
         Self(root)

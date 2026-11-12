@@ -52,7 +52,7 @@ mod tests {
     #[test]
     fn a_pack_recolours_only_what_it_names() {
         // Dyes no other test draws: the table is process-wide.
-        let dir = horizon_fs::temp_dir().join(format!("pack-dyes-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("pack-dyes-{}", horizon_fs::process_id()));
         let polytone = dir.join("assets/obs/polytone");
         horizon_fs::create_dir_all(&polytone).unwrap();
         horizon_fs::write(

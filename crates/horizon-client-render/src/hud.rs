@@ -3398,8 +3398,10 @@ mod tests {
     fn animated_root() -> PathBuf {
         static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
         let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-anim-{}-{n}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-atlas-anim-{}-{n}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         let block = root.join("assets/minecraft/textures/block");
         fs::create_dir_all(&block).unwrap();
@@ -3420,8 +3422,8 @@ mod tests {
     }
     #[test]
     fn content_mod_entity_textures_pack_under_their_namespace() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-equip-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-atlas-equip-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let equipment = root.join("assets/gems/textures/entity/equipment/humanoid");
         fs::create_dir_all(&equipment).unwrap();
@@ -3458,8 +3460,10 @@ mod tests {
     /// it (a light shaft drawn from a 1024-wide texture); the cap on GUI textures stays.
     #[test]
     fn large_particle_sprites_pack_and_large_gui_textures_dont() {
-        let root = horizon_fs::temp_dir()
-            .join(format!("horizon-atlas-big-particle-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-atlas-big-particle-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         let rays = root.join("assets/mypack/textures/particle/light_rays");
         fs::create_dir_all(&rays).unwrap();
@@ -3484,8 +3488,8 @@ mod tests {
     /// `RandomTextures` gives them; one beside its texture packs once, under its own.
     #[test]
     fn random_entity_variants_pack_under_their_scan_names() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-random-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-atlas-random-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let random = root.join("assets/minecraft/optifine/random/entity/pig");
         fs::create_dir_all(&random).unwrap();
@@ -3506,8 +3510,10 @@ mod tests {
     /// A random variant's emissive overlay packs beside the variant, under its name.
     #[test]
     fn variant_overlays_pack_under_their_names() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-overlay-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-atlas-overlay-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         let random = root.join("assets/minecraft/optifine/random/entity/zombie");
         fs::create_dir_all(&random).unwrap();
@@ -3556,8 +3562,8 @@ mod tests {
     /// Variants past the budget, in name order, stay out of the atlas.
     #[test]
     fn random_variants_stop_at_their_budget() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-budget-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-atlas-budget-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         let files: Vec<PathBuf> = ["a2.png", "a3.png", "a4.png"]
@@ -3583,8 +3589,8 @@ mod tests {
     }
     #[test]
     fn content_mod_effect_icons_pack_under_their_namespace() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-effect-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-atlas-effect-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let icons = root.join("assets/gems/textures/mob_effect");
         fs::create_dir_all(&icons).unwrap();
@@ -3679,8 +3685,8 @@ mod tests {
     }
     #[test]
     fn a_pack_directory_outside_the_walked_folders_still_packs() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-custom-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-atlas-custom-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let atlases = root.join("assets/minecraft/atlases");
         let custom = root.join("assets/minecraft/textures/custom");
@@ -3706,8 +3712,10 @@ mod tests {
     }
     #[test]
     fn another_namespaces_animated_item_texture_packs_its_first_frame_and_animates() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-ns-anim-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-atlas-ns-anim-{}",
+            horizon_fs::process_id()
+        ));
         let atlases = root.join("assets/minecraft/atlases");
         let item = root.join("assets/lobby/textures/item/npc");
         fs::create_dir_all(&atlases).unwrap();
@@ -3739,8 +3747,10 @@ mod tests {
     }
     #[test]
     fn an_animated_texture_outside_item_folders_packs_its_first_frame_and_animates() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-dir-anim-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-atlas-dir-anim-{}",
+            horizon_fs::process_id()
+        ));
         let atlases = root.join("assets/minecraft/atlases");
         let custom = root.join("assets/minecraft/textures/custom");
         fs::create_dir_all(&atlases).unwrap();
@@ -3819,8 +3829,10 @@ mod tests {
     }
     #[test]
     fn an_animated_gui_sprite_packs_its_first_frame_and_animates() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-gui-anim-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-atlas-gui-anim-{}",
+            horizon_fs::process_id()
+        ));
         let sprites = root.join("assets/minecraft/textures/gui/sprites/icon");
         fs::create_dir_all(&sprites).unwrap();
         // A GUI sprite like icon/music_notes: 4 frames stacked vertically (16x64),
@@ -3862,8 +3874,10 @@ mod tests {
     }
     /// A resource root with one plain item texture and these CIT files (relative path, contents).
     fn cit_root(name: &str, files: &[(&str, &str)]) -> PathBuf {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-atlas-cit-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-atlas-cit-{name}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         let item = root.join("assets/minecraft/textures/item");
         fs::create_dir_all(&item).unwrap();
@@ -4115,7 +4129,8 @@ texture=wide",
     }
     #[test]
     fn a_pack_texture_keeps_the_default_textures_gui_size() {
-        let temp = horizon_fs::temp_dir().join(format!("horizon-gui-size-{}", std::process::id()));
+        let temp =
+            horizon_fs::temp_dir().join(format!("horizon-gui-size-{}", horizon_fs::process_id()));
         let (defaults, pack) = (temp.join("defaults"), temp.join("pack"));
         write_png(&defaults, "gui/container/inventory", 256, 256);
         write_png(&defaults, "gui/sprites/widget/button", 200, 20);
@@ -4147,7 +4162,8 @@ texture=wide",
     /// from there instead of copying them into the run-time region.
     #[test]
     fn a_bitmap_font_sheet_outside_font_is_packed() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-font-pack-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-font-pack-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         write_png(&root, "hud/sheet", 16, 8);
         let def = root.join("assets/minecraft/font/default.json");
@@ -4170,7 +4186,8 @@ texture=wide",
     /// its other textures and vanilla's names stay as they were.
     #[test]
     fn a_content_mods_gui_textures_are_sprites_under_its_namespace() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-mod-gui-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-mod-gui-{}", horizon_fs::process_id()));
         write_png(&root, "gui/container/furnace", 256, 256);
         let png = |rel: &str, w: u32, h: u32| {
             let path = root.join(rel);
@@ -4344,8 +4361,8 @@ texture=wide",
 
     /// A synthetic default font: two 8x8 glyphs, 3 and 5 pixels wide.
     fn two_glyph_font(name: &str) -> std::path::PathBuf {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-fonts-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-fonts-{name}-{}", horizon_fs::process_id()));
         let font = root.join("assets/minecraft/font");
         let textures = root.join("assets/minecraft/textures/font");
         fs::create_dir_all(&font).unwrap();
@@ -4378,7 +4395,7 @@ texture=wide",
     fn pack_font_over_defaults(name: &str) -> (PathBuf, PathBuf) {
         let base = horizon_fs::temp_dir().join(format!(
             "horizon-font-fallback-{name}-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let pack = base.join("pack");
         let vanilla = base.join("vanilla");
@@ -4590,7 +4607,8 @@ texture=wide",
     fn name_tags_draw_bold_text_and_tall_glyphs_like_any_text() {
         // `ascii.png`'s 8x8 'a' (4 pixels wide) and `accented.png`'s 9x12
         // 'й' (height 12, ascent 10: the breve above the line), 7 wide.
-        let root = horizon_fs::temp_dir().join(format!("horizon-name-tag-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-name-tag-{}", horizon_fs::process_id()));
         let textures = root.join("assets/minecraft/textures/font");
         fs::create_dir_all(root.join("assets/minecraft/font")).unwrap();
         fs::create_dir_all(&textures).unwrap();
@@ -4650,8 +4668,8 @@ texture=wide",
         use crate::{effects::EffectInstance, hud_layout, hud_overlays, inventory_effects};
         // A synthetic resource tree exercises loading and painting together.
         // No Minecraft installation or GPU is needed for this regression test.
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-effect-icons-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-effect-icons-{}", horizon_fs::process_id()));
         for (name, size) in [
             ("mob_effect/levitation", 18),
             ("gui/sprites/hud/effect_background", 24),

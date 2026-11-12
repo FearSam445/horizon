@@ -200,7 +200,8 @@ mod tests {
 
     #[test]
     fn finds_both_folders_in_every_namespace() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-optifine-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-optifine-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         for f in [
             "assets/minecraft/optifine/ctm/glass/glass.properties",
@@ -227,8 +228,10 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn a_link_loop_is_read_once() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-optifine-loop-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-optifine-loop-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         let ctm = root.join("assets/minecraft/optifine/ctm");
         fs::create_dir_all(&ctm).unwrap();

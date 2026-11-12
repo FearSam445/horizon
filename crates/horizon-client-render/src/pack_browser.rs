@@ -627,7 +627,8 @@ mod tests {
 
     #[test]
     fn a_download_never_replaces_a_pack_already_there() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-browser-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-browser-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let _ = horizon_fs::remove_file(dir.join("p.zip"));
         let _ = horizon_fs::remove_file(dir.join("p (2).zip"));

@@ -5233,8 +5233,10 @@ mod tests {
 
     #[test]
     fn a_mod_particles_json_becomes_its_sprite_set() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-mod-particles-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-mod-particles-{}",
+            horizon_fs::process_id()
+        ));
         let particles = dir.join("assets/mymod/particles");
         horizon_fs::create_dir_all(&particles).unwrap();
         horizon_fs::write(

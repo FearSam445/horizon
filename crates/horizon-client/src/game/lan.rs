@@ -4975,8 +4975,10 @@ mod merchant_packet_tests {
             None,
         )
         .unwrap();
-        game.world_root =
-            horizon_fs::temp_dir().join(format!("horizon-merchant-packet-{}", std::process::id()));
+        game.world_root = horizon_fs::temp_dir().join(format!(
+            "horizon-merchant-packet-{}",
+            horizon_fs::process_id()
+        ));
         game.build_registries();
         game.set_allow_commands(true);
 

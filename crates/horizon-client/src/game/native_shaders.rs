@@ -267,7 +267,7 @@ mod tests {
     fn outcomes_and_refusals_survive_renderer_resets() {
         use super::{Api, NativeShaders, fingerprint, outcome, refused, remember};
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-acceptance-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-acceptance-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&root).unwrap();
         let file = root.join("post.wgsl");
         horizon_fs::write(&file, "first files").unwrap();
@@ -303,8 +303,10 @@ mod tests {
     #[test]
     fn stable_options_are_in_the_reload_signature_and_override_keeps_its_path() {
         use super::{NativeShaders, fingerprint};
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-native-identity-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-native-identity-{}",
+            horizon_fs::process_id()
+        ));
         let pack = dir.join("native-test_mod");
         horizon_fs::create_dir_all(&pack).unwrap();
         horizon_fs::write(pack.join(horizon_shader_api::MANIFEST),

@@ -1757,7 +1757,7 @@ mod tests {
     fn fireworks_use_loaded_tooltip_translations() {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-firework-tooltip-language-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -1839,7 +1839,7 @@ mod tests {
         });
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-tooltip-language-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()

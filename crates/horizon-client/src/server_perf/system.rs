@@ -23,7 +23,7 @@ pub(super) struct SystemProbe {
 
 impl SystemProbe {
     pub(super) fn read(&mut self, t: f64, counts: WorldCounts) -> Gauges {
-        let pid = std::process::id();
+        let pid = horizon_fs::process_id();
         let cpu_s = horizon_bench::cpu_seconds(pid);
         let stat = horizon_fs::read_to_string("/proc/stat")
             .ok()

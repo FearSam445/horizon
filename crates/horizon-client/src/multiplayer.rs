@@ -2491,7 +2491,8 @@ mod tests {
 
     #[test]
     fn arrow_keys_select_servers_and_shift_moves_them() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-keys-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-mp-keys-{}", horizon_fs::process_id()));
         let saves = dir.join("saves");
         horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
@@ -2540,7 +2541,8 @@ mod tests {
 
     #[test]
     fn enter_joins_the_selected_server() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-enter-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-mp-enter-{}", horizon_fs::process_id()));
         let saves = dir.join("saves");
         horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
@@ -2575,7 +2577,8 @@ mod tests {
 
     #[test]
     fn a_server_dragged_by_its_row_moves_and_is_saved_on_release() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-drag-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-mp-drag-{}", horizon_fs::process_id()));
         let saves = dir.join("saves");
         horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
@@ -2639,7 +2642,8 @@ mod tests {
 
     #[test]
     fn icon_arrows_join_and_move_servers() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-arrows-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-mp-arrows-{}", horizon_fs::process_id()));
         let saves = dir.join("saves");
         horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
@@ -2698,7 +2702,8 @@ mod tests {
 
     #[test]
     fn delete_asks_before_removing_the_server() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-delete-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-mp-delete-{}", horizon_fs::process_id()));
         let saves = dir.join("saves");
         horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);
@@ -2764,7 +2769,8 @@ mod tests {
 
     #[test]
     fn edit_cycles_and_saves_the_server_resource_pack_setting() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-mp-packs-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-mp-packs-{}", horizon_fs::process_id()));
         let saves = dir.join("saves");
         horizon_fs::create_dir_all(&saves).unwrap();
         let file = servers_file(&saves);

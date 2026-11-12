@@ -750,8 +750,8 @@ mod tests {
     /// the glint goes over the patterns, and nothing covers them after.
     #[test]
     fn an_enchanted_banner_shield_keeps_its_patterns_under_the_glint() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-shield-glint-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-shield-glint-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&root).unwrap();
         horizon_fs::write(root.join("items.json"), "{}").unwrap();
         horizon_fs::write(

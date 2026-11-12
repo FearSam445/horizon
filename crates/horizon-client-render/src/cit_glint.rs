@@ -357,7 +357,8 @@ mod tests {
 
     #[test]
     fn the_first_global_file_wins() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-cit-glint-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-cit-glint-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         assert_eq!(load_global(&root), Global::default());
         let write = |path: &str, text: &[u8]| {

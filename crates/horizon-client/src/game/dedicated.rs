@@ -385,7 +385,7 @@ pub(super) fn preflight(options: &mut Options) -> Result<bool> {
             "serverId" | "pidFile" => {
                 let value = it.next().ok_or("missing value")?;
                 if name == "pidFile" {
-                    horizon_fs::write(value, std::process::id().to_string())?;
+                    horizon_fs::write(value, horizon_fs::process_id().to_string())?;
                 }
             }
             _ => return Err(format!("{arg} is not a recognized option").into()),
@@ -2669,7 +2669,7 @@ mod tests {
                 .as_nanos();
             let home = horizon_fs::temp_dir().join(format!(
                 "horizon-console-log-test-{}-{unique}",
-                std::process::id()
+                horizon_fs::process_id()
             ));
             fs::create_dir(&home).unwrap();
             let mut child = Command::new(horizon_fs::current_exe().unwrap())
@@ -2721,7 +2721,8 @@ mod tests {
     fn a_temporarily_banned_player_is_refused_with_the_end_until_it_has_passed() {
         use super::{BanEntry, BanList, Lists, NameAndId};
         use horizon_server_files::duration::now_millis;
-        let dir = horizon_fs::temp_dir().join(format!("horizon-can-login-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-can-login-{}", horizon_fs::process_id()));
         fs::create_dir_all(&dir).unwrap();
         let mut lists = Lists {
             ops: super::OpList::new(dir.join("ops.json")),

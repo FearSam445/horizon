@@ -89,8 +89,8 @@ mod tests {
     use std::io::Write;
 
     fn scratch(name: &str) -> std::path::PathBuf {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-drop-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-drop-{name}-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(&root).unwrap();
         root

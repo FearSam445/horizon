@@ -1820,7 +1820,7 @@ bind_key.hotbar.2:north
     fn navigation_preferences_migrate_and_stay_with_each_player() {
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-pad-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()

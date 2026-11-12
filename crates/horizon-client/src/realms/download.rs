@@ -264,7 +264,7 @@ pub(super) fn unguessable(prefix: &str, suffix: &str) -> PathBuf {
     key.write_u64(n);
     horizon_fs::temp_dir().join(format!(
         "{prefix}-{}-{n}-{:016x}{suffix}",
-        std::process::id(),
+        horizon_fs::process_id(),
         key.finish()
     ))
 }
@@ -712,7 +712,7 @@ mod tests {
     fn scratch(name: &str) -> PathBuf {
         let dir = horizon_fs::temp_dir().join(format!(
             "realms-download-test-{}-{name}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();

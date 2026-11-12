@@ -719,8 +719,10 @@ mod tests {
     #[test]
     fn native_mod_records_reach_the_file_with_their_targets() {
         use log::Log;
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-native-log-test-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-native-log-test-{}",
+            horizon_fs::process_id()
+        ));
         fs::create_dir_all(&dir).unwrap();
         let (out, receive) = mpsc::channel();
         let writer = Writer {
@@ -913,7 +915,8 @@ mod tests {
 
     #[test]
     fn startup_archives_the_last_runs_log() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-logs-test-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-logs-test-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         // Empty: nothing is archived (OnStartupTriggeringPolicy's minSize is 1 byte).
@@ -950,7 +953,7 @@ mod tests {
     #[test]
     fn the_newest_crash_report_is_found_by_name() {
         let home =
-            horizon_fs::temp_dir().join(format!("horizon-crash-test-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-crash-test-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&home);
         assert!(newest_crash_report(&home).is_none());
         let dir = crash_reports_dir(&home);

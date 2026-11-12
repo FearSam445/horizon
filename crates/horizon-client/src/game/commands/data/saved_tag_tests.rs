@@ -34,7 +34,7 @@ fn with_command_game(name: &str, test: impl FnOnce(&mut Game<'_>)) {
     .unwrap();
     let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-saved-{name}-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()

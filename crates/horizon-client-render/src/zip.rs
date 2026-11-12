@@ -354,8 +354,10 @@ mod tests {
     use std::io::Cursor;
     /// `bytes` as a file and opened, the file removed again where the system lets it.
     fn opened(test: &str, bytes: &[u8]) -> io::Result<Zip> {
-        let path =
-            horizon_fs::temp_dir().join(format!("horizon-zip-{}-{test}.zip", std::process::id()));
+        let path = horizon_fs::temp_dir().join(format!(
+            "horizon-zip-{}-{test}.zip",
+            horizon_fs::process_id()
+        ));
         fs::write(&path, bytes)?;
         let zip = Zip::open(&path);
         let _ = fs::remove_file(&path);

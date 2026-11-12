@@ -47,7 +47,7 @@ fn check_respawn(check_sea_level: bool) {
     .unwrap();
     let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-respawn-point-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -237,7 +237,7 @@ fn a_mods_zero_health_kills_a_guest_as_kill_does() {
     .unwrap();
     let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-status-death-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()

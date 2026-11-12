@@ -549,7 +549,7 @@ mod tests {
             static NEXT: AtomicUsize = AtomicUsize::new(0);
             let path = horizon_fs::temp_dir().join(format!(
                 "horizon-overlay-cache-{}-{}",
-                std::process::id(),
+                horizon_fs::process_id(),
                 NEXT.fetch_add(1, Ordering::Relaxed)
             ));
             let _ = fs::remove_dir_all(&path);

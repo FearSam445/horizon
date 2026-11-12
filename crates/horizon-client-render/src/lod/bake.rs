@@ -460,7 +460,8 @@ mod tests {
     }
     #[test]
     fn columns_round_trip_and_survive_reopening() {
-        let world = horizon_fs::temp_dir().join(format!("horizon-lod-bake-{}", std::process::id()));
+        let world =
+            horizon_fs::temp_dir().join(format!("horizon-lod-bake-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&world);
         let dimension = world.join("dimensions").join("minecraft").join("overworld");
         fs::create_dir_all(&dimension).unwrap();
@@ -526,7 +527,7 @@ mod tests {
     #[test]
     fn empty_samples_are_not_baked() {
         let world =
-            horizon_fs::temp_dir().join(format!("horizon-lod-empty-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-lod-empty-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&world);
         let dimension = world.join("dimensions").join("minecraft").join("overworld");
         fs::create_dir_all(&dimension).unwrap();

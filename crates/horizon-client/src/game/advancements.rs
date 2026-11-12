@@ -3086,8 +3086,10 @@ mod structure_tag_tests {
         assert!(!View(&game).in_tag("worldgen/structure", "mypack:village", "minecraft:igloo"));
 
         // A pack's own tag (nesting the game's) and an addition to the game's.
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-structure-tags-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-structure-tags-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks").join("mypack");
         let tags = pack.join("data/mypack/tags/worldgen/structure");
@@ -3168,7 +3170,8 @@ mod random_chance_command_tests {
         game.build_registries();
         game.set_allow_commands(true);
 
-        let dir = horizon_fs::temp_dir().join(format!("horizon-h122-unit-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-h122-unit-{}", horizon_fs::process_id()));
         assert!(!dir.fs_exists());
         let pack = dir.join("datapacks/chance");
         let folder = pack.join("data/h122/predicate");

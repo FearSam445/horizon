@@ -2177,7 +2177,8 @@ mod tests {
     /// second press in the same second takes the next name, not the same one.
     #[test]
     fn a_screenshot_being_written_keeps_its_name() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-shots-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-shots-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let first = screenshot_name(&dir, &[]);
         let second = screenshot_name(&dir, &[dir.join(&first)]);
@@ -2193,7 +2194,7 @@ mod tests {
 
     #[test]
     fn resource_ids_are_listed_once_per_root() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-ids-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-ids-{}", horizon_fs::process_id()));
         let recipe = root.join("data/minecraft/recipe");
         horizon_fs::create_dir_all(recipe.join("sub")).unwrap();
         horizon_fs::write(recipe.join("b.json"), "{}").unwrap();
@@ -2211,7 +2212,7 @@ mod tests {
     #[test]
     fn recipes_of_every_namespace_are_listed() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-recipe-ids-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-recipe-ids-{}", horizon_fs::process_id()));
         for dir in ["data/minecraft/recipe", "data/mymod/recipe/press"] {
             horizon_fs::create_dir_all(root.join(dir)).unwrap();
         }
@@ -2228,7 +2229,8 @@ mod tests {
     /// count (hidden from commands) or an object that may show itself.
     #[test]
     fn overworld_timelines_and_markers() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-timelines-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-timelines-{}", horizon_fs::process_id()));
         let dir = root.join("data/minecraft/timeline");
         horizon_fs::create_dir_all(&dir).unwrap();
         horizon_fs::write(
@@ -2264,7 +2266,8 @@ mod tests {
     /// The export is read once per folder; a folder without one stays without.
     #[test]
     fn command_exports_are_read_once_per_folder() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-export-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-export-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         horizon_fs::write(dir.join("command-registries.json"), r#"{"effects":["a"]}"#).unwrap();
         let first = command_export(&dir, true).unwrap();

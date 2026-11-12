@@ -181,9 +181,10 @@ mod tests {
 
     #[test]
     fn shared_views_preserve_resolution_errors_builtins_and_reload() -> Result<()> {
-        let fixture = Fixture(
-            horizon_fs::temp_dir().join(format!("horizon-shared-models-{}", std::process::id())),
-        );
+        let fixture = Fixture(horizon_fs::temp_dir().join(format!(
+            "horizon-shared-models-{}",
+            horizon_fs::process_id()
+        )));
         fixture.write("horizon:parent", r##"{"textures":{"side":"#all","all":"block/stone"},"elements":[{"from":[0,0,0],"to":[16,8,16],"faces":{"up":{"texture":"#side"}}}]}"##);
         fixture.write("horizon:nested/child", r#"{"parent":"horizon:parent","textures":{"all":"block/glass"},"display":{"gui":{"rotation":[30,45,0]}}}"#);
         fixture.write("horizon:broken", "{");
@@ -278,8 +279,8 @@ mod tests {
     /// file outside the content root.
     #[test]
     fn root_assets_stay_inside_the_content_root() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-root-assets-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-root-assets-{}", horizon_fs::process_id()));
         let inside = root.join("content");
         fs::create_dir_all(inside.join("assets/m/models")).unwrap();
         fs::write(inside.join("assets/m/models/a.mtl"), "newmtl a").unwrap();

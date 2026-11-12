@@ -277,6 +277,21 @@ impl Pool {
     /// its main loop calls this between frames instead, so the same jobs run in
     /// the same order. With workers this still helps them, as one more worker.
     pub fn run_for(&self, budget: Duration) -> usize {
+        // Not from inside a job this thread runs (a job that sleeps, in the browser
+        // build): it would start another while holding what the first holds.
+        thread_local! {
+            static RUNNING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+        }
+        if RUNNING.with(|r| r.replace(true)) {
+            return 0;
+        }
+        struct Done;
+        impl Drop for Done {
+            fn drop(&mut self) {
+                RUNNING.with(|r| r.set(false));
+            }
+        }
+        let _done = Done;
         let started = Instant::now();
         let mut ran = 0;
         while started.elapsed() < budget {

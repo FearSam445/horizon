@@ -2461,8 +2461,10 @@ mod crossbow_tests {
         use crate::random_sequences::RandomSequences;
         use horizon_world::loot::{LootData, PackOverlay};
 
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-piglin-drop-test-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-piglin-drop-test-{}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
         horizon_fs::write(root.join("items.json"), "{}").unwrap();
         let loot = LootData::load(&root, &PackOverlay::default()).unwrap();

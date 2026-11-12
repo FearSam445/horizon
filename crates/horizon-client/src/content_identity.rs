@@ -190,7 +190,7 @@ mod tests {
         let root = |name: &str, extra: &str| {
             let root = horizon_fs::temp_dir().join(format!(
                 "horizon-content-identity-menu-{name}-{}",
-                std::process::id()
+                horizon_fs::process_id()
             ));
             horizon_fs::create_dir_all(&root).unwrap();
             let facts = br#"{"states":[["minecraft:stone",false,false,"Block{minecraft:stone}",{"id":"minecraft:stone"}]]}"#;
@@ -216,7 +216,7 @@ mod tests {
         let root = |name: &str, extra: &str| {
             let root = horizon_fs::temp_dir().join(format!(
                 "horizon-content-identity-fluid-{name}-{}",
-                std::process::id()
+                horizon_fs::process_id()
             ));
             horizon_fs::create_dir_all(&root).unwrap();
             let facts = br#"{"states":[["minecraft:stone",false,false,"Block{minecraft:stone}",{"id":"minecraft:stone"}]]}"#;
@@ -240,7 +240,7 @@ mod tests {
     fn a_root_without_mod_entries_keeps_its_block_identity() {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-content-identity-vanilla-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         horizon_fs::create_dir_all(&root).unwrap();
         let facts = br#"{"states":[["minecraft:stone",false,false,"Block{minecraft:stone}",{"id":"minecraft:stone"}]]}"#;

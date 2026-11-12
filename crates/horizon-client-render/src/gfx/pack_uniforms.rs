@@ -1330,7 +1330,7 @@ mod tests {
     fn sky_of(name: &str, attributes: &str) -> crate::environment::Sky {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-cloud-height-{}-{name}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let dir = root.join("data/minecraft/dimension_type");
         horizon_fs::create_dir_all(&dir).unwrap();

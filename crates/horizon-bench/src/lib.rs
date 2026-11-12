@@ -458,7 +458,8 @@ mod tests {
 
     #[test]
     fn writes_into_a_folder() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-bench-test-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-bench-test-{}", horizon_fs::process_id()));
         let mut r = Report::new(Kind::Launcher, App::default());
         r.created = "2026-10-15T14:03:27Z".into();
         r.conditions.scenario = Some("cold start".into());

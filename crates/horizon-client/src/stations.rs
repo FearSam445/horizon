@@ -1445,7 +1445,8 @@ mod tests {
     /// result saves without it (vanilla: two worn diamond pickaxes give a plain one).
     #[test]
     fn grindstone_merge_at_the_default_max_damage_writes_no_component() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-grind-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-grind-{}", horizon_fs::process_id()));
         fs::create_dir_all(&root).unwrap();
         fs::write(
             root.join("items.json"),
@@ -2042,7 +2043,8 @@ mod tests {
     #[test]
     fn smithing_transform_overlay_matches_optional_inputs_and_takes_template_result() {
         use crate::{banner::Banners, brewing::Brewing, crafting::Recipes, creative::Names, menu};
-        let root = horizon_fs::temp_dir().join(format!("horizon-smithing-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-smithing-{}", horizon_fs::process_id()));
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(
             root.join("items.json"),
@@ -2166,7 +2168,8 @@ mod tests {
 
     #[test]
     fn smithing_trim_reads_an_inline_pattern() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-trim-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-trim-{}", horizon_fs::process_id()));
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(
             root.join("items.json"),
@@ -2233,7 +2236,7 @@ mod tests {
     fn stonecutter_result_keeps_its_components() {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-stonecutter-components-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let dir = root.join("data/minecraft/recipe");
         fs::create_dir_all(&dir).unwrap();
@@ -2254,8 +2257,10 @@ mod tests {
     /// order (path, then namespace), not a place after the game's own.
     #[test]
     fn stonecutter_lists_recipes_in_registration_order() {
-        let root = horizon_fs::temp_dir()
-            .join(format!("horizon-stonecutter-order-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-stonecutter-order-{}",
+            horizon_fs::process_id()
+        ));
         let dir = root.join("data/minecraft/recipe");
         fs::create_dir_all(&dir).unwrap();
         let cut = |result: &str| {

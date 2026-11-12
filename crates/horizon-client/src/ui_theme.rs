@@ -899,7 +899,7 @@ mod tests {
 
     #[test]
     fn a_private_use_glyph_geist_lacks_is_the_packs_bitmap() {
-        let root = horizon_fs::temp_dir().join(format!("hz-ui-pua-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("hz-ui-pua-{}", horizon_fs::process_id()));
         let font = root.join("assets/minecraft/font");
         let tex = root.join("assets/minecraft/textures/font");
         horizon_fs::create_dir_all(&font).unwrap();

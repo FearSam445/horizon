@@ -6377,9 +6377,10 @@ mod swing_echo_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(
-            horizon_fs::temp_dir().join(format!("horizon-swing-echo-unit-{}", std::process::id())),
-        );
+        options.game_dir = Some(horizon_fs::temp_dir().join(format!(
+            "horizon-swing-echo-unit-{}",
+            horizon_fs::process_id()
+        )));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,
@@ -7082,10 +7083,10 @@ mod item_on_block_cooldown_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(
-            horizon_fs::temp_dir()
-                .join(format!("horizon-use-cooldown-unit-{}", std::process::id())),
-        );
+        options.game_dir = Some(horizon_fs::temp_dir().join(format!(
+            "horizon-use-cooldown-unit-{}",
+            horizon_fs::process_id()
+        )));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,

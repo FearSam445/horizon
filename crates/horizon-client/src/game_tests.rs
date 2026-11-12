@@ -234,7 +234,8 @@ fn eager_saves_keep_dirty_order_cooldowns_and_writer_budget() {
 #[ignore = "needs prepared resources in HORIZON_TEST_RESOURCES"]
 fn eager_saves_wait_for_an_open_world_and_for_light() {
     let mut game = super::native_machines::tests::server_game();
-    let dir = horizon_fs::temp_dir().join(format!("horizon-eager-game-{}", std::process::id()));
+    let dir =
+        horizon_fs::temp_dir().join(format!("horizon-eager-game-{}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&dir);
     horizon_fs::create_dir_all(&dir).unwrap();
     game.save = Arc::new(horizon_client::save::SaveDir::new(
@@ -264,7 +265,7 @@ fn eager_saves_wait_for_an_open_world_and_for_light() {
 fn integrated_server_save_persists_owner_player_data() {
     let dir = horizon_fs::temp_dir().join(format!(
         "horizon-integrated-player-save-{}",
-        std::process::id()
+        horizon_fs::process_id()
     ));
     let _ = horizon_fs::remove_dir_all(&dir);
 

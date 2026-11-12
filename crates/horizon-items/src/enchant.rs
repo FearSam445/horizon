@@ -1025,7 +1025,7 @@ pub mod tests {
     fn world_pack_definitions_join_catalog_in_overlay_priority() {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-enchantment-overlay-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()

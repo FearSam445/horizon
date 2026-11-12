@@ -13,8 +13,10 @@ fn png(path: &Path, w: u32, h: u32, color: [u8; 4]) {
 }
 
 fn fixture(name: &str) -> PathBuf {
-    let root =
-        horizon_fs::temp_dir().join(format!("horizon-glint-5851-{name}-{}", std::process::id()));
+    let root = horizon_fs::temp_dir().join(format!(
+        "horizon-glint-5851-{name}-{}",
+        horizon_fs::process_id()
+    ));
     let write = |name: &str, data: &[u8]| {
         let path = root.join(name);
         fs::create_dir_all(path.parent().unwrap()).unwrap();

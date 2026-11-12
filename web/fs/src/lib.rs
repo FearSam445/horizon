@@ -197,3 +197,12 @@ pub fn current_exe() -> io::Result<PathBuf> {
     #[cfg(not(target_arch = "wasm32"))]
     std::env::current_exe()
 }
+
+/// `std::process::id()`, which names temporary files and seeds a few defaults:
+/// 1 in the browser build, where std's panics (a page has one process).
+pub fn process_id() -> u32 {
+    #[cfg(target_arch = "wasm32")]
+    return 1;
+    #[cfg(not(target_arch = "wasm32"))]
+    std::process::id()
+}

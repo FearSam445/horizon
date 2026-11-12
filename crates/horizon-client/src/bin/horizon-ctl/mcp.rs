@@ -130,8 +130,8 @@ impl Session {
             );
         };
         if cmd.name == "screenshot" {
-            let path =
-                horizon_fs::temp_dir().join(format!("horizon-ctl-{}.png", std::process::id()));
+            let path = horizon_fs::temp_dir()
+                .join(format!("horizon-ctl-{}.png", horizon_fs::process_id()));
             let result = self
                 .run(&["screenshot".to_owned(), path.display().to_string()])
                 .and_then(|reply| {

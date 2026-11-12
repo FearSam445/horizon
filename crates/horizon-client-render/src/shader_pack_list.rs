@@ -434,8 +434,10 @@ mod tests {
 
     #[test]
     fn native_selection_and_values_survive_install_update_rename_and_reset() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-identity-update-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-identity-update-{}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(&dir).unwrap();
         install(&dir, "warm-1.hshader", "1");
         horizon_fs::write(dir.join("warm-1.hshader.txt"), "strength=1.5\n").unwrap();
@@ -496,7 +498,7 @@ mod tests {
     fn migrates_a_removed_registry_filename_and_resolves_duplicates_deterministically() {
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-identity-duplicates-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         horizon_fs::create_dir_all(&dir).unwrap();
         install(&dir, "z.hshader", "newest");
@@ -516,8 +518,8 @@ mod tests {
 
     #[test]
     fn lists_both_kinds_horizon_first_and_skips_the_rest() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-shader-list-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-shader-list-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         let d = dir.as_path();
@@ -584,8 +586,10 @@ mod tests {
         let on = OptionKind::Bool { default: true };
         assert_eq!(step_value(&on, 1.0, false), 0.0);
 
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-shader-values-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-shader-values-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         let pack = dir.join("p.hshader");

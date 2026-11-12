@@ -315,8 +315,10 @@ pub(crate) mod tests {
         r#""boxes": [{"coordinates": [0, 0, 0, 1, 1, 1], "textureOffset": [0, 0]}]"#;
     /// A fresh pack folder named for `test`, holding `files` under `assets/minecraft/`.
     pub(crate) fn pack(test: &str, files: &[(&str, String)]) -> std::path::PathBuf {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-be-cem-{test}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-be-cem-{test}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         for (path, text) in files {
             let path = root.join("assets/minecraft").join(path);

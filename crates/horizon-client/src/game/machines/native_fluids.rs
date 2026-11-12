@@ -808,8 +808,10 @@ mod tests {
             }
         }
         let base = std::path::PathBuf::from(std::env::var_os("HORIZON_TEST_RESOURCES").unwrap());
-        let scratch =
-            horizon_fs::temp_dir().join(format!("horizon-fluid-provider-{}", std::process::id()));
+        let scratch = horizon_fs::temp_dir().join(format!(
+            "horizon-fluid-provider-{}",
+            horizon_fs::process_id()
+        ));
         let mut content = Content::declared("fixture");
         content
             .declare(

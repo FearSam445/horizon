@@ -32,7 +32,8 @@ fn falling_impacts_wear_the_helmet_before_normal_armor_and_reduction() {
         None,
     )
     .unwrap();
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-helmet-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-helmet-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&scratch).unwrap();
     game.world_root = scratch.clone();
     game.creative = false;

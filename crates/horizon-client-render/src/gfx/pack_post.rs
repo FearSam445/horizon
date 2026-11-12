@@ -6190,7 +6190,8 @@ mod tests {
         let Ok((device, queue)) = pollster::block_on(adapter.request_device(&desc)) else {
             return;
         };
-        let dir = horizon_fs::temp_dir().join(format!("hz-composite-blend-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("hz-composite-blend-{}", horizon_fs::process_id()));
         let shaders = dir.join("shaders");
         horizon_fs::create_dir_all(&shaders).unwrap();
         let file = |name: &str, text: &str| horizon_fs::write(shaders.join(name), text).unwrap();

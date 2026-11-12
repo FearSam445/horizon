@@ -389,8 +389,10 @@ mod tests {
     use super::*;
 
     fn world_dir(name: &str) -> PathBuf {
-        let dir = horizon_fs::temp_dir()
-            .join(format!("realms-upload-test-{}-{name}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "realms-upload-test-{}-{name}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(dir.join("region")).unwrap();
         horizon_fs::write(dir.join("level.dat"), b"nbt").unwrap();

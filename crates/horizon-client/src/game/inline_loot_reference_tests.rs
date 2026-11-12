@@ -59,7 +59,7 @@ fn game() -> Game<'static> {
     let n = FIXTURES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let dir = horizon_fs::temp_dir().join(format!(
         "horizon-inline-loot-ref-{}-{n}",
-        std::process::id()
+        horizon_fs::process_id()
     ));
     let _ = horizon_fs::remove_dir_all(&dir);
     let tables = dir.join("datapacks/il/data/parity/loot_table");

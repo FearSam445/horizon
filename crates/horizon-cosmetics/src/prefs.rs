@@ -279,7 +279,8 @@ mod tests {
 
     #[test]
     fn a_wish_waits_until_the_service_confirms_it() {
-        let home = horizon_fs::temp_dir().join(format!("cosmetics-prefs-{}", std::process::id()));
+        let home =
+            horizon_fs::temp_dir().join(format!("cosmetics-prefs-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&home);
         let (alex, steve) = ("a".repeat(32), "b".repeat(32));
         // Nothing asked: shown, which the service assumes too.

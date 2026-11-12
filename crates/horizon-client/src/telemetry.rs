@@ -291,7 +291,7 @@ fn peak_ram_mb() -> u32 {
             })
     } else if cfg!(target_os = "macos") {
         std::process::Command::new("ps")
-            .args(["-o", "rss=", "-p", &std::process::id().to_string()])
+            .args(["-o", "rss=", "-p", &horizon_fs::process_id().to_string()])
             .output()
             .ok()
             .and_then(|o| {
@@ -314,7 +314,7 @@ mod tests {
     fn home(name: &str) -> std::path::PathBuf {
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-client-telemetry-{name}-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();

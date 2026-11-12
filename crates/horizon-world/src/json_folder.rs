@@ -203,8 +203,10 @@ mod tests {
     use super::*;
 
     fn folder(tag: &str) -> PathBuf {
-        let dir = horizon_fs::temp_dir()
-            .join(format!("horizon-json-folder-{tag}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-json-folder-{tag}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(dir.join("brewing")).unwrap();
         fs::write(dir.join("stick.json"), b"{\"a\":1}").unwrap();
@@ -234,8 +236,10 @@ mod tests {
     /// from it: the same files, names and order as the folder's.
     #[test]
     fn a_prepared_root_reads_the_folder_from_its_data_file() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-json-folder-root-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-json-folder-root-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         let recipes = root.join("data/minecraft/recipe");
         fs::create_dir_all(recipes.join("crushing")).unwrap();
@@ -264,8 +268,10 @@ mod tests {
 
     #[test]
     fn a_folder_that_cannot_be_listed_is_an_error() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-json-folder-none-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-json-folder-none-{}",
+            horizon_fs::process_id()
+        ));
         assert!(read(&dir).is_err());
     }
 }

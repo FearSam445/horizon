@@ -10,8 +10,8 @@ struct Scratch(PathBuf);
 
 impl Scratch {
     fn new(tag: &str) -> Self {
-        let dir =
-            horizon_fs::temp_dir().join(format!("hz-server-perf-{tag}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("hz-server-perf-{tag}-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         Self(dir)

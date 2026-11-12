@@ -1863,7 +1863,7 @@ mod tests {
     #[test]
     fn a_world_copy_skips_the_lock_and_symlinks() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-repro-test-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-repro-test-{}", horizon_fs::process_id()));
         let src = root.join("src");
         let dst = root.join("dst");
         fs::create_dir_all(src.join("region")).unwrap();
@@ -1978,7 +1978,7 @@ mod tests {
     #[test]
     fn an_export_name_that_is_taken_gets_a_number() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-repro-dest-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-repro-dest-{}", horizon_fs::process_id()));
         fs::create_dir_all(&root).unwrap();
         let first = root.join("repro.zip");
         fs::write(&first, b"x").unwrap();

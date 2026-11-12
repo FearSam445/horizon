@@ -345,8 +345,10 @@ mod tests {
 
     #[test]
     fn packs_replace_a_mods_file_and_files_apply_in_id_order() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-recipe-filters-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-recipe-filters-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("data/mymod/recipe_filter");
         horizon_fs::create_dir_all(&dir).unwrap();

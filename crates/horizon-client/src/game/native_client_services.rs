@@ -807,7 +807,8 @@ mod client_tests {
 
         // A name that climbs out of the packs is refused, even where a picture
         // is there.
-        let packs = horizon_fs::temp_dir().join(format!("horizon-texture-{}", std::process::id()));
+        let packs =
+            horizon_fs::temp_dir().join(format!("horizon-texture-{}", horizon_fs::process_id()));
         let textures = packs.join("assets/minecraft/textures");
         horizon_fs::create_dir_all(&textures).unwrap();
         let png = horizon_fs::read(root.join("assets/minecraft/textures/entity/zombie/zombie.png"))

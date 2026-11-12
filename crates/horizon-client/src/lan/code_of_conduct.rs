@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn only_txt_files_are_read_by_lowercased_name() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-coc-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-coc-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         horizon_fs::write(dir.join("EN_US.txt"), "\u{a7}lBe nice\nplease\n").unwrap();
         horizon_fs::write(dir.join("notes.md"), "ignored").unwrap();

@@ -326,7 +326,7 @@ pub fn temp_folder() -> std::io::Result<PathBuf> {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
-    let dir = horizon_fs::temp_dir().join(format!("mcworld-{}-{nanos}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!("mcworld-{}-{nanos}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&dir)?;
     Ok(dir)
 }
@@ -1046,8 +1046,10 @@ mod tests {
 
     #[test]
     fn folder_metadata_is_required_before_contents_are_discovered() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-folder-metadata-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-folder-metadata-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         for (name, metadata) in [
             ("broken", Some("{")),
@@ -1146,7 +1148,8 @@ mod tests {
 
     #[test]
     fn a_pack_that_cannot_be_copied_is_reported() {
-        let root = horizon_fs::temp_dir().join(format!("hz-datapack-copy-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("hz-datapack-copy-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         let pack = root.join("pack");
         horizon_fs::create_dir_all(pack.join("data")).unwrap();
@@ -1165,7 +1168,7 @@ mod tests {
     #[test]
     fn a_game_folder_s_new_world_packs_go_into_new_worlds_only() {
         let root =
-            horizon_fs::temp_dir().join(format!("hz-new-world-packs-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("hz-new-world-packs-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         let (game, world, old) = (root.join("game"), root.join("new"), root.join("old"));
         assert!(seed_create_world(&game).is_none());
@@ -1194,8 +1197,8 @@ mod tests {
 
     #[test]
     fn enabled_packs_override_worldgen_in_order() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("hz-datapack-worldgen-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("hz-datapack-worldgen-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let write = |pack: &str, p: &str, t: &str| {
             let path = dir.join("datapacks").join(pack).join(p);
@@ -1318,7 +1321,7 @@ mod tests {
 
     #[test]
     fn packs_provide_functions_and_tags() {
-        let dir = horizon_fs::temp_dir().join(format!("hz-datapack-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("hz-datapack-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks/mypack");
         let write = |p: &str, t: &str| {
@@ -1421,7 +1424,8 @@ mod tests {
 
     #[test]
     fn folder_packs_list_the_needed_kinds_in_walk_order() {
-        let dir = horizon_fs::temp_dir().join(format!("hz-datapack-kinds-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("hz-datapack-kinds-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks/p");
         let files = [
@@ -1461,8 +1465,8 @@ mod tests {
 
     #[test]
     fn create_world_installs_its_packs() {
-        let root =
-            horizon_fs::temp_dir().join(format!("hz-datapack-install-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("hz-datapack-install-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         let (dir, world) = (root.join("mcworld"), root.join("world"));
         let write = |pack: &str, p: &str, t: &str| {

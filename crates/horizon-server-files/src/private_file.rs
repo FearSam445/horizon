@@ -19,7 +19,7 @@ pub fn write_private(path: &Path, text: impl AsRef<[u8]>) -> io::Result<()> {
     let tmp = path.with_file_name(format!(
         ".{}.{}.{}.tmp",
         name.to_string_lossy(),
-        std::process::id(),
+        horizon_fs::process_id(),
         WRITES.fetch_add(1, Ordering::Relaxed)
     ));
     let mut options = horizon_fs::OpenOptions::new();
@@ -42,8 +42,10 @@ mod tests {
     use super::*;
 
     fn scratch(name: &str) -> std::path::PathBuf {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-private-{name}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-private-{name}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         dir

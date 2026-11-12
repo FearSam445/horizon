@@ -273,8 +273,8 @@ sha256 = "0000000000000000000000000000000000000000000000000000000000000000"
     }
 
     fn scratch(name: &str) -> PathBuf {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-hpack-{name}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-hpack-{name}-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         dir

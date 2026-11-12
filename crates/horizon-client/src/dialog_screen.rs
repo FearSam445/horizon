@@ -529,8 +529,10 @@ mod tests {
     #[test]
     fn a_glyph_moved_down_by_its_ascent_is_clicked_where_it_is_drawn() {
         use crate::{component, hud::Rect, text::ClickEvent};
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-dialog-ascent-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-dialog-ascent-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         let mut sheet = Vec::new();
         {

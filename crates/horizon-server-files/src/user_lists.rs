@@ -516,8 +516,8 @@ mod tests {
     #[test]
     fn a_watcher_hears_what_vanillas_notification_service_does() {
         use std::sync::{Arc, Mutex};
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-lists-watch-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-lists-watch-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let heard = Arc::new(Mutex::new(Vec::new()));
         let mut ops = OpList::new(dir.join("ops.json"));
@@ -559,7 +559,8 @@ mod tests {
 
     #[test]
     fn a_cleared_list_saves_empty() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-lists-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-lists-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let mut white = WhiteList::new(dir.join("whitelist.json"));
         assert!(white.add(WhiteEntry {

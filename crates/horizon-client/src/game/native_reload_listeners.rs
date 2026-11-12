@@ -126,7 +126,7 @@ mod tests {
         fn new(name: &str) -> Self {
             let dir = horizon_fs::temp_dir().join(format!(
                 "horizon-reload-listeners-{name}-{}",
-                std::process::id()
+                horizon_fs::process_id()
             ));
             let _ = fs::remove_dir_all(&dir);
             Self(dir)

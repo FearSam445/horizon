@@ -917,7 +917,8 @@ mod tests {
 
     #[test]
     fn logs_reads_the_end_of_latest_log_and_the_newest_crash_report() {
-        let home = horizon_fs::temp_dir().join(format!("horizon-ctl-logs-{}", std::process::id()));
+        let home =
+            horizon_fs::temp_dir().join(format!("horizon-ctl-logs-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&home);
         let words = |s: &str| -> Vec<String> { s.split_whitespace().map(String::from).collect() };
         let failure = logs(&home, &words("")).unwrap_err();
@@ -987,7 +988,8 @@ mod tests {
         name: &str,
         reply: &'static str,
     ) -> (PathBuf, horizon_thread::JoinHandle<Vec<String>>) {
-        let path = horizon_fs::temp_dir().join(format!("hctl-{name}-{}.sock", std::process::id()));
+        let path =
+            horizon_fs::temp_dir().join(format!("hctl-{name}-{}.sock", horizon_fs::process_id()));
         let _ = horizon_fs::remove_file(&path);
         let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
         let handle = horizon_thread::spawn(move || {
@@ -1095,8 +1097,10 @@ mod tests {
 
     #[test]
     fn unreachable_games_fail_with_status_3() {
-        let home =
-            horizon_fs::temp_dir().join(format!("horizon-ctl-unreachable-{}", std::process::id()));
+        let home = horizon_fs::temp_dir().join(format!(
+            "horizon-ctl-unreachable-{}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(&home).unwrap();
         let mut s = Session::new(home.join("nobody.sock"), None);
         s.home = home.clone();
@@ -1110,7 +1114,8 @@ mod tests {
 
     #[test]
     fn no_ai_refuses_every_command() {
-        let home = horizon_fs::temp_dir().join(format!("horizon-ctl-no-ai-{}", std::process::id()));
+        let home =
+            horizon_fs::temp_dir().join(format!("horizon-ctl-no-ai-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&home);
         let mut s = Session::new(horizon_fs::temp_dir().join("horizon-ctl-nobody.sock"), None);
         s.home = home.clone();

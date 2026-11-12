@@ -515,7 +515,8 @@ mod tests {
 
     #[test]
     fn scan_and_select_recordings() {
-        let temp_dir = horizon_fs::temp_dir().join(format!("studio_test_{}", std::process::id()));
+        let temp_dir =
+            horizon_fs::temp_dir().join(format!("studio_test_{}", horizon_fs::process_id()));
         let _ = fs::create_dir_all(&temp_dir);
 
         let rec_path = temp_dir.join("sample.mcpr");

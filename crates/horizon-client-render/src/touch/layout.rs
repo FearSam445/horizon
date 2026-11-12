@@ -342,7 +342,10 @@ mod tests {
     use super::*;
 
     fn temp_file(name: &str) -> std::path::PathBuf {
-        horizon_fs::temp_dir().join(format!("horizon-touch-{name}-{}.json", std::process::id()))
+        horizon_fs::temp_dir().join(format!(
+            "horizon-touch-{name}-{}.json",
+            horizon_fs::process_id()
+        ))
     }
 
     #[test]

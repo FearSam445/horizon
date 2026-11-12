@@ -287,7 +287,7 @@ mod tests {
         static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-random-textures-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             N.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         let _ = fs::remove_dir_all(&root);
@@ -528,8 +528,10 @@ mod tests {
 
     #[test]
     fn latin1_rules_are_read() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-random-latin1-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-random-latin1-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         let dir = root.join(RANDOM).join("creeper");
         fs::create_dir_all(&dir).unwrap();

@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn a_non_durable_stack_can_carry_its_own_durability() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-durability-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-durability-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
         fs::write(

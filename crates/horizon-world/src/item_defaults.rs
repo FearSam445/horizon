@@ -191,8 +191,10 @@ mod tests {
 
     #[test]
     fn a_load_shares_one_snapshot_and_the_next_load_reads_changes() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-default-snapshot-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-default-snapshot-{}",
+            horizon_fs::process_id()
+        ));
         fs::create_dir_all(&root).unwrap();
         let write = |size| {
             fs::write(
@@ -230,8 +232,8 @@ mod tests {
     /// count the wire and the save carry).
     #[test]
     fn data_pack_sizes_stay_in_vanilla_range() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-stack-sizes-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-stack-sizes-{}", horizon_fs::process_id()));
         fs::create_dir_all(&root).unwrap();
         let items = r#"{"a:none": {"minecraft:max_stack_size": 0},
             "a:less": {"minecraft:max_stack_size": -5},
@@ -280,7 +282,8 @@ mod tests {
             loot_function: |_, _, _, _| {},
             loot_condition: |_, _, _, _| {},
         });
-        let root = horizon_fs::temp_dir().join(format!("horizon-mod-sizes-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-mod-sizes-{}", horizon_fs::process_id()));
         fs::create_dir_all(&root).unwrap();
         let items = r#"{"a:raised": {"minecraft:max_stack_size": 64},
             "a:zero": {"minecraft:max_stack_size": 16},

@@ -508,7 +508,7 @@ impl ServerProperties {
     /// its owner's only, as it holds the RCON password and that secret; an existing one keeps its
     /// permissions.
     pub fn store(&self, path: &std::path::Path) -> std::io::Result<()> {
-        let tmp = path.with_extension(format!("properties.{}.tmp", std::process::id()));
+        let tmp = path.with_extension(format!("properties.{}.tmp", horizon_fs::process_id()));
         let mut options = horizon_fs::OpenOptions::new();
         options.write(true).create(true).truncate(true);
         #[cfg(unix)]
@@ -648,7 +648,8 @@ mod tests {
     #[test]
     fn a_new_properties_file_is_its_owners_and_an_old_one_keeps_its_mode() {
         use std::os::unix::fs::PermissionsExt;
-        let dir = horizon_fs::temp_dir().join(format!("horizon-props-mode-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-props-mode-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("server.properties");

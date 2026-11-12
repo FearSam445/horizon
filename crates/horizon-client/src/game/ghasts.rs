@@ -240,9 +240,10 @@ mod item_collision_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(
-            horizon_fs::temp_dir().join(format!("horizon-item-cart-unit-{}", std::process::id())),
-        );
+        options.game_dir = Some(horizon_fs::temp_dir().join(format!(
+            "horizon-item-cart-unit-{}",
+            horizon_fs::process_id()
+        )));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,

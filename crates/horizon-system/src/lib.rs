@@ -1079,8 +1079,8 @@ mod tests {
     fn this_process_is_measured() {
         if cfg!(any(target_os = "macos", target_os = "linux")) {
             assert!(load_average().is_some());
-            assert!(rss_bytes(std::process::id()).unwrap() > 1 << 20);
-            assert!(cpu_seconds(std::process::id()).unwrap() >= 0.0);
+            assert!(rss_bytes(horizon_fs::process_id()).unwrap() > 1 << 20);
+            assert!(cpu_seconds(horizon_fs::process_id()).unwrap() >= 0.0);
         }
     }
 }

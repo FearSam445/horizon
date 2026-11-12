@@ -1488,8 +1488,10 @@ capabilities = ["registries"]
     const ITEM: &[u8] = br#"{"template": "minecraft:diamond", "rarity": "uncommon"}"#;
 
     fn scratch(name: &str) -> PathBuf {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-content-{}-{name}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-content-{}-{name}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         dir

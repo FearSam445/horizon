@@ -216,7 +216,7 @@ fn insert(
 fn write(path: &Path, root: &NamedTag) -> std::io::Result<()> {
     let bytes = nbt::write_named(root, nbt::Limits::default()).map_err(std::io::Error::other)?;
     // Its own temporary file: another game on the same folder writes at the same time.
-    let tmp = path.with_extension(format!("dat_tmp.{}", std::process::id()));
+    let tmp = path.with_extension(format!("dat_tmp.{}", horizon_fs::process_id()));
     horizon_fs::write(&tmp, bytes)?;
     horizon_fs::rename(tmp, path)
 }
@@ -271,7 +271,8 @@ mod tests {
 
     #[test]
     fn servers_dat_round_trips() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-servers-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-servers-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("servers.dat");
         let list = vec![
@@ -293,7 +294,8 @@ mod tests {
 
     #[test]
     fn prepend_keeps_hidden_entries_and_unknown_fields() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-prepend-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-prepend-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("servers.dat");
         prepend(&path, &ServerEntry::new("First", "a.example")).unwrap();

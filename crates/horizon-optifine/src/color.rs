@@ -441,7 +441,8 @@ mod tests {
 
     #[test]
     fn load_prefers_optifine_over_mcpatcher() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-color-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-color-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         for (top, colour) in [("optifine", "010101"), ("mcpatcher", "020202")] {
             let dir = root.join(format!("assets/minecraft/{top}"));

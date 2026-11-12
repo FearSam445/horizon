@@ -1404,8 +1404,10 @@ mod tests {
 
     #[test]
     fn mod_category_mapping_validates_ids_icons_and_conflicts() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-book-categories-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-book-categories-{}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(&root).unwrap();
         horizon_fs::write(
             root.join("items.json"),
@@ -1484,8 +1486,8 @@ mod tests {
     }
     #[test]
     fn the_index_knows_each_recipes_toast_station_and_result() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-toast-index-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-toast-index-{}", horizon_fs::process_id()));
         let dir = root.join("data/minecraft/recipe");
         horizon_fs::create_dir_all(&dir).unwrap();
         for (name, json) in [
@@ -1538,7 +1540,7 @@ mod tests {
     fn content_namespace_recipes_have_display_ids() {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-mod-recipe-index-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()
@@ -1692,8 +1694,10 @@ mod tests {
     }
     #[test]
     fn a_knowledge_book_unlocks_its_recipes_and_is_used_up() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-knowledge-book-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-knowledge-book-{}",
+            horizon_fs::process_id()
+        ));
         let dir = root.join("data/minecraft/recipe");
         horizon_fs::create_dir_all(&dir).unwrap();
         for name in ["stick", "crafting_table", "torch"] {
@@ -1762,8 +1766,10 @@ mod tests {
     /// order: the file's path (with `.json`) first, then its namespace.
     #[test]
     fn display_ids_follow_registration_order() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-display-order-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-display-order-{}",
+            horizon_fs::process_id()
+        ));
         let dir = root.join("data/minecraft/recipe");
         horizon_fs::create_dir_all(&dir).unwrap();
         let recipe = r#"{"type":"minecraft:crafting_shapeless","result":{"id":"minecraft:stick"}}"#;
@@ -1797,8 +1803,8 @@ mod tests {
     /// Rod vanished from the book and from recipe viewers).
     #[test]
     fn synced_recipes_number_their_displays_as_the_server_does() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-synced-order-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-synced-order-{}", horizon_fs::process_id()));
         let dir = root.join("data/minecraft/recipe");
         horizon_fs::create_dir_all(&dir).unwrap();
         let recipe = r#"{"type":"minecraft:crafting_shapeless","ingredients":["minecraft:stick"],"result":{"id":"minecraft:stick"}}"#;

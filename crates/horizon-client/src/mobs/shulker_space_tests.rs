@@ -95,7 +95,7 @@ fn fixture() -> (BlockRegistry, crate::blocks::BlockFacts, Tag) {
     static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     let root = horizon_fs::temp_dir().join(format!(
         "horizon-shulker-space-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
     ));
     horizon_fs::create_dir(&root).unwrap();

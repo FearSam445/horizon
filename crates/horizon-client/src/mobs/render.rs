@@ -3674,7 +3674,7 @@ mod emissive_tests {
         static N: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-render-emissive-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             N.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         let _ = horizon_fs::remove_dir_all(&root);
@@ -3963,8 +3963,10 @@ mod random_texture_tests {
 
     /// A pack whose silverfish has a second variant, every silverfish wearing it.
     fn data() -> MobData {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-render-random-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-render-random-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("assets/minecraft/optifine/random/entity");
         horizon_fs::create_dir_all(&dir).unwrap();

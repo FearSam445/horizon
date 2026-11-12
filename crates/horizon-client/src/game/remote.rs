@@ -11715,7 +11715,7 @@ mod tests {
             std::env::var_os("HORIZON_TEST_RESOURCES").expect("prepared resources required"),
         );
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-alias-game-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-alias-game-{}", horizon_fs::process_id()));
         let mut content = Content::declared("ruby");
         content
             .declare(

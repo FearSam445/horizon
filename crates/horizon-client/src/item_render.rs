@@ -1414,8 +1414,10 @@ mod tests {
     /// items.json still reports itself first.
     #[test]
     fn item_model_errors_wait_for_the_item_definitions() -> crate::Result<()> {
-        let root = horizon_fs::temp_dir()
-            .join(format!("horizon-item-model-errors-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-item-model-errors-{}",
+            horizon_fs::process_id()
+        ));
         let model = root.join("assets/horizon/models/INVALID.json");
         fs::create_dir_all(model.parent().unwrap())?;
         fs::write(model, "{}")?;
@@ -1443,7 +1445,7 @@ mod tests {
     fn item_definitions_load_from_nested_folders() -> crate::Result<()> {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-item-definitions-nested-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let definitions = root.join("assets/horizon/items");
         fs::create_dir_all(definitions.join("postman"))?;
@@ -1461,8 +1463,8 @@ mod tests {
     /// none of the client item definitions.
     #[test]
     fn a_server_keeps_prototypes_without_definitions() -> crate::Result<()> {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-item-server-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-item-server-{}", horizon_fs::process_id()));
         let definitions = root.join("assets/horizon/items");
         fs::create_dir_all(&definitions)?;
         fs::write(

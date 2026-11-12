@@ -226,8 +226,10 @@ mod tests {
 
     #[test]
     fn chains_run_while_their_condition_holds_with_their_uniforms() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-polytone-post-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-polytone-post-{}",
+            horizon_fs::process_id()
+        ));
         let write = |path: &str, text: &str| {
             let path = root.join(path);
             horizon_fs::create_dir_all(path.parent().unwrap()).unwrap();

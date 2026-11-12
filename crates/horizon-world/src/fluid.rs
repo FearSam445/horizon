@@ -791,7 +791,7 @@ mod tests {
             ..ModFluid::default()
         };
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-mod-fluids-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-mod-fluids-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&root).unwrap();
         horizon_fs::write(
             root.join(MOD_FLUIDS_FILE),

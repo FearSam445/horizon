@@ -162,8 +162,10 @@ mod tests {
 
     #[test]
     fn optifine_overlays_pair_with_their_loaded_blocks() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-block-emissive-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-block-emissive-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         let block = root.join("assets/minecraft/textures/block");
         let names = [

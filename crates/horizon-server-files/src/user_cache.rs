@@ -238,7 +238,7 @@ mod tests {
     fn cache(text: &str) -> (UserCache, Vec<String>) {
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-usercache-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             text.len()
         ));
         horizon_fs::create_dir_all(&dir).unwrap();

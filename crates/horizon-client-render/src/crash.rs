@@ -926,7 +926,7 @@ mod tests {
         assert!(text.contains("\tOperating System: "));
         assert!(text.contains("\tCPU: "));
         let home =
-            horizon_fs::temp_dir().join(format!("horizon-crash-save-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-crash-save-{}", horizon_fs::process_id()));
         let path = report.save(&home).unwrap();
         assert_eq!(horizon_fs::read_to_string(&path).unwrap(), text);
         assert!(

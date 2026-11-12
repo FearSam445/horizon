@@ -675,7 +675,7 @@ mod tests {
     #[test]
     fn standalone_models_bake_once_and_skip_what_does_not_read() -> Result<()> {
         let fixture = Fixture(
-            horizon_fs::temp_dir().join(format!("horizon-standalone-{}", std::process::id())),
+            horizon_fs::temp_dir().join(format!("horizon-standalone-{}", horizon_fs::process_id())),
         );
         // A half shaft: one element, two faces; a child with its parent's elements.
         fixture.write(

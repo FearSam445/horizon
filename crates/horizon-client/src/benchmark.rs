@@ -250,7 +250,7 @@ fn time_passes(control: &Control, scene: &str, report: &mut Report) -> Result<bo
 fn run(control: &Control, setup: Setup) -> Result<PathBuf, String> {
     let scenario = Scenario::parse(&setup.scenario)?;
     let mut report = Report::new(Kind::Game, setup.app.clone());
-    let pid = std::process::id();
+    let pid = horizon_fs::process_id();
     report.conditions.load_avg_1m = horizon_bench::load_average();
     report.conditions.power = horizon_bench::power_source().map(str::to_owned);
     let rss = RssSampler::start(pid);
@@ -1333,8 +1333,10 @@ mod tests {
 
     #[test]
     fn only_replaces_its_own_world() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-benchmark-test-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-benchmark-test-{}",
+            horizon_fs::process_id()
+        ));
         let world = dir.join("saves").join(WORLD);
         horizon_fs::create_dir_all(&world).unwrap();
         assert!(

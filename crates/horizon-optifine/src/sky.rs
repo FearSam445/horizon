@@ -608,7 +608,7 @@ mod tests {
 
     #[test]
     fn scan_reads_worlds_in_number_order_with_bodies() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-sky-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-sky-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("assets/minecraft/optifine/sky/world0");
         horizon_fs::create_dir_all(&dir).unwrap();

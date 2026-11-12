@@ -514,7 +514,8 @@ fn a_converted_profile_written_to_a_file_reads_back_through_the_queries() {
         t: 10.0,
         ..Default::default()
     }));
-    let dir = horizon_fs::temp_dir().join(format!("horizon-render-perf-{}", std::process::id()));
+    let dir =
+        horizon_fs::temp_dir().join(format!("horizon-render-perf-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&dir).unwrap();
     let file = dir.join("real.hzperf");
     let mut writer = CaptureWriter::new(horizon_fs::File::create(&file).unwrap()).unwrap();

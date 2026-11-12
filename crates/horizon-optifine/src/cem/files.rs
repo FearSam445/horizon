@@ -96,7 +96,8 @@ mod tests {
 
     #[test]
     fn emf_files_win_and_a_flat_file_beats_its_folder() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-jem-files-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-jem-files-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         for path in [
             // EMF's folder form over OptiFine's flat file.

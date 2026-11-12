@@ -285,7 +285,7 @@ mod tests {
     #[test]
     fn rule_models_load_with_their_relative_textures_and_parents() {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-cit-models-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-cit-models-{}", horizon_fs::process_id()));
         let cit = root.join("assets/minecraft/optifine/cit");
         fs::create_dir_all(cit.join("swords")).unwrap();
         let write = |rel: &str, text: &str| fs::write(cit.join(rel), text).unwrap();

@@ -605,8 +605,10 @@ mod tests {
     /// anticheat is dropped (the server stopping), even a flood written just before.
     #[test]
     fn the_log_keeps_every_line_in_order_up_to_the_drop() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-anticheat-log-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-anticheat-log-{}",
+            horizon_fs::process_id()
+        ));
         let path = dir.join("logs").join("anticheat.log");
         let mut anticheat = Anticheat::new(Config {
             log: path.to_string_lossy().into_owned(),

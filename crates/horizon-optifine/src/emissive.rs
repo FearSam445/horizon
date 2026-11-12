@@ -135,8 +135,10 @@ mod tests {
     use super::*;
 
     fn pack(name: &str, files: &[&str], suffix: Option<&str>) -> (std::path::PathBuf, Emissive) {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-emissive-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-emissive-{name}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&root);
         for path in files {
             let path = root.join(path);
@@ -228,7 +230,7 @@ mod tests {
         let suffix = |files: &[(&str, &[u8])]| {
             let root = horizon_fs::temp_dir().join(format!(
                 "horizon-emissive-where-{}-{}",
-                std::process::id(),
+                horizon_fs::process_id(),
                 files.len()
             ));
             let _ = fs::remove_dir_all(&root);

@@ -288,8 +288,10 @@ mod tests {
     /// A temp pack of `files` (path under `optifine/random/entity`, or from the root when it
     /// starts with `assets/`; contents), scanned.
     fn pack(name: &str, files: &[(&str, &str)]) -> RandomTextures {
-        let root = horizon_fs::temp_dir()
-            .join(format!("horizon-mob-random-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-mob-random-{name}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         for (path, text) in files {
             let path = if path.starts_with("assets/") {

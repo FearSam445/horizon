@@ -1168,7 +1168,8 @@ mod tests {
 
     #[test]
     fn open_and_share_find_a_named_capture_in_the_reports_folder_or_the_last_one() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-resolve-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-resolve-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let name = "profile-20251107-143844Z";
         horizon_fs::write(dir.join(format!("{name}.hzperf")), b"x").unwrap();
@@ -1235,8 +1236,10 @@ mod tests {
     }
 
     fn scratch(tag: &str) -> PathBuf {
-        let dir =
-            horizon_fs::temp_dir().join(format!("hz-profile-route-{tag}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "hz-profile-route-{tag}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         dir

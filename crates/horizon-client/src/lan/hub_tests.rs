@@ -594,7 +594,7 @@ fn sent_tabs(rx: &std::sync::mpsc::Receiver<crate::lan::Out>) -> Vec<Option<Stri
 fn advancement_data() -> std::path::PathBuf {
     let root = horizon_fs::temp_dir().join(format!(
         "horizon-advancement-tab-{}-{:?}",
-        std::process::id(),
+        horizon_fs::process_id(),
         horizon_thread::current().id()
     ));
     let folder = root.join("data").join("minecraft").join("advancement");

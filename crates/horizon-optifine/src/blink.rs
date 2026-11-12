@@ -141,8 +141,8 @@ mod tests {
     use super::*;
 
     fn pack(name: &str, files: &[(&str, &str)]) -> (std::path::PathBuf, Blinks) {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-blink-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-blink-{name}-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         for (path, text) in files {
             let path = root.join(path);

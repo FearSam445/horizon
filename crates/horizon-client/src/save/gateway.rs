@@ -128,7 +128,7 @@ mod tests {
     fn fixture() -> (PathBuf, SaveDir) {
         let dir = horizon_fs::temp_dir().join(format!(
             "gateway-migration-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir_all(&dir).unwrap();

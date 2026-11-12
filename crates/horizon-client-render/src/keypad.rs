@@ -484,7 +484,8 @@ mod tests {
         keypad.configure(&settings);
         assert_eq!(keypad.state(), PadState::default());
 
-        let dir = horizon_fs::temp_dir().join(format!("horizon-keypad-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-keypad-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("horizon-keypad.json");
         Settings::default().save(&path).unwrap();

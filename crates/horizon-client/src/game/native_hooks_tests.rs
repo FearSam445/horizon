@@ -122,7 +122,7 @@ fn mod_sign_constructor_prioritizes_templates_over_suffixes() {
     );
     let root = horizon_fs::temp_dir().join(format!(
         "horizon-sign-constructor-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -852,7 +852,8 @@ fn config_dir_is_config_in_the_game_folder() {
     // Callable without a game, from any hook.
     let _: fn() -> Result<std::path::PathBuf, String> = super::Game::native_config_dir;
     use super::config_dir;
-    let root = horizon_fs::temp_dir().join(format!("horizon-config-dir-{}", std::process::id()));
+    let root =
+        horizon_fs::temp_dir().join(format!("horizon-config-dir-{}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&root);
     assert!(!root.join("config").fs_exists());
     let dir = config_dir(&root).unwrap();

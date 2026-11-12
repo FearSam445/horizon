@@ -259,7 +259,7 @@ mod tests {
         else {
             return;
         };
-        let dir = horizon_fs::temp_dir().join(format!("horizon-shot-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-shot-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("shot.png");
         let [w, h] = [3u32, 2];

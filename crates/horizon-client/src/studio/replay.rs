@@ -382,7 +382,7 @@ mod tests {
     #[test]
     fn test_replay_driver_advance_and_speed() {
         let temp_dir =
-            horizon_fs::temp_dir().join(format!("replay_driver_test_{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("replay_driver_test_{}", horizon_fs::process_id()));
         let _ = fs::create_dir_all(&temp_dir);
         let mcpr_path = temp_dir.join("driver_test.mcpr");
 
@@ -436,8 +436,10 @@ mod tests {
 
     #[test]
     fn seek_reconstructs_packets_and_forward_seek_skips_consumed_packets() {
-        let temp_dir =
-            horizon_fs::temp_dir().join(format!("replay_driver_seek_test_{}", std::process::id()));
+        let temp_dir = horizon_fs::temp_dir().join(format!(
+            "replay_driver_seek_test_{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::create_dir_all(&temp_dir);
         let mcpr_path = temp_dir.join("seek_test.mcpr");
         let meta = Metadata {

@@ -1032,7 +1032,7 @@ mod tests {
 
     #[test]
     fn files_reshape_their_layers_and_babies_fall_back() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-cem-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-cem-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let cem = root.join("assets/minecraft/optifine/cem");
         fs::create_dir_all(cem.join("zombie")).unwrap();
@@ -1167,7 +1167,7 @@ mod tests {
     /// A fresh pack folder for the test `test` holding `files` (paths under `assets/minecraft/`).
     fn pack(test: &str, files: &[(&str, &str)]) -> std::path::PathBuf {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-cem-{test}-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-cem-{test}-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         for (path, text) in files {
             let path = root.join("assets/minecraft").join(path);

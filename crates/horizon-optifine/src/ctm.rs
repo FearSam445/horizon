@@ -876,7 +876,7 @@ mod tests {
 
     #[test]
     fn loading_a_pack() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-ctm-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("horizon-ctm-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&root);
         let ctm = root.join("assets/minecraft/optifine/ctm");
         horizon_fs::create_dir_all(ctm.join("b")).unwrap();

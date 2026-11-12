@@ -88,8 +88,10 @@ mod tests {
 
     #[test]
     fn a_resource_pack_overrides_a_texture() {
-        let base =
-            horizon_fs::temp_dir().join(format!("horizon-client-resources-{}", std::process::id()));
+        let base = horizon_fs::temp_dir().join(format!(
+            "horizon-client-resources-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         write(&vanilla.join(COW), &one_pixel_png(RED));
@@ -120,7 +122,7 @@ mod tests {
     fn only_plain_paths_under_assets_are_read() {
         let base = horizon_fs::temp_dir().join(format!(
             "horizon-client-resources-paths-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = fs::remove_dir_all(&base);
         let root = base.join("root");

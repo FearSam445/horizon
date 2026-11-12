@@ -1779,8 +1779,9 @@ mod stand_equip_event_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir =
-            Some(horizon_fs::temp_dir().join(format!("horizon-h130-unit-{}", std::process::id())));
+        options.game_dir = Some(
+            horizon_fs::temp_dir().join(format!("horizon-h130-unit-{}", horizon_fs::process_id())),
+        );
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,

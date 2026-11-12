@@ -288,8 +288,10 @@ pub(crate) mod tests {
 
     /// A fresh empty folder under the system's temp folder.
     pub(crate) fn temp_dir(name: &str) -> PathBuf {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-shaders-{name}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-shaders-{name}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         dir

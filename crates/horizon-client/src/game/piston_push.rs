@@ -1162,10 +1162,10 @@ mod order_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(
-            horizon_fs::temp_dir()
-                .join(format!("horizon-piston-order-unit-{}", std::process::id())),
-        );
+        options.game_dir = Some(horizon_fs::temp_dir().join(format!(
+            "horizon-piston-order-unit-{}",
+            horizon_fs::process_id()
+        )));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,
@@ -1265,7 +1265,7 @@ mod order_tests {
         options.resources = root.clone();
         options.game_dir = Some(horizon_fs::temp_dir().join(format!(
             "horizon-piston-velocity-unit-{}",
-            std::process::id()
+            horizon_fs::process_id()
         )));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
@@ -1353,10 +1353,10 @@ mod order_tests {
         .unwrap();
         let mut options = Options::parse(std::iter::empty()).unwrap().unwrap();
         options.resources = root.clone();
-        options.game_dir = Some(
-            horizon_fs::temp_dir()
-                .join(format!("horizon-piston-slime-unit-{}", std::process::id())),
-        );
+        options.game_dir = Some(horizon_fs::temp_dir().join(format!(
+            "horizon-piston-slime-unit-{}",
+            horizon_fs::process_id()
+        )));
         options.execution_role = crate::game::execution_role::ExecutionRole::IntegratedServer;
         let mut game = Game::new(
             &loaded.resources,

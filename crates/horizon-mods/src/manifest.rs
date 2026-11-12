@@ -516,7 +516,7 @@ capabilities = ["game-read", "hud"]
 
     #[test]
     fn hmod_round_trips() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-mods-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-mods-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let path = dir.join("coords_hud.hmod");
         horizon_fs::write(&path, Package::write(EXAMPLE, b"\0asm").unwrap()).unwrap();

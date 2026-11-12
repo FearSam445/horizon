@@ -5707,7 +5707,8 @@ mod tests {
                 .registry
                 .default_state("minecraft:stone")
                 .unwrap();
-            let dir = horizon_fs::temp_dir().join(format!("horizon-{name}-{}", std::process::id()));
+            let dir =
+                horizon_fs::temp_dir().join(format!("horizon-{name}-{}", horizon_fs::process_id()));
             let _ = horizon_fs::remove_dir_all(&dir);
             Ok(Self {
                 lod: Lod::new(source(&dir), context),

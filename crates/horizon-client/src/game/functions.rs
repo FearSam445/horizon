@@ -1728,8 +1728,10 @@ mod tests {
         .unwrap();
         game.build_registries();
         game.set_allow_commands(true);
-        let dir = horizon_fs::temp_dir()
-            .join(format!("horizon-function-admission-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-function-admission-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks/admission");
         let functions = pack.join("data/h144/function");
@@ -1953,7 +1955,7 @@ mod tests {
         for order in [["file/a", "file/b"], ["file/b", "file/a"]] {
             let dir = horizon_fs::temp_dir().join(format!(
                 "horizon-overlay-{}-{}",
-                std::process::id(),
+                horizon_fs::process_id(),
                 order[0].replace('/', "_")
             ));
             let _ = horizon_fs::remove_dir_all(&dir);
@@ -1987,8 +1989,8 @@ mod tests {
     /// counts.
     #[test]
     fn contributed_files_join_the_load_below_the_worlds_packs() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-contributed-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-contributed-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks").join("pack");
         horizon_fs::create_dir_all(pack.join("data/pkg/tags/item")).unwrap();
@@ -2209,7 +2211,7 @@ mod entity_score_tests {
         game.set_allow_commands(true);
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-game-folder-metadata-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = horizon_fs::remove_dir_all(&dir);
         let cases = [
@@ -2337,7 +2339,7 @@ mod required_tag_tests {
         .unwrap();
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-required-tags-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
@@ -2551,7 +2553,7 @@ mod required_tag_tests {
         game.set_allow_commands(true);
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-predicate-reference-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = horizon_fs::remove_dir_all(&dir);
         let pack = dir.join("datapacks/references");

@@ -1074,7 +1074,7 @@ mod tests {
         static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-env-packs-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         let _ = horizon_fs::remove_dir_all(&dir);

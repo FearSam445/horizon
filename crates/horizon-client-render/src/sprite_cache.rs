@@ -100,7 +100,7 @@ impl SpriteCache {
         self.dirty = false;
         let temporary = self
             .path
-            .with_extension(format!("{}.tmp", std::process::id()));
+            .with_extension(format!("{}.tmp", horizon_fs::process_id()));
         if fs::write(&temporary, serialize(self.fingerprint, &self.entries)).is_ok()
             && fs::rename(&temporary, &self.path).is_err()
         {
@@ -220,8 +220,10 @@ mod tests {
         }
     }
     fn scratch(tag: &str) -> PathBuf {
-        let dir = horizon_fs::temp_dir()
-            .join(format!("horizon-sprite-cache-{tag}-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-sprite-cache-{tag}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(dir.join("assets/minecraft/textures/block")).unwrap();
         dir

@@ -870,8 +870,10 @@ mod tests {
 
     /// A resources dir with those registries and the given recipe files.
     fn resources(name: &str, recipes: &[(&str, &str)]) -> PathBuf {
-        let root = horizon_fs::temp_dir()
-            .join(format!("horizon-recipe-book-{name}-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-recipe-book-{name}-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&root);
         let dir = root.join("data/minecraft/recipe");
         horizon_fs::create_dir_all(&dir).unwrap();

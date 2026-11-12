@@ -14,7 +14,7 @@ impl Fixture {
         static NEXT: AtomicUsize = AtomicUsize::new(0);
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-world-menu-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir_all(root.join("saves")).unwrap();

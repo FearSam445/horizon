@@ -35,7 +35,7 @@ fn mining_uses_admitted_stack_tools_and_actual_eye_immersion() {
     .unwrap();
     let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-stack-mining-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()

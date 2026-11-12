@@ -431,7 +431,7 @@ mod tests {
             static NEXT: AtomicU32 = AtomicU32::new(0);
             let root = horizon_fs::temp_dir().join(format!(
                 "horizon-panorama-{}-{}",
-                std::process::id(),
+                horizon_fs::process_id(),
                 NEXT.fetch_add(1, Ordering::Relaxed),
             ));
             let fixture = Self(root);

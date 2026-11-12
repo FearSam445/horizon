@@ -227,7 +227,7 @@ mod tests {
         .unwrap();
         let scratch = horizon_fs::temp_dir().join(format!(
             "horizon-building-turn-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             horizon_clock::system_now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap()

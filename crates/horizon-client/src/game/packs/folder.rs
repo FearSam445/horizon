@@ -35,7 +35,7 @@ mod tests {
         fn new() -> Self {
             let path = horizon_fs::temp_dir().join(format!(
                 "horizon-folder-{}-{}",
-                std::process::id(),
+                horizon_fs::process_id(),
                 NEXT.fetch_add(1, Ordering::Relaxed)
             ));
             fs::create_dir(&path).unwrap();

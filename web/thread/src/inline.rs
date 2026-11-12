@@ -11,9 +11,23 @@ pub use std::thread::{
     yield_now,
 };
 
-/// Waiting is not possible on the page's only thread: a sleep returns at once.
-/// A loop that sleeps until another thread acts must be made a step instead.
-pub fn sleep(_dur: Duration) {}
+/// What a sleep does instead of waiting ([`set_idle`]).
+static IDLE: std::sync::OnceLock<fn(Duration)> = std::sync::OnceLock::new();
+
+/// Gives sleeps work to do: the page's only thread can't wait, and the work a
+/// sleeping loop waits for (chunks, for one) is the work it must do itself.
+/// The browser build sets the job pool's pump here at boot.
+pub fn set_idle(work: fn(Duration)) {
+    let _ = IDLE.set(work);
+}
+
+/// The page's only thread can't wait: a sleep does the idle work ([`set_idle`])
+/// for at most `dur` instead, and returns at once without any.
+pub fn sleep(dur: Duration) {
+    if let Some(work) = IDLE.get() {
+        work(dur);
+    }
+}
 
 /// `sleep_until`, which returns at once for the same reason as [`sleep`].
 pub fn sleep_until<I>(_deadline: I) {}

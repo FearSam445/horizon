@@ -70,6 +70,10 @@ pub fn boot() -> Result<(), String> {
     std::panic::set_hook(Box::new(|info| {
         web_sys::console::error_1(&format!("Horizon panicked: {info}").into());
     }));
+    // A loop that sleeps until chunks are made makes them itself: no worker would.
+    horizon_thread::set_idle(|budget| {
+        horizon_threads::jobs::pump(budget);
+    });
     let zip = std::mem::take(&mut *GAME_FILES.lock().unwrap_or_else(|e| e.into_inner()));
     if !zip.is_empty() {
         mount(zip)?;

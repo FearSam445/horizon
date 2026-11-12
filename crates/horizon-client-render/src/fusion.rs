@@ -614,8 +614,10 @@ mod tests {
 
     #[test]
     fn models_name_the_predicates_their_faces_draw() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-fusion-models-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-fusion-models-{}",
+            horizon_fs::process_id()
+        ));
         let models = root.join("assets/demo/models/block");
         fs::create_dir_all(&models).unwrap();
         // A pane arm over a template whose `particle` names the pane sheet but draws no face
@@ -659,8 +661,8 @@ mod tests {
 
     #[test]
     fn faces_of_one_sprite_join_by_their_own_keys() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-fusion-keys-{}", std::process::id()));
+        let root = horizon_fs::temp_dir()
+            .join(format!("horizon-fusion-keys-{}", horizon_fs::process_id()));
         let models = root.join("assets/demo/models/block");
         fs::create_dir_all(&models).unwrap();
         // The wiki's example: four keys on one texture, two of them joining by `blue`.

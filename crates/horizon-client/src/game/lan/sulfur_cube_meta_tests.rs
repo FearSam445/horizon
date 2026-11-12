@@ -7,7 +7,7 @@
 #[test]
 fn a_sulfur_cube_sends_its_fuse_at_19_and_from_bucket_at_20() {
     use horizon_world::nbt::Tag;
-    let root = horizon_fs::temp_dir().join(format!("horizon-sulfur-meta-{}", std::process::id()));
+    let root = horizon_fs::temp_dir().join(format!("horizon-sulfur-meta-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&root).unwrap();
     horizon_fs::write(
         root.join("entity-types.json"),

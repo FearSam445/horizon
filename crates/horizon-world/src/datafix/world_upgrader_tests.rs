@@ -6,7 +6,8 @@ use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 struct TempWorld(PathBuf);
 impl TempWorld {
     fn new(name: &str) -> Self {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-wu-{name}-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-wu-{name}-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         Self(dir)

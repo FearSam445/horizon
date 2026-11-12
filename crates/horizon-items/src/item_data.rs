@@ -1983,8 +1983,10 @@ mod tests {
     fn check_max_stack_saved_prototype(decoded: bool) {
         use crate::items::Items;
         use horizon_world::loot::PackOverlay;
-        let root = horizon_fs::temp_dir()
-            .join(format!("h088-prototypes-{}-{decoded}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "h088-prototypes-{}-{decoded}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
         horizon_fs::write(root.join("items.json"), r#"{"minecraft:iron_helmet":{"minecraft:max_stack_size":1},"minecraft:stone":{"minecraft:max_stack_size":64},"minecraft:ender_pearl":{"minecraft:max_stack_size":16},"audit:changed":{"minecraft:max_stack_size":7},"audit:missing":{}}"#).unwrap();
         let items = Items::catalog(&root, &PackOverlay::NONE).unwrap();

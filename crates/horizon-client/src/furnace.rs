@@ -218,8 +218,10 @@ mod tests {
     /// with two fuels: `test:coal` (no remainder) and `test:cell` (a content mod's item
     /// that leaves `test:husk`). The folder is gone when this returns.
     fn data(name: &str) -> (Items, Recipes, Providers) {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-furnace-{name}-{}", std::process::id(),));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-furnace-{name}-{}",
+            horizon_fs::process_id(),
+        ));
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("data/minecraft/recipe")).unwrap();
         fs::write(

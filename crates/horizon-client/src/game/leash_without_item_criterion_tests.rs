@@ -15,7 +15,7 @@ fn actual_holder_detach_does_not_reaward_the_held_lead_criterion() {
     // A world of its own under the temporary folder, never the cwd.
     game.world_root = horizon_fs::temp_dir().join(format!(
         "horizon-leash-criterion-world-{}",
-        std::process::id()
+        horizon_fs::process_id()
     ));
     let _ = horizon_fs::remove_dir_all(&game.world_root);
     game.build_registries();

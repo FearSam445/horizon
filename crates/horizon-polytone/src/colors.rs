@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn fluid_modifiers_give_water_and_lava_their_fog() {
-        let root = horizon_fs::temp_dir().join(format!("fluid-fog-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!("fluid-fog-{}", horizon_fs::process_id()));
         let dir = root.join("assets/minecraft/polytone/fluid_modifiers");
         horizon_fs::create_dir_all(&dir).unwrap();
         horizon_fs::write(

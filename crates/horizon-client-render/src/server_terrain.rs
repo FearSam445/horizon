@@ -773,7 +773,8 @@ mod tests {
     }
 
     fn scratch(name: &str) -> PathBuf {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-{name}-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-{name}-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         dir
     }

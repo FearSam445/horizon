@@ -1637,7 +1637,7 @@ mod tests {
         let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-polytone-particles-{}-{n}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         for (path, json) in files {
             let path = root.join(path);

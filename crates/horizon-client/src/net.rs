@@ -1555,7 +1555,8 @@ mod tests {
 
     #[test]
     fn a_known_entry_takes_its_data_from_the_clients_pack() {
-        let root = horizon_fs::temp_dir().join(format!("hz-known-entries-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("hz-known-entries-{}", horizon_fs::process_id()));
         let dir = root.join("data/minecraft/damage_type");
         horizon_fs::create_dir_all(&dir).unwrap();
         horizon_fs::write(
@@ -1817,8 +1818,10 @@ mod tests {
 
     #[test]
     fn configuration_answers_the_content_identity_challenge() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-content-identity-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-content-identity-{}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(&root).unwrap();
         horizon_fs::write(
             root.join("facts.json"),
@@ -1876,9 +1879,10 @@ mod tests {
             cfg::Serverbound::FinishConfiguration(Empty)
         );
         assert!(thread.join().unwrap().is_ok());
-        horizon_fs::remove_dir_all(
-            horizon_fs::temp_dir().join(format!("horizon-content-identity-{}", std::process::id())),
-        )
+        horizon_fs::remove_dir_all(horizon_fs::temp_dir().join(format!(
+            "horizon-content-identity-{}",
+            horizon_fs::process_id()
+        )))
         .unwrap();
     }
 
@@ -2400,8 +2404,8 @@ mod tests {
 
     #[test]
     fn fill_known_entries_rejects_path_traversal_and_reads_valid_entries() {
-        let temp_dir =
-            horizon_fs::temp_dir().join(format!("horizon-net-reg-test-{}", std::process::id()));
+        let temp_dir = horizon_fs::temp_dir()
+            .join(format!("horizon-net-reg-test-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&temp_dir);
         let resources = temp_dir.join("res");
         let valid_dir = resources.join("data/minecraft/worldgen/biome");

@@ -278,8 +278,10 @@ mod tests {
         }
     }
     fn list(tag: &str) -> BanList {
-        let file = horizon_fs::temp_dir()
-            .join(format!("horizon-tempban-{tag}-{}.json", std::process::id()));
+        let file = horizon_fs::temp_dir().join(format!(
+            "horizon-tempban-{tag}-{}.json",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_file(&file);
         BanList::new(file)
     }

@@ -2,7 +2,8 @@ use super::*;
 
 #[test]
 fn a_folder_without_prepared_files_is_named_before_loading() {
-    let root = horizon_fs::temp_dir().join(format!("horizon-unprepared-{}", std::process::id()));
+    let root =
+        horizon_fs::temp_dir().join(format!("horizon-unprepared-{}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&root);
     let unprepared = root.join(".local/horizon-client/26.3");
     let missing = missing_resources(&unprepared, None).expect("no manifest is reported");
@@ -44,7 +45,8 @@ fn a_folder_without_prepared_files_is_named_before_loading() {
 
 #[test]
 fn worker_prepares_owned_models_and_inventory_before_handoff() {
-    let root = horizon_fs::temp_dir().join(format!("horizon-startup-cpu-{}", std::process::id()));
+    let root =
+        horizon_fs::temp_dir().join(format!("horizon-startup-cpu-{}", horizon_fs::process_id()));
     horizon_fs::create_dir_all(&root).unwrap();
     horizon_fs::write(
         root.join("entity-models.json"),

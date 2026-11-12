@@ -1057,7 +1057,8 @@ mod tests {
     /// for keeps what `load_tags` read.
     #[test]
     fn world_packs_tags_reach_every_synchronized_registry() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-pack-tags-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-pack-tags-{}", horizon_fs::process_id()));
         let block_tags = root.join("tags/block");
         horizon_fs::create_dir_all(block_tags.join("mineable")).unwrap();
         horizon_fs::write(

@@ -1004,7 +1004,7 @@ mod tests {
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-tag-cache-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         ));
         let textures = root.join("assets/minecraft/textures/font");

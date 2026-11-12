@@ -7,7 +7,7 @@ use horizon_fs::{KindExt as _, MetaExt as _, PathExt as _};
 fn scratch(name: &str) -> PathBuf {
     let dir = horizon_fs::temp_dir().join(format!(
         "horizon-mod-registry-{name}-{}",
-        std::process::id()
+        horizon_fs::process_id()
     ));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();

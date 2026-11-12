@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn a_damage_bar_picks_its_pixel_by_the_stacks_damage() {
-        let dir = horizon_fs::temp_dir().join(format!("pack-bars-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("pack-bars-{}", horizon_fs::process_id()));
         let modifiers = dir.join("assets/minecraft/polytone/item_modifiers");
         let rgby = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0]];
         png_row(&modifiers.join("diamond_pickaxe_bar.png"), &rgby);

@@ -782,8 +782,10 @@ mod slot_tests {
     /// when `LAST_DAMAGE_PLAYER` is gone (the player left).
     #[test]
     fn experience_and_equipment_follow_the_hurt_memory_not_the_player_entity() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-guest-left-xp-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-guest-left-xp-{}",
+            horizon_fs::process_id()
+        ));
         horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
         horizon_fs::write(root.join("items.json"), "{}").unwrap();
         let loot = LootData::load(&root, &PackOverlay::default()).unwrap();

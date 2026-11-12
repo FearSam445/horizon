@@ -74,7 +74,8 @@ mod tests {
 
     #[test]
     fn mismatched_account_sessions_are_consumed_and_refused() {
-        let dir = horizon_fs::temp_dir().join(format!("hz-split-account-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("hz-split-account-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let file = dir.join("session.json");
         horizon_fs::write(&file, r#"{"name":"Ann","uuid":"00000000000000000000000000000001","access_token":"unused","user_type":"msa"}"#).unwrap();
@@ -96,7 +97,8 @@ mod tests {
 
     #[test]
     fn every_listed_session_file_is_consumed() {
-        let dir = horizon_fs::temp_dir().join(format!("hz-split-consumed-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("hz-split-consumed-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&dir).unwrap();
         let file = |n: &str| {
             let file = dir.join(format!("session-{n}.json"));

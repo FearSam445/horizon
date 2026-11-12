@@ -296,7 +296,7 @@ pub fn write_with_readers(root: &Path, readers: usize) -> io::Result<()> {
         + pad(source.len() as u64)
         + (files.len() * ENTRY) as u64
         + pad(pool_len as u64);
-    let tmp = root.join(format!("{FILE_NAME}.{}.tmp", std::process::id()));
+    let tmp = root.join(format!("{FILE_NAME}.{}.tmp", horizon_fs::process_id()));
     remove_abandoned(root);
     let result = (|| {
         let mut out = BufWriter::new(File::create(&tmp)?);
@@ -477,7 +477,8 @@ mod tests {
 
     /// A prepared root with a few files, as `horizon-prepare` leaves it.
     fn root(tag: &str) -> PathBuf {
-        let root = horizon_fs::temp_dir().join(format!("hz-prepared-{tag}-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("hz-prepared-{tag}-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         for (name, bytes) in [
             (SOURCE, &b"{\"client_sha256\":\"a\"}"[..]),
@@ -610,7 +611,7 @@ mod tests {
         // A mirror of the root (a resource pack's, a content mod's) holding a
         // copy of its file and its horizon-resources.json.
         let mirror =
-            horizon_fs::temp_dir().join(format!("hz-prepared-mirror-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("hz-prepared-mirror-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&mirror);
         fs::create_dir_all(&mirror).unwrap();
         fs::copy(&bin, mirror.join(FILE_NAME)).unwrap();

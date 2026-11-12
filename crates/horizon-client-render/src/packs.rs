@@ -1446,7 +1446,7 @@ mod tests {
 
     #[test]
     fn mcmeta_with_utf8_bom_is_read() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-bom-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("horizon-bom-{}", horizon_fs::process_id()));
         fs::create_dir_all(&dir).unwrap();
         let mut meta = b"\xEF\xBB\xBF".to_vec();
         meta.extend_from_slice(br#"{"pack":{"description":"d","pack_format":97}}"#);
@@ -1621,8 +1621,10 @@ mod tests {
     }
     #[test]
     fn a_sound_entry_whose_polytone_condition_fails_is_left_out() {
-        let base =
-            horizon_fs::temp_dir().join(format!("horizon-packs-sound-cond-{}", std::process::id()));
+        let base = horizon_fs::temp_dir().join(format!(
+            "horizon-packs-sound-cond-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&base);
         let (vanilla, dir, out) = (base.join("vanilla"), base.join("pack"), base.join("out"));
         fs::create_dir_all(vanilla.join("assets/minecraft")).unwrap();
@@ -1774,8 +1776,10 @@ mod tests {
     }
     #[test]
     fn companion_maps_follow_the_winning_colour_or_a_higher_map_only_pack() {
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-material-owner-{}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-material-owner-{}",
+            horizon_fs::process_id()
+        ));
         let vanilla = root.join("vanilla");
         let relative = "assets/minecraft/textures/block";
         fs::create_dir_all(vanilla.join(relative)).unwrap();
@@ -1830,7 +1834,8 @@ mod tests {
     #[test]
     fn overlay_layers_packs_over_vanilla() {
         // `&` would split an unquoted `cmd /C mklink` line.
-        let base = horizon_fs::temp_dir().join(format!("horizon-packs-&{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-packs-&{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();
@@ -1912,7 +1917,7 @@ mod tests {
     fn every_file_of_a_big_stack_comes_from_its_top_pack() {
         use std::io::Write as _;
         let base =
-            horizon_fs::temp_dir().join(format!("horizon-pack-stack-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-pack-stack-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         // Folders whose names start alike (`item`, `item_extra`, `item2`) and files beside
@@ -1978,7 +1983,8 @@ mod tests {
     #[test]
     fn a_pack_that_unpacks_past_its_budget_fails_and_leaves_nothing() {
         use std::io::Write as _;
-        let base = horizon_fs::temp_dir().join(format!("horizon-pack-bomb-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-pack-bomb-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();
@@ -2049,8 +2055,8 @@ mod tests {
     #[test]
     fn zip_entries_never_leave_the_overlay() {
         use std::io::Write as _;
-        let base =
-            horizon_fs::temp_dir().join(format!("horizon-pack-escape-{}", std::process::id()));
+        let base = horizon_fs::temp_dir()
+            .join(format!("horizon-pack-escape-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();
@@ -2101,7 +2107,7 @@ mod tests {
     fn built_in_and_folder_packs_give_their_pack_png() {
         use std::io::Write as _;
         let base =
-            horizon_fs::temp_dir().join(format!("horizon-pack-icons-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-pack-icons-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let meta = br#"{"pack":{"description":"d","pack_format":97}}"#;
         let built_in = base.join("vanilla/assets/minecraft/resourcepacks");
@@ -2139,8 +2145,10 @@ mod tests {
     }
     #[test]
     fn polytone_conditions_turn_overlays_on_from_the_packs_configs() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-packs-polytone-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!(
+            "horizon-packs-polytone-{}",
+            horizon_fs::process_id()
+        ));
         let _ = fs::remove_dir_all(&dir);
         let configs = dir.join("assets/mypack/polytone/config_entries");
         fs::create_dir_all(&configs).unwrap();
@@ -2185,7 +2193,8 @@ mod tests {
             {"formats":97,"directory":"C:"},
             {"formats":97,"directory":"ok_1.21-x"}]}}"#);
         assert_eq!(overlays_of(&meta, &Default::default()), ["ok_1.21-x"]);
-        let base = horizon_fs::temp_dir().join(format!("horizon-packs-ov-{}", std::process::id()));
+        let base =
+            horizon_fs::temp_dir().join(format!("horizon-packs-ov-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&base);
         let vanilla = base.join("vanilla");
         fs::create_dir_all(vanilla.join("assets/minecraft/textures/block")).unwrap();

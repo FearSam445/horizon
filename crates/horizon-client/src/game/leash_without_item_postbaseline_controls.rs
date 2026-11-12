@@ -17,7 +17,7 @@ fn holder_detach_still_dispatches_the_actual_interaction_criterion() {
     // A world of its own under the temporary folder, never the cwd.
     game.world_root = horizon_fs::temp_dir().join(format!(
         "horizon-leash-context-control-world-{}",
-        std::process::id()
+        horizon_fs::process_id()
     ));
     let _ = horizon_fs::remove_dir_all(&game.world_root);
     let pack = game.world_root.join("datapacks/leash_context");

@@ -206,7 +206,8 @@ mod tests {
     /// The held stack's own tool rules decide the speed and the harvest.
     #[test]
     fn fist_and_pickaxe_on_stone_through_the_item_table() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-mining-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-mining-{}", horizon_fs::process_id()));
         horizon_fs::create_dir_all(&root).unwrap();
         horizon_fs::write(
             root.join("items.json"),

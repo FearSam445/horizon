@@ -3,7 +3,8 @@ use super::LootOdds;
 
 /// Loot data holding these tables (`minecraft:<name>`).
 fn data(name: &str, tables: &[(&str, &str)]) -> LootData {
-    let root = horizon_fs::temp_dir().join(format!("loot-odds-{name}-{}", std::process::id()));
+    let root =
+        horizon_fs::temp_dir().join(format!("loot-odds-{name}-{}", horizon_fs::process_id()));
     let _ = horizon_fs::remove_dir_all(&root);
     horizon_fs::create_dir_all(root.join("data/minecraft/loot_table")).unwrap();
     for (id, json) in tables {

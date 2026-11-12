@@ -117,7 +117,7 @@ mod tests {
 
     #[test]
     fn stores_per_namespace_and_persists() {
-        let dir = horizon_fs::temp_dir().join(format!("hz-storage-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("hz-storage-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let mut s = CommandStorage::default();
         assert_eq!(s.get("minecraft:x"), Tag::Compound(Compound::new()));

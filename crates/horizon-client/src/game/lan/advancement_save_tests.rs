@@ -27,7 +27,7 @@ mod connected_advancement_save_tests {
         game.options.execution_role = ExecutionRole::DedicatedServer;
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-connected-advancement-save-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
@@ -189,7 +189,7 @@ mod connected_advancement_preservation_tests {
         game.options.execution_role = ExecutionRole::DedicatedServer;
         let dir = horizon_fs::temp_dir().join(format!(
             "horizon-advancement-preservation-{}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();

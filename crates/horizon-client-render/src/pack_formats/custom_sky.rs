@@ -164,7 +164,7 @@ mod tests {
     fn pack(files: &[(&str, &str)]) -> (std::path::PathBuf, CustomSky) {
         let root = horizon_fs::temp_dir().join(format!(
             "horizon-custom-sky-{}-{}",
-            std::process::id(),
+            horizon_fs::process_id(),
             files.len()
         ));
         let _ = horizon_fs::remove_dir_all(&root);

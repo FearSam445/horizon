@@ -298,7 +298,7 @@ mod tests {
     ) -> Result<Bundle, String> {
         let path = horizon_fs::temp_dir().join(format!(
             "native-bundle-{name}-{}.{extension}",
-            std::process::id()
+            horizon_fs::process_id()
         ));
         let mut zip = zip::ZipWriter::new(horizon_fs::File::create(&path).unwrap());
         let options = zip::write::SimpleFileOptions::default();

@@ -100,8 +100,10 @@ mod tests {
     fn nested_tags_optional_entries_and_cycles_resolve() {
         static NEXT: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
         let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let root =
-            horizon_fs::temp_dir().join(format!("horizon-pack-tags-{}-{n}", std::process::id()));
+        let root = horizon_fs::temp_dir().join(format!(
+            "horizon-pack-tags-{}-{n}",
+            horizon_fs::process_id()
+        ));
         let write = |path: &str, json: serde_json::Value| {
             let file = root.join(path);
             horizon_fs::create_dir_all(file.parent().unwrap()).unwrap();

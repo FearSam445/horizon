@@ -444,7 +444,8 @@ mod tests {
 
     #[test]
     fn load_keeps_the_sound_files_a_root_holds() {
-        let root = horizon_fs::temp_dir().join(format!("horizon-sounds-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("horizon-sounds-{}", horizon_fs::process_id()));
         let ns = root.join("assets/minecraft");
         fs::create_dir_all(ns.join("sounds/block/note")).unwrap();
         fs::write(ns.join("sounds/block/note/harp.ogg"), b"").unwrap();

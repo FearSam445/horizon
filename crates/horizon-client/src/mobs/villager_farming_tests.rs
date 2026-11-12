@@ -10,7 +10,7 @@ fn resources() -> &'static std::path::Path {
     ROOT.get_or_init(|| {
         let base = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../.local/horizon-client/26.3");
-        let scratch = horizon_fs::temp_dir().join(format!("fresh-farming-{}", std::process::id()));
+        let scratch = horizon_fs::temp_dir().join(format!("fresh-farming-{}", horizon_fs::process_id()));
         let dir = scratch.join("mod");
         let mut files = vec![(
             "horizon-mod.toml".to_owned(),

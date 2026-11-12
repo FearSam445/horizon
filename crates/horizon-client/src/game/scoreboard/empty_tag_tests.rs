@@ -35,7 +35,7 @@ fn empty_tag_selectors_follow_actual_tag_edits() {
     .unwrap();
     let scratch = horizon_fs::temp_dir().join(format!(
         "horizon-empty-tags-{}-{}",
-        std::process::id(),
+        horizon_fs::process_id(),
         horizon_clock::system_now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()

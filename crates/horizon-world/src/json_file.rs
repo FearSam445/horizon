@@ -37,8 +37,10 @@ fn named(path: &Path, error: io::Error) -> io::Error {
 /// A path for tests: a fresh folder under the system temporary directory.
 #[cfg(test)]
 fn test_dir(tag: &str) -> std::path::PathBuf {
-    let dir =
-        horizon_fs::temp_dir().join(format!("horizon-json-file-{tag}-{}", std::process::id()));
+    let dir = horizon_fs::temp_dir().join(format!(
+        "horizon-json-file-{tag}-{}",
+        horizon_fs::process_id()
+    ));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir

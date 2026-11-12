@@ -81,7 +81,8 @@ mod tests {
 
     #[test]
     fn set_writes_only_when_needed() {
-        let home = horizon_fs::temp_dir().join(format!("horizon-no-ai-{}", std::process::id()));
+        let home =
+            horizon_fs::temp_dir().join(format!("horizon-no-ai-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&home);
         set(&home, false).unwrap();
         assert!(!home.join(FILE).fs_exists(), "off needs no file");

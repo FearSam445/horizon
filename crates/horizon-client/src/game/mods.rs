@@ -783,7 +783,7 @@ pub(super) fn living_mod_types()
     let call = CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let root = horizon_fs::temp_dir().join(format!(
         "horizon-living-mod-types-{}-{call}",
-        std::process::id()
+        horizon_fs::process_id()
     ));
     horizon_fs::create_dir_all(&root).unwrap();
     horizon_fs::write(root.join("entity-types.json"), table).unwrap();
@@ -883,8 +883,10 @@ mod tests {
         let base = std::path::PathBuf::from(
             std::env::var_os("HORIZON_TEST_RESOURCES").expect("prepared resources required"),
         );
-        let scratch =
-            horizon_fs::temp_dir().join(format!("horizon-native-content-{}", std::process::id()));
+        let scratch = horizon_fs::temp_dir().join(format!(
+            "horizon-native-content-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&scratch);
         let version = scratch.join("version");
         let home = scratch.join("game");
@@ -1027,7 +1029,8 @@ mod tests {
     /// replaced (a new modification time) is read again.
     #[test]
     fn a_mods_live_switch_verdict_is_read_once_per_version_of_it() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-verdict-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-verdict-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let ruby = dir.join("ruby");
         horizon_fs::create_dir_all(ruby.join("assets/ruby/lang")).unwrap();
@@ -1065,8 +1068,8 @@ mod tests {
     /// files, and a refused mod's error stays with that mod alone.
     #[test]
     fn mods_read_at_once_keep_their_order_and_their_own_errors() {
-        let dir =
-            horizon_fs::temp_dir().join(format!("horizon-read-at-once-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir()
+            .join(format!("horizon-read-at-once-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let paths: Vec<PathBuf> = (0..12).map(|i| dir.join(format!("m{i}"))).collect();
         for (i, path) in paths.iter().enumerate() {
@@ -1157,7 +1160,8 @@ mod tests {
 
     #[test]
     fn native_mods_installed_but_not_built_get_a_row_saying_so() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-not-built-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-not-built-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         horizon_fs::create_dir_all(&dir).unwrap();
         for id in ["veinminer", "zoom", "minimap"] {

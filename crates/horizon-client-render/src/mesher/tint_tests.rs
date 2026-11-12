@@ -119,7 +119,7 @@ fn pack(files: &[(&str, Vec<u8>)]) -> std::path::PathBuf {
     let n = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let root = horizon_fs::temp_dir().join(format!(
         "horizon-mesher-colormap-{}-{n}",
-        std::process::id()
+        horizon_fs::process_id()
     ));
     for (path, bytes) in files {
         let path = root.join(path);

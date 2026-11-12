@@ -231,8 +231,10 @@ fn place_block_aliases_keep_the_original_item_in_placement_context() {
     else {
         return;
     };
-    let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-alias-context-{}", std::process::id()));
+    let scratch = horizon_fs::temp_dir().join(format!(
+        "horizon-alias-context-{}",
+        horizon_fs::process_id()
+    ));
     let mut content = Content::declared("ruby");
     content
         .declare(
@@ -516,7 +518,8 @@ fn creative_tabs_keep_vanilla_items_missing_from_search() {
 /// vanilla item has fails the build.
 #[test]
 fn block_items_patch_their_template_item() {
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-block-item-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-block-item-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let base = scratch.join("base");
     fs::create_dir_all(&base).unwrap();
@@ -613,7 +616,8 @@ fn a_mods_atlas_sources_follow_vanillas() {
 /// Registry IDs and state IDs must not depend on package discovery order.
 #[test]
 fn allocated_ids_follow_mod_and_entry_order_after_vanilla() {
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-order-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-order-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let base = scratch.join("base");
     fs::create_dir_all(&base).unwrap();
@@ -911,7 +915,7 @@ fn content_root_loads_with_every_table() {
         return;
     };
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-content-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-content-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = ruby_mod(&scratch.join("ruby"));
     // The base as a relative path (cargo runs tests in the crate's folder):
@@ -1135,7 +1139,8 @@ fn refuses_unknown_templates_and_vanilla_ids() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-refuse-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-refuse-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let mut m = ruby_mod(&scratch.join("ruby"));
     m.content.blocks[0].template = "minecraft:not_a_block".into();
@@ -1162,7 +1167,8 @@ fn refuses_more_states_than_a_world_holds() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-states-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-states-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let mut m = ruby_mod(&scratch.join("ruby"));
     // Redstone wire has 1296 states: 810 copies pass 2^20 with any game.
@@ -1188,7 +1194,8 @@ fn builds_past_sixteen_bit_states() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-wide-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-wide-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let mut m = ruby_mod(&scratch.join("ruby"));
     // 40 redstone wires: 51,840 states, past 65,536 with vanilla's 35,723.
@@ -1210,7 +1217,8 @@ fn plain_files_are_copied_and_size_checked() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-copy-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-copy-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let dir = scratch.join("ruby");
     let mut m = ruby_mod(&dir);
@@ -1325,7 +1333,7 @@ fn shared_behaviour_document_matches_independent_loaders() {
 fn independent_reloads_read_changed_behaviour_json_and_report_invalid_files() {
     let Some(base) = prepared() else { return };
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-json-reloads-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-json-reloads-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     fs::create_dir_all(&scratch).unwrap();
     // Keep the remaining resource tree intact without copying a huge prepared client.
@@ -1449,7 +1457,8 @@ fn content_root_is_reused_until_a_mod_changes() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-reuse-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-reuse-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = ruby_mod(&scratch.join("ruby"));
     let cache = scratch.join("cache");
@@ -1497,7 +1506,7 @@ fn content_root_carries_a_structure_mod() {
         return;
     };
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-worldgen-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-worldgen-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let dir = scratch.join("huts");
     let files = [
@@ -1913,7 +1922,8 @@ fn content_root_registers_a_mod_mob_effect() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-effect-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-effect-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = folder_mod(
         &scratch.join("glow"),
@@ -1956,7 +1966,8 @@ fn content_root_with_only_an_item_checks_its_identity() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-item-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-item-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = folder_mod(
         &scratch.join("gem"),
@@ -2019,7 +2030,8 @@ fn content_root_registers_a_mod_entity_type() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-entity-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-entity-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = folder_mod(
         &scratch.join("example"),
@@ -2085,7 +2097,8 @@ fn content_root_registers_a_mod_menu_type() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-menu-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-menu-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = folder_mod(
         &scratch.join("example"),
@@ -2140,7 +2153,8 @@ fn listed_namespaces_join_the_root() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-ns-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-ns-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let toml = manifest("towers", "\"kaisyn\"");
     let m = folder_mod(
@@ -2181,7 +2195,8 @@ fn a_content_root_appends_a_mods_atlas_sources() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-atlas-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-atlas-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = folder_mod(
         &scratch.join("gauge"),
@@ -2211,7 +2226,8 @@ fn a_content_root_appends_a_mods_atlas_sources() {
 /// or both list it) are refused together, naming both.
 #[test]
 fn mods_sharing_a_namespace_are_refused() {
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-clash-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-clash-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let towers = folder_mod(
         &scratch.join("towers"),
@@ -2287,7 +2303,7 @@ fn a_replacing_mod_tag_reaches_the_root() {
         return;
     };
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-replace-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-replace-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let file = "data/minecraft/tags/worldgen/biome/has_structure/village_plains.json";
     let adds = folder_mod(
@@ -2433,7 +2449,8 @@ fn exploration_maps_skip_the_structures_maps_pointed_at() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-map-refs-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-map-refs-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let assets = Assets::load(&base).unwrap();
     let biomes = crate::biome::Biomes::load(&base).unwrap();
@@ -2527,8 +2544,10 @@ fn content_shapes_drive_outline_and_collision() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-content-shapes-{}", std::process::id()));
+    let scratch = horizon_fs::temp_dir().join(format!(
+        "horizon-content-shapes-{}",
+        horizon_fs::process_id()
+    ));
     let _ = fs::remove_dir_all(&scratch);
     let m = folder_mod(
         &scratch.join("mod"),
@@ -2604,7 +2623,7 @@ fn content_shapes_drive_outline_and_collision() {
 #[test]
 fn content_block_default_state_is_validated_and_overlaid() {
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-default-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-default-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let base = scratch.join("base");
     fs::create_dir_all(&base).unwrap();
@@ -2684,8 +2703,10 @@ fn content_block_default_state_is_validated_and_overlaid() {
 #[test]
 fn shapes_reject_unknown_or_missing_template_values() {
     let Some(base) = prepared() else { return };
-    let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-shape-invalid-{}", std::process::id()));
+    let scratch = horizon_fs::temp_dir().join(format!(
+        "horizon-shape-invalid-{}",
+        horizon_fs::process_id()
+    ));
     let _ = fs::remove_dir_all(&scratch);
     for declaration in [
         r#"{"template":"minecraft:oak_log","shapes":{"property":"typo","values":{"x":[]}}}"#,
@@ -2723,7 +2744,8 @@ fn connecting_blocks_join_themselves_and_their_tag() {
     let Some(_) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-pipe-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-pipe-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let dir = scratch.join("cable");
     for (name, text) in [
@@ -3028,7 +3050,7 @@ fn mod_recipe_results_are_an_item_stack_or_a_bare_item_id() {
         return;
     }
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-results-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-results-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let dir = scratch.join("ruby");
     let _ = ruby_mod(&dir);
@@ -3105,7 +3127,8 @@ fn creative_tabs_come_on_their_own_page() {
     let Some(_) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-tabs-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-tabs-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let dir = scratch.join("gems");
     for (name, text) in [
@@ -3225,7 +3248,8 @@ fn block_base(tag: &str, declarations: &[&str]) -> (PathBuf, Vec<ContentMod>) {
 /// the plan reads are built from its state count, so a template can have one
 /// state and no properties of its own (a `stone`) as easily as two.
 fn block_base_of(tag: &str, declarations: &[&str], facts: &str) -> (PathBuf, Vec<ContentMod>) {
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-{tag}-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-{tag}-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let base = scratch.join("base");
     fs::create_dir_all(&base).unwrap();
@@ -4376,7 +4400,8 @@ fn content_root_generates_a_biome_modifier_ore() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-ore-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-ore-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let ore = |modifier: bool| -> usize {
         let mut files = vec![
@@ -4496,7 +4521,7 @@ fn blocks_and_items_declared_in_code_get_ids() {
         return;
     };
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-declared-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-declared-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let known = known_components(&base).unwrap();
     let block = |id: &str| Block {
@@ -4646,7 +4671,8 @@ fn signs_take_their_form_wood_and_wall_block_from_their_declaration() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-signs-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-signs-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let m = folder_mod(
         &scratch.join("signs"),
@@ -4747,8 +4773,10 @@ fn a_feature_gives_a_mods_sign_its_block_entity() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-sign-feature-{}", std::process::id()));
+    let scratch = horizon_fs::temp_dir().join(format!(
+        "horizon-mod-sign-feature-{}",
+        horizon_fs::process_id()
+    ));
     let _ = fs::remove_dir_all(&scratch);
     let m = folder_mod(
         &scratch.join("post"),
@@ -4877,7 +4905,8 @@ fn edit_in_place(path: &Path, bytes: &[u8]) {
 /// holding copies of them.
 #[test]
 fn the_overlay_shares_the_base_files() {
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-share-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-share-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let (base, out) = (scratch.join("base"), scratch.join("root"));
     small_base(&base);
@@ -4899,7 +4928,8 @@ fn the_overlay_shares_the_base_files() {
 /// files of the overlay still follow the base.
 #[test]
 fn writing_into_the_overlay_leaves_the_base_alone() {
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-write-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-write-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let (base, out) = (scratch.join("base"), scratch.join("root"));
     small_base(&base);
@@ -4938,7 +4968,7 @@ fn writing_into_the_overlay_leaves_the_base_alone() {
 #[test]
 fn a_file_is_linked_or_else_copied() {
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-linkfile-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-linkfile-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     fs::create_dir_all(&scratch).unwrap();
     let target = scratch.join("base.json");
@@ -4973,7 +5003,7 @@ fn a_file_is_linked_or_else_copied() {
 #[test]
 fn a_symlink_file_is_copied_through() {
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-symfile-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-symfile-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     fs::create_dir_all(&scratch).unwrap();
     fs::write(scratch.join("real.json"), b"real").unwrap();
@@ -5001,7 +5031,7 @@ fn a_symlink_file_is_copied_through() {
 #[test]
 fn copied_files_replace_the_base_links_and_the_last_file_wins() {
     let scratch =
-        horizon_fs::temp_dir().join(format!("horizon-mod-copyall-{}", std::process::id()));
+        horizon_fs::temp_dir().join(format!("horizon-mod-copyall-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let (base, out) = (scratch.join("base"), scratch.join("out"));
     fs::create_dir_all(base.join("assets/minecraft/textures")).unwrap();
@@ -5101,7 +5131,8 @@ fn glint_mod(dir: &Path) -> ContentMod {
 
 #[test]
 fn only_assets_and_data_switch_live() {
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-live-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-live-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     assert_eq!(
         live_switch(&glint_mod(&scratch.join("glint")).content),
@@ -5165,7 +5196,8 @@ fn a_data_mod_loads_unloads_and_loads_again() {
     let Some(base) = prepared() else {
         return;
     };
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-reload-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-reload-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let cache = scratch.join("cache");
     let glint = glint_mod(&scratch.join("glint"));
@@ -5232,7 +5264,8 @@ fn a_data_mod_loads_unloads_and_loads_again() {
 
 #[test]
 fn roots_unused_for_a_day_are_removed() {
-    let scratch = horizon_fs::temp_dir().join(format!("horizon-mod-prune-{}", std::process::id()));
+    let scratch =
+        horizon_fs::temp_dir().join(format!("horizon-mod-prune-{}", horizon_fs::process_id()));
     let _ = fs::remove_dir_all(&scratch);
     let roots = scratch.join("mod-content");
     let root = |name: &str, age_s: u64| {

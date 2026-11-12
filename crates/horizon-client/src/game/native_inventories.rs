@@ -1007,7 +1007,7 @@ mod tests {
 
     #[test]
     fn a_saved_player_file_round_trips_its_inventory_and_keeps_the_rest() {
-        let dir = horizon_fs::temp_dir().join(format!("native-inv-{}", std::process::id()));
+        let dir = horizon_fs::temp_dir().join(format!("native-inv-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let uuid = 0x1234_u128;
         let file = playerdata::path(&dir, uuid);

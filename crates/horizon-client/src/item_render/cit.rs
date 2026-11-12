@@ -389,7 +389,7 @@ mod tests {
     /// A stick, a bow's frames and a potion; with `cit`, rules over them.
     fn root(name: &str, cit: bool) -> PathBuf {
         let root =
-            horizon_fs::temp_dir().join(format!("horizon-cit-{name}-{}", std::process::id()));
+            horizon_fs::temp_dir().join(format!("horizon-cit-{name}-{}", horizon_fs::process_id()));
         let _ = fs::remove_dir_all(&root);
         let write = |rel: &str, text: &str| {
             let path = root.join(rel);

@@ -74,7 +74,8 @@ mod tests {
 
     #[test]
     fn hide_and_restore_preserve_settings_and_stay_in_one_instance() {
-        let root = horizon_fs::temp_dir().join(format!("hz-profile-store-{}", std::process::id()));
+        let root =
+            horizon_fs::temp_dir().join(format!("hz-profile-store-{}", horizon_fs::process_id()));
         let (a, b) = (root.join("a"), root.join("b"));
         restore(&a, "jordank").unwrap();
         let options = a.join("jordank/options.txt");

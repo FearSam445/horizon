@@ -239,8 +239,10 @@ mod pickup_tests {
         game.level.health = 20.0;
         game.creative = false;
         // A world of its own under the temporary folder, never the cwd.
-        game.world_root = horizon_fs::temp_dir()
-            .join(format!("horizon-panda-pickup-world-{}", std::process::id()));
+        game.world_root = horizon_fs::temp_dir().join(format!(
+            "horizon-panda-pickup-world-{}",
+            horizon_fs::process_id()
+        ));
         let _ = horizon_fs::remove_dir_all(&game.world_root);
         game.build_registries();
         game.set_allow_commands(true);

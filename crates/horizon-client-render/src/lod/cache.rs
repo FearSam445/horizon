@@ -312,7 +312,8 @@ mod tests {
 
     #[test]
     fn chunks_survive_reopening_and_a_torn_last_record() {
-        let dir = horizon_fs::temp_dir().join(format!("horizon-lod-cache-{}", std::process::id()));
+        let dir =
+            horizon_fs::temp_dir().join(format!("horizon-lod-cache-{}", horizon_fs::process_id()));
         let _ = horizon_fs::remove_dir_all(&dir);
         let cache = DiskCache::new(dir.clone(), 7);
         assert!(cache.get(3, -40).is_none(), "nothing cached yet");
