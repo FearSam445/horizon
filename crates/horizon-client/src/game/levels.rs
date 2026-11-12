@@ -832,7 +832,13 @@ impl Game<'_> {
         if *next > now {
             // The chunks loading (the players', force-loaded ones, a
             // `/pregen` task) keep the workers fed until the next tick.
-            self.pump_chunks(*next, paused);
+            // In the browser build the window runs the server each frame: a slice
+            // of chunk work here, and the rest of the wait is the page's.
+            #[cfg(target_arch = "wasm32")]
+            let until = (*next).min(now + Duration::from_millis(4));
+            #[cfg(not(target_arch = "wasm32"))]
+            let until = *next;
+            self.pump_chunks(until, paused);
             let now = Instant::now();
             if *next > now {
                 horizon_thread::sleep(*next - now);

@@ -2470,6 +2470,16 @@ impl Streaming {
     /// Wait up to `timeout` for a worker to finish a job; the next `update`
     /// takes it. A server pumps generation with this between its ticks.
     pub fn wait(&mut self, timeout: web_time::Duration) {
+        // The browser build has no workers to wait for (and std's condvar can't
+        // wait there): the jobs run here for that long instead.
+        #[cfg(target_arch = "wasm32")]
+        {
+            horizon_threads::jobs::pump(timeout);
+            if let Some(done) = self.shared.done.try_recv() {
+                self.deferred.push(done);
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
         if let Some(done) = self.shared.done.recv_timeout(timeout) {
             self.deferred.push(done);
         }

@@ -179,6 +179,12 @@ pub fn configure(threads: usize) {
     CONFIGURED.store(threads.max(1), Ordering::Relaxed);
 }
 
+/// Runs the process's queued jobs here for at most `budget`: what the browser
+/// build's one thread does between frames ([`Pool::run_for`]).
+pub fn pump(budget: Duration) -> usize {
+    pool().run_for(budget)
+}
+
 /// The process's pool, started on first use.
 pub fn pool() -> &'static Pool {
     POOL.get_or_init(|| {
@@ -264,6 +270,33 @@ impl Pool {
             inner: self.inner.clone(),
             id,
         }
+    }
+
+    /// Runs queued jobs here, most urgent first, until `budget` is spent or none is
+    /// left; returns how many ran. The browser build has no workers (one thread):
+    /// its main loop calls this between frames instead, so the same jobs run in
+    /// the same order. With workers this still helps them, as one more worker.
+    pub fn run_for(&self, budget: Duration) -> usize {
+        let started = Instant::now();
+        let mut ran = 0;
+        while started.elapsed() < budget {
+            let Some((entry, far)) = choose(&self.inner) else {
+                break;
+            };
+            let _ = catch_unwind(AssertUnwindSafe(|| entry.source.run(0)));
+            if far {
+                self.inner.far.fetch_sub(1, Ordering::SeqCst);
+            }
+            *lock(&entry.last_job) = Instant::now();
+            entry.quiet.store(false, Ordering::SeqCst);
+            entry.running.fetch_sub(1, Ordering::SeqCst);
+            if entry.retired.load(Ordering::SeqCst) {
+                drop(lock(&self.inner.sleep));
+                self.inner.finished.notify_all();
+            }
+            ran += 1;
+        }
+        ran
     }
 
     /// Wake a worker for a job just queued (after the queue's lock is released).

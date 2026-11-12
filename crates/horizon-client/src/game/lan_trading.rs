@@ -37,6 +37,7 @@ fn uuid_words(uuid: u128) -> [i32; 4] {
 
 impl Game<'_> {
     /// Development oracle: observe the actual open guest merchant, never a synthetic menu.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(super) fn harness_merchant(
         &self,
         host: &LanHost,

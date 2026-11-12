@@ -20,6 +20,7 @@ use web_time::{Duration, Instant};
 /// A message as `[text, style]` runs with adjacent equal styles merged; the
 /// style lists colour, bold, italic, underlined, strikethrough, obfuscated
 /// and the suggested command.
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 pub(super) fn spans(text: &Text) -> Value {
     let mut out: Vec<(String, Value)> = Vec::new();
     for span in &text.spans {
@@ -77,6 +78,7 @@ impl Game<'_> {
 
     /// The owner's authoritative body and level, using the same swaps as a
     /// server command. Always put them back, also when a script operation fails.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn harness_owner<T>(&mut self, f: impl FnOnce(&mut Self) -> Result<T>) -> Result<T> {
         let owner = self
             .serving
@@ -111,6 +113,7 @@ impl Game<'_> {
 
     /// The connected owner's authoritative block/crafting menu, without
     /// client prediction. Only its own slots are counted (not the inventory).
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn harness_owner_menu(&mut self) -> Result<(u32, usize, i32)> {
         let owner = self.serving.as_ref().ok_or("menu state: no server")?.owner;
         self.in_owner_level(|g| {
@@ -140,6 +143,7 @@ impl Game<'_> {
 
     /// The player's portal process finished in the nether portal it stands
     /// in (the oracle's player is not ticked, so neither is the wait).
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn harness_portal(&mut self) -> Result<()> {
         let (conn, plan) = self.harness_owner(|g| {
             let p = g
@@ -173,6 +177,7 @@ impl Game<'_> {
         })
     }
     /// Load terrain until the player stands in lit chunks.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn harness_settle(&mut self, deadline: Instant, required: Option<&Value>) -> Result<()> {
         loop {
             self.update_world();
@@ -228,6 +233,7 @@ impl Game<'_> {
             horizon_thread::sleep(Duration::from_millis(2));
         }
     }
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(super) fn run_command_harness(&mut self, script: &Path, output: &Path) -> Result<()> {
         let deadline = Instant::now()
             + Duration::from_secs(

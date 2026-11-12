@@ -1548,6 +1548,7 @@ mod tests {
 
 impl Game<'_> {
     /// Read-only command-harness observation of the existing raid state and inputs.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(in crate::game) fn raid_fixture_state(
         &self,
         op: &serde_json::Value,

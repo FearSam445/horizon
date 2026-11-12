@@ -903,6 +903,7 @@ impl Game<'_> {
     /// (`server.execute(() -> result.ifPresentOrElse(...))`).
     /// Whether a `/fetchprofile` lookup is still in flight (the command
     /// harness waits for them, as vanilla's oracle resolves at once).
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(in crate::game) fn profile_fetches_pending(&mut self) -> bool {
         let mut resolver = self.skin_profiles.borrow_mut();
         self.cmds

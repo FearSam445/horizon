@@ -99,6 +99,9 @@ type Task = Box<dyn FnOnce(&mut Game<'_>) + Send>;
 pub(super) struct Integrated {
     flags: Arc<Flags>,
     thread: Option<JoinHandle<()>>,
+    /// The browser build's server, which the window runs each frame instead of a thread.
+    #[cfg(target_arch = "wasm32")]
+    host: std::cell::RefCell<Option<Host>>,
     tasks: Sender<Task>,
     /// The world's name (`level.dat`'s `LevelName`), for the pause menu.
     pub world_name: String,
@@ -228,6 +231,17 @@ impl Integrated {
                 let _ = tx.send(f(g));
             }))
             .ok()?;
+        // The browser build's server runs here: it answers at once.
+        #[cfg(target_arch = "wasm32")]
+        {
+            if let Ok(mut host) = self.host.try_borrow_mut()
+                && let Some(host) = host.as_mut()
+            {
+                host.game.run_tasks();
+            }
+            return rx.try_recv().ok();
+        }
+        #[allow(unreachable_code)]
         match rx.recv_timeout(CALL_TIMEOUT) {
             Ok(answer) => Some(answer),
             Err(RecvTimeoutError::Timeout) => {
@@ -258,12 +272,43 @@ impl Integrated {
         self.flags.stop.store(true, Ordering::Relaxed);
     }
     pub fn stopped(&self) -> bool {
+        #[cfg(target_arch = "wasm32")]
+        return self.host.try_borrow().is_ok_and(|host| host.is_none());
+        #[allow(unreachable_code)]
         self.thread
             .as_ref()
             .is_none_or(|thread| thread.is_finished())
     }
+    /// The browser build's server, run by the window once a frame: a tick when one
+    /// is due, else a slice of chunk work. Ends it once it has stopped.
+    #[cfg(target_arch = "wasm32")]
+    pub fn step(&self) {
+        let Ok(mut slot) = self.host.try_borrow_mut() else {
+            return;
+        };
+        let Some(host) = slot.as_mut() else {
+            return;
+        };
+        if let Some(ended) = host.game.integrated_frame(&self.flags, &mut host.turn) {
+            if let Err(e) = &ended {
+                log::error!("Horizon: integrated server: {e}");
+                *self.flags.failure.lock().unwrap() = Some(e.to_string());
+            }
+            host.game.integrated_closed(&ended);
+            *slot = None;
+        }
+    }
     fn halt(&mut self) -> Result<()> {
         self.request_stop();
+        // The browser build's server ends here: it saves and lets the world go.
+        #[cfg(target_arch = "wasm32")]
+        if let Some(mut host) = self.host.get_mut().take() {
+            let ended = host.game.integrated_end(None);
+            if let Err(e) = &ended {
+                *self.flags.failure.lock().unwrap() = Some(e.to_string());
+            }
+            host.game.integrated_closed(&ended);
+        }
         if let Some(thread) = self.thread.take() {
             thread
                 .join()
@@ -490,6 +535,37 @@ impl Game<'_> {
         let (ready_tx, ready) = channel();
         let (tasks, server_tasks) = channel();
         let server_flags = flags.clone();
+        // The browser build has one thread: the server opens its world here and the
+        // window runs it each frame (`Integrated::step`).
+        #[cfg(target_arch = "wasm32")]
+        let host = {
+            let res: &'static Arc<Resources> = Box::leak(Box::new(res));
+            match serve_here(
+                res,
+                pack,
+                options,
+                settings,
+                launch,
+                server_flags.clone(),
+                server_tasks,
+                &ready_tx,
+            ) {
+                Ok(game) => Some(Host {
+                    game,
+                    turn: Turn {
+                        next: Instant::now(),
+                        was_paused: false,
+                    },
+                }),
+                Err(e) => {
+                    log::error!("Horizon: integrated server: {e}");
+                    *server_flags.failure.lock().unwrap() = Some(e.to_string());
+                    let _ = ready_tx.send(Err(e.to_string()));
+                    None
+                }
+            }
+        };
+        #[cfg(not(target_arch = "wasm32"))]
         let thread = horizon_thread::Builder::new()
             .name("Server thread".into())
             .spawn(move || {
@@ -513,7 +589,12 @@ impl Game<'_> {
             })?;
         let handle = Integrated {
             flags,
+            #[cfg(not(target_arch = "wasm32"))]
             thread: Some(thread),
+            #[cfg(target_arch = "wasm32")]
+            thread: None,
+            #[cfg(target_arch = "wasm32")]
+            host: std::cell::RefCell::new(host),
             tasks,
             world_name: String::new(),
         };
@@ -671,6 +752,7 @@ impl Game<'_> {
 
     /// The server thread's loop (`MinecraftServer.runServer`): 20 ticks a
     /// second, the world held while the window is paused.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn run_integrated(
         &mut self,
         launch: Launch,
@@ -680,14 +762,20 @@ impl Game<'_> {
         opening: Opening,
     ) -> Result<()> {
         let result = self.run_integrated_inner(launch, flags, tasks, ready, opening);
-        self.finish_server_capture();
-        if let Err(error) = &result {
-            self.native_players_leaving();
-            self.native_lifecycle_close_failed(&error.to_string());
-        }
+        self.integrated_closed(&result);
         result
     }
 
+    /// After the server's run, however it ended.
+    fn integrated_closed(&mut self, result: &Result<()>) {
+        self.finish_server_capture();
+        if let Err(error) = result {
+            self.native_players_leaving();
+            self.native_lifecycle_close_failed(&error.to_string());
+        }
+    }
+
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn run_integrated_inner(
         &mut self,
         launch: Launch,
@@ -696,14 +784,7 @@ impl Game<'_> {
         ready: &Sender<Ready>,
         opening: Opening,
     ) -> Result<()> {
-        // The open segment runs as one unit (`integrated_open`) so its
-        // failures fire `WorldOpenFailed` with the engine's own error text.
-        if let Err(e) = self.integrated_open(&launch, &flags, tasks, ready, opening) {
-            self.native_lifecycle_world_failed(&e.to_string());
-            return Err(e);
-        }
-        // The server thread's `WorldOpenReady` site, before the tick loop.
-        self.native_lifecycle_world_ready();
+        self.integrated_begin(&launch, &flags, tasks, ready, opening)?;
         if let (Some(script), Some(output)) = (
             std::env::var_os("HORIZON_COMMAND_SCRIPT"),
             std::env::var_os("HORIZON_COMMAND_OUTPUT"),
@@ -714,6 +795,31 @@ impl Game<'_> {
             let stopped = self.stop_integrated();
             return result.and(stopped);
         }
+        self.integrated_profile();
+        self.integrated_tick_loop(&flags)
+    }
+
+    /// The world opened (`integrated_open`, as one unit so its failures fire
+    /// `WorldOpenFailed` with the engine's own error text), and told the window.
+    fn integrated_begin(
+        &mut self,
+        launch: &Launch,
+        flags: &Arc<Flags>,
+        tasks: Receiver<Task>,
+        ready: &Sender<Ready>,
+        opening: Opening,
+    ) -> Result<()> {
+        if let Err(e) = self.integrated_open(launch, flags, tasks, ready, opening) {
+            self.native_lifecycle_world_failed(&e.to_string());
+            return Err(e);
+        }
+        // The server thread's `WorldOpenReady` site, before the tick loop.
+        self.native_lifecycle_world_ready();
+        Ok(())
+    }
+
+    /// The server side of a performance capture, before the first tick.
+    fn integrated_profile(&mut self) {
         let slow_ms = self
             .options
             .spikes
@@ -721,82 +827,97 @@ impl Game<'_> {
         self.profile
             .server
             .get_or_insert_with(|| capture::ServerSide::new(slow_ms));
-        self.integrated_tick_loop(&flags)
     }
 
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     fn integrated_tick_loop(&mut self, flags: &Flags) -> Result<()> {
-        let mut next = Instant::now();
-        let mut was_paused = false;
+        let mut turn = Turn {
+            next: Instant::now(),
+            was_paused: false,
+        };
         let mut failure = None;
         while !flags.stop.load(Ordering::Relaxed) {
-            self.run_tasks();
-            if self.agent.hold_server {
-                // Keep servicing control requests so the fixture can release the barrier.
-                // Unlike /tick freeze, no player's queued packets are applied here.
-                self.wait_for_next_server_tick(&mut next, true);
-                continue;
-            }
-            self.server_tick_deadline = Some(next + self.clock.tick_duration());
-            let paused = flags.paused.load(Ordering::Relaxed);
-            let ticked =
-                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Result<()> {
-                    #[cfg(test)]
-                    if flags.fail_tick.swap(false, Ordering::Relaxed) {
-                        self.level.name = "saved after integrated tick panic".into();
-                        self.experience.total = 37;
-                        panic!("integrated tick fixture");
-                    }
-                    if paused && !was_paused {
-                        // IntegratedServer.tickServer: the tick the game pauses saves
-                        // everything (saveEverything, without flushing), as an
-                        // autosave does.
-                        log::info!("Saving and pausing game...");
-                        self.save_game_with(false)?;
-                    }
-                    was_paused = paused;
-                    if paused {
-                        // Only the connections run.
-                        self.tick_server_measured(true)?;
-                    } else {
-                        self.follow_distances(flags);
-                        let started = Instant::now();
-                        self.tick_server_measured(false)?;
-                        // MinecraftServer.tickServer's tick times, for /tick query.
-                        self.clock.record(started.elapsed());
-                        self.debug_charts.log_tick(started, started.elapsed());
-                        flags.smoothed_tick_ms.store(
-                            self.debug_charts.smoothed_tick_ms.to_bits(),
-                            Ordering::Relaxed,
-                        );
-                        if let (Some(terrain), Ok(mut terrains)) =
-                            (self.end.locator(), flags.terrain.lock())
-                        {
-                            terrains.insert(self.dim.id(), terrain);
-                        }
-                    }
-                    Ok(())
-                }));
-            match ticked {
-                Ok(Ok(())) => {}
-                Ok(Err(error)) => {
+            match self.integrated_turn(flags, &mut turn) {
+                Ok(paused) => {
+                    self.wait_for_next_server_tick(&mut turn.next, paused);
+                }
+                Err(error) => {
                     failure = Some(error);
                     break;
                 }
-                Err(payload) => {
-                    failure = Some(
-                        format!(
-                            "the server thread panicked: {}",
-                            super::dedicated::panic_message(payload.as_ref())
-                        )
-                        .into(),
-                    );
-                    break;
+            }
+        }
+        self.integrated_end(failure)
+    }
+
+    /// One turn of the server thread's loop: the window's tasks, then a tick
+    /// (none while a fixture holds the server). Returns whether the wait for
+    /// the next tick is a paused one, or the failure that ends the loop.
+    fn integrated_turn(&mut self, flags: &Flags, turn: &mut Turn) -> Result<bool> {
+        self.run_tasks();
+        if self.agent.hold_server {
+            // Keep servicing control requests so the fixture can release the barrier.
+            // Unlike /tick freeze, no player's queued packets are applied here.
+            return Ok(true);
+        }
+        self.server_tick_deadline = Some(turn.next + self.clock.tick_duration());
+        let paused = flags.paused.load(Ordering::Relaxed);
+        let ticked = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Result<()> {
+            #[cfg(test)]
+            if flags.fail_tick.swap(false, Ordering::Relaxed) {
+                self.level.name = "saved after integrated tick panic".into();
+                self.experience.total = 37;
+                panic!("integrated tick fixture");
+            }
+            if paused && !turn.was_paused {
+                // IntegratedServer.tickServer: the tick the game pauses saves
+                // everything (saveEverything, without flushing), as an
+                // autosave does.
+                log::info!("Saving and pausing game...");
+                self.save_game_with(false)?;
+            }
+            turn.was_paused = paused;
+            if paused {
+                // Only the connections run.
+                self.tick_server_measured(true)?;
+            } else {
+                self.follow_distances(flags);
+                let started = Instant::now();
+                self.tick_server_measured(false)?;
+                // MinecraftServer.tickServer's tick times, for /tick query.
+                self.clock.record(started.elapsed());
+                self.debug_charts.log_tick(started, started.elapsed());
+                flags.smoothed_tick_ms.store(
+                    self.debug_charts.smoothed_tick_ms.to_bits(),
+                    Ordering::Relaxed,
+                );
+                if let (Some(terrain), Ok(mut terrains)) =
+                    (self.end.locator(), flags.terrain.lock())
+                {
+                    terrains.insert(self.dim.id(), terrain);
                 }
             }
-            self.apply_publish();
-            self.publish_load_view();
-            self.wait_for_next_server_tick(&mut next, paused);
+            Ok(())
+        }));
+        match ticked {
+            Ok(Ok(())) => {}
+            Ok(Err(error)) => return Err(error),
+            Err(payload) => {
+                return Err(format!(
+                    "the server thread panicked: {}",
+                    super::dedicated::panic_message(payload.as_ref())
+                )
+                .into());
+            }
         }
+        self.apply_publish();
+        self.publish_load_view();
+        Ok(paused)
+    }
+
+    /// The server thread's end: saves and lets the world go, or, after
+    /// `failure`, the crash shutdown.
+    fn integrated_end(&mut self, failure: Option<Box<dyn std::error::Error>>) -> Result<()> {
         if failure.is_none() {
             self.finish_server_capture();
         }
@@ -824,6 +945,31 @@ impl Game<'_> {
             return Err(error);
         }
         self.stop_integrated()
+    }
+
+    /// The browser build's server, called by the window each frame instead of
+    /// running on a thread: a turn when the next tick is due, else a slice of
+    /// chunk work. `Some` once the server has ended, with how.
+    #[cfg(target_arch = "wasm32")]
+    fn integrated_frame(&mut self, flags: &Flags, turn: &mut Turn) -> Option<Result<()>> {
+        if flags.stop.load(Ordering::Relaxed) {
+            return Some(self.integrated_end(None));
+        }
+        let now = Instant::now();
+        if now < turn.next {
+            // The chunks the players wait for, for a share of the frame (pump_chunks
+            // would otherwise go on until the tick).
+            let until = turn.next.min(now + Duration::from_millis(4));
+            self.pump_chunks(until, flags.paused.load(Ordering::Relaxed));
+            return None;
+        }
+        match self.integrated_turn(flags, turn) {
+            Ok(paused) => {
+                self.wait_for_next_server_tick(&mut turn.next, paused);
+                None
+            }
+            Err(error) => Some(self.integrated_end(Some(error))),
+        }
     }
 
     /// After the level of `dim` ticked: the window's debug entries' server
@@ -1298,6 +1444,7 @@ impl Game<'_> {
 
 /// The server thread: a game of its own over the shared resources.
 #[allow(clippy::too_many_arguments)]
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 fn serve(
     res: &Arc<Resources>,
     pack: PackResources,
@@ -1308,6 +1455,45 @@ fn serve(
     tasks: Receiver<Task>,
     ready: &Sender<Ready>,
 ) -> Result<()> {
+    let (mut server, opening) = prepare_server(res, pack, options, settings, &launch, &flags)?;
+    server.run_integrated(launch, flags, tasks, ready, opening)
+}
+
+/// The browser build's `serve`: the server's Game with its world open, handed
+/// back to the window, which runs it each frame (`Game::integrated_frame`)
+/// instead of a thread.
+#[cfg(target_arch = "wasm32")]
+fn serve_here(
+    res: &'static Arc<Resources>,
+    pack: PackResources,
+    options: Options,
+    settings: Settings,
+    launch: Launch,
+    flags: Arc<Flags>,
+    tasks: Receiver<Task>,
+    ready: &Sender<Ready>,
+) -> Result<Box<Game<'static>>> {
+    let (server, opening) = prepare_server(res, pack, options, settings, &launch, &flags)?;
+    let mut server = Box::new(server);
+    let begun = server.integrated_begin(&launch, &flags, tasks, ready, opening);
+    if let Err(error) = begun {
+        let failed: Result<()> = Err(error.to_string().into());
+        server.integrated_closed(&failed);
+        return Err(error);
+    }
+    server.integrated_profile();
+    Ok(server)
+}
+
+/// The server's own Game, and its world preparing beside it.
+fn prepare_server<'r>(
+    res: &'r Arc<Resources>,
+    pack: PackResources,
+    options: Options,
+    settings: Settings,
+    launch: &Launch,
+    flags: &Flags,
+) -> Result<(Game<'r>, Opening)> {
     // The world prepares, and the registries the server sends are read, on
     // helper threads while this one builds the server's own Game: none of
     // them reads what another makes (`integrated_open` takes them up).
@@ -1335,7 +1521,7 @@ fn serve(
         world,
         sync: preload_sync_data(&options.resources),
     };
-    let mut server = match startup::time("server.game_new", || {
+    let server = match startup::time("server.game_new", || {
         server_game(res, pack, options, settings)
     }) {
         Ok(server) => server,
@@ -1347,7 +1533,22 @@ fn serve(
             return Err(e);
         }
     };
-    server.run_integrated(launch, flags, tasks, ready, opening)
+    Ok((server, opening))
+}
+
+/// The browser build's server: its Game and where its loop is.
+#[cfg(target_arch = "wasm32")]
+struct Host {
+    game: Box<Game<'static>>,
+    turn: Turn,
+}
+
+/// Where the server thread's loop is between its turns.
+struct Turn {
+    /// When the next tick is due.
+    next: Instant,
+    /// Whether the last tick ran paused (the tick a pause starts saves the world).
+    was_paused: bool,
 }
 
 /// What `serve` starts beside the server's own Game.

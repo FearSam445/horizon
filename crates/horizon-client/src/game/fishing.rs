@@ -282,6 +282,7 @@ fn rebound(velocity: Vec3, hit: Vec3, at: Vec3) -> Vec3 {
 }
 impl Game<'_> {
     /// Run real `catchingFish` states for the vanilla differential harness.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(super) fn fishing_tick_reference(&mut self) -> Vec<serde_json::Value> {
         self.world.weather.raining = false;
         let mut rows = Vec::new();
@@ -308,6 +309,7 @@ impl Game<'_> {
         rows
     }
     /// Exercise the actual rod-use path with a table without a named sequence.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(super) fn fishing_fallback_reference(&mut self) -> Vec<serde_json::Value> {
         let rod = ItemStack {
             item: Arc::from("minecraft:fishing_rod"),
@@ -345,6 +347,7 @@ impl Game<'_> {
         rows
     }
     /// Exercise `FishingHook.tick` in a still-water block on the server.
+    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
     pub(super) fn fishing_bobbing_reference(&mut self) -> Vec<serde_json::Value> {
         let old_position = self.player.as_ref().unwrap().position;
         let block = [
