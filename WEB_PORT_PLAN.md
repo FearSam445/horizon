@@ -64,13 +64,22 @@ the chunk worker pool (`streaming.rs`) must become a per-frame job queue.
 - **Graphics: WebGL2** through wgpu's `webgl` backend, with
   `fragile-send-sync-non-atomic-wasm` (one thread, no atomics).
 - **Threads:** no SharedArrayBuffer in a runner's sandboxed iframe, so no real
-  threads. Long-lived threads become steps the main loop calls each frame (the
-  integrated server first); short ones run inline.
+  threads. `horizon_thread` (web/thread): `spawn` and scoped threads run their
+  closure inline; `Builder::spawn` fails, as std's does on wasm32, so workers
+  take their callers' no-thread fallbacks. The single-player server runs in the
+  window's frames (`Integrated::step`), and the job pool's chunk work is pumped
+  from the main loop (`jobs::pump`, 8 ms a frame).
+- **WebGL fences only signal between tasks:** nothing may block waiting for the
+  GPU, and a page never exits (a failed start shows its reason on the page).
+- **Stack: 8 MiB** (wasm's default 1 MiB overflowed in the renderer).
 
 ## Milestones
 1. ✅ `cargo check -p horizon-client --target wasm32-unknown-unknown` passes (cfg-gates above).
-2. Renders a blank WebGL2 canvas from a test page.
-3. Loads the player's game files and renders a world.
+2. ✅ Renders through WebGL2 in a page: the "no game files" screen, then the
+   title menu with a stand-in zip.
+3. ⏳ Loads the player's game files (picker, IndexedDB, zip mount: done) and
+   renders a world (server and chunk work run on the page's thread: written,
+   needs real game files to test).
 4. Playable single-player with input through the runner.
 5. Bundled into one `.html` and tested in the runner; measure RAM.
 6. Later: saves to IndexedDB, WebAudio sound, WebSocket multiplayer.
