@@ -78,8 +78,13 @@ the chunk worker pool (`streaming.rs`) must become a per-frame job queue.
 2. ✅ Renders through WebGL2 in a page: the "no game files" screen, then the
    title menu with a stand-in zip.
 3. ⏳ Loads the player's game files (picker, IndexedDB, zip mount: done) and
-   renders a world (server and chunk work run on the page's thread: written,
-   needs real game files to test).
+   renders a world. Written and checked as far as possible without game files:
+   the server runs in the window's frames, the in-memory connection's login runs
+   as futures on one thread (tested), chunk work is pumped, and every wait on the
+   single-player path was audited (no condvar, no sleeping loop that waits for a
+   worker). Needs a real zip to test.
 4. Playable single-player with input through the runner.
 5. Bundled into one `.html` and tested in the runner; measure RAM.
-6. Later: saves to IndexedDB, WebAudio sound, WebSocket multiplayer.
+6. Worlds and options kept in IndexedDB: ✅ (when the runner allows storage).
+7. Later: WebAudio sound, WebSocket multiplayer, opening a world in steps (it
+   freezes the page until its spawn area is made), a smaller wasm.

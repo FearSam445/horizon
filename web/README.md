@@ -5,6 +5,31 @@ directly, or when dropped into an Eaglercraft-style runner that reads it as text
 and `document.write()`s it. The plan and its status are in
 [../WEB_PORT_PLAN.md](../WEB_PORT_PLAN.md).
 
+## Playing it
+
+1. On a computer, let the Horizon launcher prepare the game files from your own
+   Minecraft: Java Edition (it does on first start). They are in its
+   `game-files/horizon-client/26.3` folder.
+2. Zip that `26.3` folder, leaving out `horizon-data.bin` (the page doesn't use
+   it, and it repeats the other files). Put the zip where the device can reach
+   it (on an iPad, the Files app: iCloud Drive, AirDrop...).
+3. Open `horizon.html`, or drop it into an Eaglercraft-style runner, and choose
+   the zip when it asks.
+
+The zip, your worlds and your options are kept in the browser's storage when the
+page may use it; inside some runners it may not, and then the zip is asked for
+again and worlds last until the page closes.
+
+### What to expect
+
+- One thread does everything: the world, the chunks and the drawing take turns
+  in each frame, so a world's first opening freezes the page until its spawn
+  area is made.
+- No sound yet, no multiplayer (a page can't open sockets), no shader packs or
+  far terrain.
+- Defaults are set for little memory: render distance 6, simulation distance 5,
+  one game pixel per screen point.
+
 ## Build
 
 ```bash
@@ -28,18 +53,29 @@ node web/test/boot.js 20 web/out/boot.png
 |---|---|
 | `horizon-web/` | The wasm entry point: sets the panic hook and runs `horizon_client::entry::main` |
 | `page/` | The HTML page, its loader (unpacks the gzip + base64 game) and the input bridge |
-| `fs/` (`horizon-fs`) | `std::fs` on the desktop; in the browser an in-memory file system with read-only zip mounts |
+| `fs/` (`horizon-fs`) | `std::fs` on the desktop; in the browser an in-memory file system with read-only zip mounts, exported to the page's storage between visits |
+| `thread/` (`horizon-thread`) | `std::thread` on the desktop; in the browser spawning runs inline, `spawn_bounded` runs finite work inline, `spawn_local` runs futures the page's loop polls, and a sleep does idle work |
 | `clock/` (`horizon-clock`) | `SystemTime::now()` that works in the browser |
 | `shims/` | Stand-ins, under the original names, for crates that can't run in a page (mimalloc, ureq, mio, fs4, arboard) |
-| `tools/` | The scripts that made the mechanical changes across the crates (`webdep.py`, `webtime.py`, `systime.py`, `webfs.py`) |
+| `tools/` | The scripts that made the mechanical changes across the crates (`webdep.py`, `webtime.py`, `systime.py`, `webfs.py`, `webthread.py`), and `uniforms.py`, which checks every WGSL uniform for WebGL2's 16-byte rule |
 | `test/` | The headless boot check |
 
 ## How the desktop build stays the same
 
 Every change is either behind `cfg(target_arch = "wasm32")` or goes through a
 crate that is `std` itself on the desktop: `web_time` re-exports `std::time`,
-`horizon_fs` re-exports `std::fs`, and `horizon_clock::system_now()` is
-`SystemTime::now()`.
+`horizon_fs` re-exports `std::fs`, `horizon_thread` re-exports `std::thread`,
+and `horizon_clock::system_now()` is `SystemTime::now()`. The connection code is
+`async`: the desktop threads run it with `pollster::block_on`, as before.
+
+## How the browser build runs on one thread
+
+Each turn of the page's loop (`horizon_client::web_frame::run`, about 8 ms):
+the connections' tasks (the client's and the server's login, as futures) and
+the network's turn (`lan::io_pool`), the single-player server's step
+(`Integrated::step`: a tick when due), then the job pool's chunk work
+(`horizon_threads::jobs::pump`). Nothing may wait: std's condvars and sleeps
+panic on wasm32, and WebGL's fences only signal between tasks.
 
 ## Runner input
 

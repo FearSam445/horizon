@@ -38,8 +38,15 @@ pub fn game_files_chunk(chunk: &[u8]) {
 }
 
 /// Folders the page doesn't keep between visits: the player's game files (they
-/// come from the zip each time), the zip's mount and temporary files.
-const NOT_KEPT: &[&str] = &[RESOURCES, "/mnt", "/tmp"];
+/// come from the zip each time), the zip's mount, temporary files, and the logs
+/// and crash reports of the game's home (`logging::data_dir`, `/data` here).
+const NOT_KEPT: &[&str] = &[
+    RESOURCES,
+    "/mnt",
+    "/tmp",
+    "/data/horizon/logs",
+    "/data/horizon/crash-reports",
+];
 
 /// A number that moves when the game changes a file it made (a world's save,
 /// the options): the page keeps the files again only when it moved.

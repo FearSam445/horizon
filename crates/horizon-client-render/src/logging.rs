@@ -31,6 +31,10 @@ const FLOOD_WINDOW: Duration = Duration::from_secs(60);
 
 /// The platform data folder (what the `dirs` crate's data_dir gives).
 pub fn data_dir() -> PathBuf {
+    // The browser build's: kept between visits, as /tmp is not (horizon-web).
+    if cfg!(target_arch = "wasm32") {
+        return PathBuf::from("/data");
+    }
     let env = |k: &str| {
         std::env::var_os(k)
             .filter(|v| !v.is_empty())
