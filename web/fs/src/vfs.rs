@@ -42,6 +42,14 @@ enum Node {
         len: u64,
         modified: SystemTime,
     },
+    /// A file handed over packed ([`add_packed`]): stored or deflated bytes,
+    /// inflated when opened.
+    Packed {
+        data: Arc<[u8]>,
+        deflated: bool,
+        len: u64,
+        modified: SystemTime,
+    },
 }
 
 #[derive(Clone, Default)]
@@ -65,7 +73,7 @@ impl Node {
                 len: lock(data).len() as u64,
                 modified: Some(*modified),
             },
-            Node::Entry { len, modified, .. } => Metadata {
+            Node::Entry { len, modified, .. } | Node::Packed { len, modified, .. } => Metadata {
                 kind: Kind::File,
                 len: *len,
                 modified: Some(*modified),
@@ -230,6 +238,54 @@ fn inflate(archive: &Archive, index: usize, len: u64) -> io::Result<Vec<u8>> {
     let mut out = Vec::with_capacity(len as usize);
     entry.read_to_end(&mut out)?;
     Ok(out)
+}
+
+/// The bytes of a packed file.
+fn unpack(data: &[u8], deflated: bool, len: u64) -> io::Result<Vec<u8>> {
+    if !deflated {
+        return Ok(data.to_vec());
+    }
+    let out = miniz_oxide::inflate::decompress_to_vec_with_limit(data, len as usize)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("{e:?}")))?;
+    if out.len() as u64 != len {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "a packed file's length is wrong",
+        ));
+    }
+    Ok(out)
+}
+
+/// Adds a file of `len` bytes at `path`, handed over as it is in a zip:
+/// `deflated` (raw deflate) or stored. It stays packed until it is opened, so
+/// the game's files take their packed size in memory. Its folders are made.
+pub fn add_packed(
+    path: impl AsRef<Path>,
+    deflated: bool,
+    len: u64,
+    data: Vec<u8>,
+) -> io::Result<()> {
+    let path = path.as_ref();
+    if let Some(parent) = path.parent() {
+        create_dir_all(parent)?;
+    }
+    let parts = parts(path);
+    let mut tree = lock(&TREE);
+    let dir = parent_mut(&mut tree, &parts, path)?;
+    let name = parts.last().expect("parent_mut checked").clone();
+    if let Some(Node::Dir(_)) = dir.entries.get(&name) {
+        return Err(error(io::ErrorKind::IsADirectory, path, "a folder"));
+    }
+    dir.entries.insert(
+        name,
+        Node::Packed {
+            data: data.into(),
+            deflated,
+            len,
+            modified: now(),
+        },
+    );
+    Ok(())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -593,16 +649,25 @@ impl OpenOptions {
                 }
                 data.clone()
             }
-            Some(Node::Entry {
-                archive,
-                index,
-                len,
-                ..
-            }) => {
+            Some(node @ (Node::Entry { .. } | Node::Packed { .. })) => {
                 let bytes = if writes && self.truncate {
                     Vec::new()
                 } else {
-                    inflate(archive, *index, *len)?
+                    match node {
+                        Node::Entry {
+                            archive,
+                            index,
+                            len,
+                            ..
+                        } => inflate(archive, *index, *len)?,
+                        Node::Packed {
+                            data,
+                            deflated,
+                            len,
+                            ..
+                        } => unpack(data, *deflated, *len)?,
+                        _ => unreachable!("matched above"),
+                    }
                 };
                 let data: Bytes = Arc::new(Mutex::new(bytes));
                 if writes {
@@ -750,6 +815,12 @@ pub fn read(path: impl AsRef<Path>) -> io::Result<Vec<u8>> {
             len,
             ..
         }) => inflate(&archive, index, len),
+        Some(Node::Packed {
+            data,
+            deflated,
+            len,
+            ..
+        }) => unpack(&data, deflated, len),
         Some(Node::Dir(_)) => Err(error(io::ErrorKind::IsADirectory, path, "a folder")),
         None => Err(not_found(path)),
     }
@@ -956,7 +1027,7 @@ pub fn export(skip: &[&str]) -> Vec<u8> {
         };
         match node {
             Node::File { data, .. } => entry(0, Some(&lock(data))),
-            Node::Entry { .. } => {}
+            Node::Entry { .. } | Node::Packed { .. } => {}
             Node::Dir(dir) => {
                 if path.as_os_str() != "/" {
                     entry(1, None);
@@ -1126,6 +1197,36 @@ mod tests {
             .unwrap();
         f.write_all(b"!").unwrap();
         assert_eq!(read(r.join("resources/a.json")).unwrap(), b"{}!");
+    }
+
+    #[test]
+    fn packed_files_read_as_their_bytes_and_stay_out_of_exports() {
+        let r = root("packed");
+        let text = b"a packed file, a packed file, a packed file".to_vec();
+        let deflated = miniz_oxide::deflate::compress_to_vec(&text, 6);
+        add_packed(r.join("res/a/b.json"), true, text.len() as u64, deflated).unwrap();
+        add_packed(r.join("res/stored.txt"), false, 3, b"abc".to_vec()).unwrap();
+        assert_eq!(read(r.join("res/a/b.json")).unwrap(), text);
+        assert_eq!(
+            metadata(r.join("res/a/b.json")).unwrap().len(),
+            text.len() as u64
+        );
+        let mut s = String::new();
+        File::open(r.join("res/stored.txt"))
+            .unwrap()
+            .read_to_string(&mut s)
+            .unwrap();
+        assert_eq!(s, "abc");
+        add_packed(r.join("res/bad"), true, 99, vec![1, 2, 3]).unwrap();
+        assert!(
+            read(r.join("res/bad")).is_err(),
+            "a wrong length is an error"
+        );
+        let saved = export(&[]);
+        assert!(
+            !saved.windows(6).any(|w| w == b"b.json"),
+            "the player's files stay out"
+        );
     }
 
     #[test]

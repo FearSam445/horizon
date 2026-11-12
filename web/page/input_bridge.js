@@ -47,7 +47,7 @@
   }, true);
   ['keydown', 'keyup'].forEach(function (type) {
     window.addEventListener(type, function (e) {
-      if (e[MARK]) return;
+      if (e[MARK] || e.code === 'Backquote') return;
       var target = canvas();
       if (!target || e.target === target) return;
       // A key typed into the page's own controls (the file picker) stays there.
@@ -57,6 +57,22 @@
         key: e.key, code: e.code, location: e.location, repeat: e.repeat,
         ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, altKey: e.altKey, metaKey: e.metaKey,
         bubbles: true, cancelable: true, composed: true
+      });
+      ev[MARK] = true;
+      target.dispatchEvent(ev);
+    }, true);
+  });
+  // Many iPad keyboards have no Escape key, which the game's menus need: the
+  // backquote key (`) works as Escape too, as in Eaglercraft.
+  ['keydown', 'keyup'].forEach(function (type) {
+    document.addEventListener(type, function (e) {
+      if (e[MARK] || e.code !== 'Backquote') return;
+      var target = canvas();
+      if (!target) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      var ev = new KeyboardEvent(type, {
+        key: 'Escape', code: 'Escape', bubbles: true, cancelable: true, composed: true
       });
       ev[MARK] = true;
       target.dispatchEvent(ev);

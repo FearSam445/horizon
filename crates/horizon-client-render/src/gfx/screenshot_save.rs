@@ -76,6 +76,19 @@ impl Saves {
     /// Maps `buffer` (and the HDR copy's), whose copy was just submitted, and writes the
     /// PNG on a thread of its own once the GPU has finished the frame.
     pub fn start(&mut self, shot: Shot, buffer: wgpu::Buffer) {
+        // A page has nowhere to save a picture the player could open.
+        #[cfg(target_arch = "wasm32")]
+        {
+            drop(buffer);
+            let _ = self.sender.send(Saved {
+                path: shot.path,
+                result: Err("screenshots aren't saved in the browser build".into()),
+                hdr: None,
+            });
+            self.in_flight += 1;
+            return;
+        }
+        #[allow(unreachable_code)]
         let (mapped, on_mapped) = channel();
         map(&buffer, &mapped);
         if let Some((_, hdr)) = &shot.hdr {
@@ -117,6 +130,10 @@ impl Saves {
 impl Drop for Saves {
     /// A screenshot taken right before quitting is still written whole.
     fn drop(&mut self) {
+        // The browser build writes none (and std's recv_timeout panics there).
+        if cfg!(target_arch = "wasm32") {
+            return;
+        }
         let deadline = web_time::Instant::now() + Duration::from_secs(10);
         while self.in_flight > 0 && web_time::Instant::now() < deadline {
             let _ = self.device.poll(wgpu::PollType::Poll);

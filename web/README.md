@@ -10,9 +10,11 @@ and `document.write()`s it. The plan and its status are in
 1. On a computer, let the Horizon launcher prepare the game files from your own
    Minecraft: Java Edition (it does on first start). They are in its
    `game-files/horizon-client/26.3` folder.
-2. Zip that `26.3` folder, leaving out `horizon-data.bin` (the page doesn't use
-   it, and it repeats the other files). Put the zip where the device can reach
-   it (on an iPad, the Files app: iCloud Drive, AirDrop...).
+2. Zip that `26.3` folder (on an iPad: long-press it in the Files app, then
+   Compress). Put the zip where the device can reach it (iCloud Drive,
+   AirDrop...). The page reads only the files the game uses from it: not
+   `horizon-data.bin`, which it never needs, nor the sounds while it has no
+   sound.
 3. Open `horizon.html`, or drop it into an Eaglercraft-style runner, and choose
    the zip when it asks.
 
@@ -25,7 +27,8 @@ again and worlds last until the page closes.
 - One thread does everything: the world, the chunks and the drawing take turns
   in each frame, so a world's first opening freezes the page until its spawn
   area is made.
-- No sound yet, no multiplayer (a page can't open sockets), no shader packs or
+- Many iPad keyboards have no Escape key: the backquote key (`) works as Escape.
+- No sound yet, no screenshots, no multiplayer (a page can't open sockets), no shader packs or
   far terrain.
 - Defaults are set for little memory: render distance 6, simulation distance 5,
   one game pixel per screen point.

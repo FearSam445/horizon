@@ -54,8 +54,10 @@ def main():
     page = open(os.path.join(WEB, "page", "index.html")).read()
     loader = open(os.path.join(WEB, "page", "loader.js")).read()
     bridge = open(os.path.join(WEB, "page", "input_bridge.js")).read()
+    zip_reader = open(os.path.join(WEB, "page", "zip_reader.js")).read()
     html = (
         page.replace("/*INPUT_BRIDGE*/", bridge)
+        .replace("/*ZIP_READER*/", zip_reader)
         .replace("/*GLUE*/", glue.replace("</script", "<\\/script"))
         .replace("/*LOADER*/", loader)
         .replace("WASM_BASE64", packed)

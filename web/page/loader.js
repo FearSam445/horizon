@@ -104,7 +104,7 @@
         '<p class="title">Your game files</p>' +
         '<p>' + (reason || 'Horizon needs the game files prepared from your own copy of Minecraft: ' +
         'zip the <b>26.3</b> folder the Horizon launcher made (game-files/horizon-client/26.3) and choose it here. ' +
-        'Leave out <b>horizon-data.bin</b>: the page doesn\'t use it, and it repeats the other files, so the zip is smaller without it.') + '</p>' +
+        'Only the files the game uses are loaded, so your device keeps as much memory free as it can.') + '</p>' +
         '<label class="button">Choose zip…<input type="file" accept=".zip,application/zip" hidden></label>' +
         '<button class="link" type="button">Start without them</button>';
       document.body.appendChild(box);
@@ -121,14 +121,17 @@
     });
   }
 
-  // Copies `file` into the game a piece at a time: one copy of the zip, in the game.
+  // Hands the game the files of `file` it uses, one at a time, as they are
+  // packed (page/zip_reader.js): nothing it doesn't use is copied.
   async function handOver(file) {
-    wasm_bindgen.game_files_begin(file.size);
-    for (var at = 0; at < file.size; at += CHUNK) {
-      say('Loading your game files…', 0.5 + 0.4 * at / file.size);
-      var piece = new Uint8Array(await file.slice(at, at + CHUNK).arrayBuffer());
-      wasm_bindgen.game_files_chunk(piece);
-    }
+    say('Loading your game files…', 0.5);
+    var handed = await HorizonZip.each(file, function (path, deflated, length, data) {
+      wasm_bindgen.game_file(path, deflated, length, data);
+    }, function (fraction) {
+      say('Loading your game files…', 0.5 + 0.4 * fraction);
+    });
+    console.log('Horizon: ' + handed.files + ' game files (' +
+      Math.round(handed.bytes / 1048576) + ' MiB packed), ' + handed.skipped + ' left out');
   }
 
   async function start() {
@@ -155,19 +158,24 @@
         status.style.display = '';
         if (file) remember(file);
       }
-      if (file) await handOver(file);
-      say('Starting…', 0.95);
-      try {
-        wasm_bindgen.boot();
-        break;
-      } catch (error) {
-        if (error && String(error.message || error).indexOf('Using exceptions for control flow') >= 0) break;
-        if (!file) throw error;
-        // A zip the game can't use: forget it and ask again.
-        reason = String(error.message || error);
-        forget('game-files');
-        file = null;
+      if (file) {
+        try {
+          await handOver(file);
+        } catch (error) {
+          // A zip the game can't use: forget it and ask again.
+          reason = String(error.message || error);
+          forget('game-files');
+          file = null;
+          continue;
+        }
       }
+      break;
+    }
+    say('Starting…', 0.95);
+    try {
+      wasm_bindgen.boot();
+    } catch (error) {
+      if (!(error && String(error.message || error).indexOf('Using exceptions for control flow') >= 0)) throw error;
     }
     status.style.display = 'none';
     keepFiles();
