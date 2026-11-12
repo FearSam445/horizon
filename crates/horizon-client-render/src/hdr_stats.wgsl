@@ -19,6 +19,8 @@ struct Params {
     // threshold lies, for bright parts and for all over (hdr.rs `Masks`).
     parts: f32,
     whole: f32,
+    // To 16 bytes, the buffer's size: WebGL2 binds uniforms in 16-byte steps.
+    _pad: vec2<f32>,
 };
 @group(0) @binding(8) var<uniform> params: Params;
 

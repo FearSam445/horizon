@@ -5,6 +5,8 @@ struct Params {
     stamp: u32,
     // Boxes covering more than this share of the screen count as seen.
     big: f32,
+    // To 16 bytes, as cull.rs's Params: WebGL2 binds uniforms in 16-byte steps.
+    pad: vec2<u32>,
 }
 // The leading member of terrain.wgsl's Globals.
 struct Globals {
