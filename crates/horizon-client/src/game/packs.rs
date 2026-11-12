@@ -720,9 +720,10 @@ impl PackReload {
     ) -> std::io::Result<Self> {
         let progress = super::Progress::with(&RELOAD_LINES);
         let worker = progress.clone();
-        let handle = horizon_thread::Builder::new()
-            .name("pack-reload".into())
-            .spawn(move || stage(&worker))?;
+        let handle = horizon_thread::spawn_bounded(
+            horizon_thread::Builder::new().name("pack-reload".into()),
+            move || stage(&worker),
+        )?;
         Ok(Self {
             progress,
             kind,

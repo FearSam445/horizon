@@ -16,3 +16,22 @@ pub use std::thread::*;
 mod inline;
 #[cfg(target_arch = "wasm32")]
 pub use inline::*;
+
+/// Starts work that ends on its own (a load, a world's preparation: nothing
+/// that waits for others): on the desktop a thread from `builder`; in the
+/// browser build, with one thread, it runs at once, and the handle keeps the
+/// result. Where a thread may loop until told to stop, use `builder.spawn`,
+/// which fails in the browser build, and fall back.
+pub fn spawn_bounded<F, T>(builder: Builder, f: F) -> std::io::Result<JoinHandle<T>>
+where
+    F: FnOnce() -> T + Send + 'static,
+    T: Send + 'static,
+{
+    #[cfg(target_arch = "wasm32")]
+    {
+        let _ = builder;
+        Ok(spawn(f))
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    builder.spawn(f)
+}

@@ -339,9 +339,10 @@ pub(crate) fn quantize_parameter_report(json: &str) -> Result<String, GeneratorE
 fn loading<T: Send + 'static>(
     load: impl FnOnce() -> T + Send + 'static,
 ) -> io::Result<horizon_thread::JoinHandle<T>> {
-    horizon_thread::Builder::new()
-        .name("Worldgen loader".into())
-        .spawn(load)
+    horizon_thread::spawn_bounded(
+        horizon_thread::Builder::new().name("Worldgen loader".into()),
+        load,
+    )
 }
 /// A loading thread's result; its panic goes on in this thread.
 fn joined<T>(thread: horizon_thread::JoinHandle<T>) -> T {

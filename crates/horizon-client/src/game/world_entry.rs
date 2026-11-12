@@ -100,14 +100,15 @@ impl Game<'_> {
                     )
                 })
                 .unwrap_or_default();
-            self.creation_job = horizon_thread::Builder::new()
-                .name("world-creation".into())
-                .spawn(move || {
+            self.creation_job = horizon_thread::spawn_bounded(
+                horizon_thread::Builder::new().name("world-creation".into()),
+                move || {
                     horizon_client::vanillagen::shared_data_with(&dir, &overrides, registry)
                         .map(|_| ())
                         .map_err(|e| e.to_string())
-                })
-                .ok();
+                },
+            )
+            .ok();
             return;
         }
         if !self

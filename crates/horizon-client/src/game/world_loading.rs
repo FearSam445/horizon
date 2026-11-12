@@ -348,13 +348,14 @@ impl WorldLoader {
         settings: Settings,
         upgrade: Arc<horizon_world::datafix::progress::UpgradeProgress>,
     ) -> Result<Self> {
-        let handle = horizon_thread::Builder::new()
-            .name("World initialization".into())
-            .spawn(move || {
+        let handle = horizon_thread::spawn_bounded(
+            horizon_thread::Builder::new().name("World initialization".into()),
+            move || {
                 request
                     .prepare(&res, &pack, &options, &settings, &upgrade)
                     .map_err(|e| e.to_string())
-            })?;
+            },
+        )?;
         Ok(Self { handle })
     }
 

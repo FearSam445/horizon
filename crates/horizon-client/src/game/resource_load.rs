@@ -505,9 +505,9 @@ pub(super) fn load_resources(
         let entity_models = entity_models.clone();
         let rest_progress = progress.clone();
         let progress = progress.clone();
-        let handle = horizon_thread::Builder::new()
-            .name("world-rest-loader".into())
-            .spawn(move || {
+        let handle = horizon_thread::spawn_bounded(
+            horizon_thread::Builder::new().name("world-rest-loader".into()),
+            move || {
                 let _step = startup::step("rest");
                 let rest = load_world_rest(
                     &root,
@@ -535,7 +535,8 @@ pub(super) fn load_resources(
                 );
                 write_prepared_files(vanilla_root);
                 Ok(())
-            })?;
+            },
+        )?;
         Some(WorldRestLoader {
             progress: rest_progress,
             handle,

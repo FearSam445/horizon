@@ -411,12 +411,34 @@ impl Mailbox {
         self.try_lock()?.pop_front()
     }
     fn recv_timeout(&self, timeout: web_time::Duration) -> Option<Done> {
-        let done = self.done.lock().unwrap();
-        let (mut done, _) = self
-            .arrived
-            .wait_timeout_while(done, timeout, |done| done.is_empty())
-            .unwrap();
-        done.pop_front()
+        // The browser build has no workers (and std's condvar can't wait there): the
+        // jobs run here until one is done, the time is up, or none is left to run.
+        #[cfg(target_arch = "wasm32")]
+        {
+            let deadline = web_time::Instant::now() + timeout;
+            loop {
+                if let Some(done) = self.try_recv() {
+                    return Some(done);
+                }
+                let left = deadline.saturating_duration_since(web_time::Instant::now());
+                if left.is_zero() {
+                    return None;
+                }
+                let slice = left.min(web_time::Duration::from_millis(5));
+                if horizon_threads::jobs::pump(slice) == 0 {
+                    return self.try_recv();
+                }
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let done = self.done.lock().unwrap();
+            let (mut done, _) = self
+                .arrived
+                .wait_timeout_while(done, timeout, |done| done.is_empty())
+                .unwrap();
+            done.pop_front()
+        }
     }
 }
 /// [`Streaming::proto_census`].
@@ -2470,16 +2492,7 @@ impl Streaming {
     /// Wait up to `timeout` for a worker to finish a job; the next `update`
     /// takes it. A server pumps generation with this between its ticks.
     pub fn wait(&mut self, timeout: web_time::Duration) {
-        // The browser build has no workers to wait for (and std's condvar can't
-        // wait there): the jobs run here for that long instead.
-        #[cfg(target_arch = "wasm32")]
-        {
-            horizon_threads::jobs::pump(timeout);
-            if let Some(done) = self.shared.done.try_recv() {
-                self.deferred.push(done);
-            }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
+        // In the browser build the wait runs the jobs itself (`Done::recv_timeout`).
         if let Some(done) = self.shared.done.recv_timeout(timeout) {
             self.deferred.push(done);
         }
