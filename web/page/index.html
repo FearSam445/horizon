@@ -6,7 +6,12 @@
 <title>Horizon</title>
 <style>
   html, body { margin: 0; height: 100%; background: #0b0d12; overflow: hidden; }
-  canvas._eaglercraftX_canvas_element { display: block; width: 100vw; height: 100vh; outline: none; touch-action: none; }
+  /* The game asks winit for a desktop window's size, which winit writes on the canvas as
+     inline pixels: !important keeps it the page's size (iPad Safari's 100vh counts the
+     toolbars, so the canvas fills the page with position: fixed instead). */
+  canvas._eaglercraftX_canvas_element { display: block; position: fixed; inset: 0;
+    width: 100% !important; height: 100% !important; min-width: 0 !important; min-height: 0 !important;
+    max-width: none !important; max-height: none !important; margin: 0; outline: none; touch-action: none; }
   #horizon-status { position: fixed; inset: auto 0 40% 0; text-align: center; color: #e8e8ea;
     font: 16px/1.5 system-ui, sans-serif; pointer-events: none; white-space: pre-line; }
   #horizon-status .bar { width: 240px; height: 4px; margin: 12px auto 0; background: #2a2f3a; border-radius: 2px; overflow: hidden; }
