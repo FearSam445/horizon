@@ -20,9 +20,8 @@ The owner is not a programmer: explain results simply, do everything yourself
 
 All work is on branch **`web-port`** of the owner's fork **FearSam445/horizon**
 (upstream: horizon-rust/horizon). Commit there; never commit Mojang files or the zip.
-**Pushing needs the owner's GitHub sign-in** (no credentials on the PC as of
-Nov 13): commits made since `eb320fb63e` may be local only. Check with
-`git status -sb`; the owner pushes with `git push origin web-port`.
+The owner signed in to GitHub on this PC (Nov 13), so `git push origin web-port`
+works from here.
 
 ## Status (Nov 13, tested in desktop Chromium with the owner's real zip)
 
@@ -39,8 +38,8 @@ Works:
   generates and reaches full speed after ~18 s on the PC (it was 20 frames a
   second for ~35 s); normal play leaves the PC's CPU idle 84% of the time.
 
-Not yet confirmed on the iPad itself (WebKit): the fixes were tested in Chromium.
-The owner tests on the iPad; ask what they saw.
+**Confirmed on the owner's iPad (Nov 13)**: the shipped file runs in the runner
+at 60 fps. Ask the owner what to improve next.
 
 Fixed on Nov 13 (see `git log`):
 1. Worlds never finished loading: the bar stopped at ~17% (10 of 59 parts: the
@@ -58,8 +57,8 @@ Fixed on Nov 13 (see `git log`):
 
 ## Ideas for what's next, in order of value
 
-1. **iPad feedback**: anything that differs in Safari (input, sound unlock,
-   sizing in the runner, crashes). Safari's console: on a Mac, Develop menu.
+1. **iPad feedback**: it works at 60 fps; ask about anything else that differs
+   in Safari (sound, input, longer play). Safari's console: on a Mac, Develop menu.
 2. **Speed on the iPad**: the shipped build uses `opt-level` and `wasm-opt`
    settings chosen on Nov 13 (see "Building"); compare frames (`turns` in the
    status line) if changed. Lower render distance helps most.
