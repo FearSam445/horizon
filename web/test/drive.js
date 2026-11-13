@@ -1,6 +1,7 @@
 // Drives web/out/horizon.html in headless Chromium through a list of steps, printing
 // the console and taking screenshots on the way:
 //   node web/test/drive.js game-files.zip steps.json [width] [height]
+// OUT=folder serves the horizon.html in that folder instead of web/out.
 // steps.json is a list of steps, each one of:
 //   {"wait": seconds}            {"click": [x, y]}       {"key": "Escape"}
 //   {"type": "text"}             {"shot": "path.png"}    {"hold": "KeyW", "for": seconds}
@@ -13,7 +14,8 @@ const http = require('http');
 const fs = require('fs');
 
 function serve() {
-  const root = path.resolve(__dirname, '..', 'out');
+  // OUT=folder serves another build's page (the shipped one in another checkout).
+  const root = path.resolve(process.env.OUT || path.join(__dirname, '..', 'out'));
   const server = http.createServer((req, res) => {
     const file = path.join(root, decodeURIComponent(req.url.split('?')[0]));
     if (!file.startsWith(root) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }

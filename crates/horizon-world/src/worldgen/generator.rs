@@ -426,9 +426,13 @@ impl GeneratorData {
         let behaviours = loading({
             let root = dir.parent().map(Path::to_owned);
             move || {
-                root.filter(|root| root.join("block-behaviours.json").fs_exists())
-                    .and_then(|root| crate::level::Behaviours::load(registry, &root).ok())
-                    .map(Arc::new)
+                let root = root.filter(|root| root.join("block-behaviours.json").fs_exists())?;
+                // The game's own tables when it lent them; else built here.
+                crate::level::Behaviours::shared(registry, &root).or_else(|| {
+                    crate::level::Behaviours::load(registry, &root)
+                        .ok()
+                        .map(Arc::new)
+                })
             }
         })?;
         let tag_set = |name: &str| -> Result<BTreeSet<&str>, GeneratorError> {

@@ -22,6 +22,9 @@ horizon-threads = { path = "../../crates/horizon-threads" }
 wasm-bindgen = "0.2.129"
 web-sys = { version = "0.3.106", features = ["console"] }
 js-sys = "0.3.106"
+# The shared atlas's upload straight to WebGL (webgl_upload.rs): wgpu's GL backend and its GL calls.
+wgpu = { version = "30.0.1", default-features = false, features = ["webgl"] }
+glow = "0.17"
 
 [lints]
 workspace = true

@@ -2258,6 +2258,7 @@ dependencies = [
 name = "horizon-web"
 version = "0.1.0"
 dependencies = [
+ "glow",
  "horizon-client",
  "horizon-fs",
  "horizon-thread",
@@ -2266,6 +2267,7 @@ dependencies = [
  "log",
  "wasm-bindgen",
  "web-sys",
+ "wgpu",
 ]
 
 [[package]]

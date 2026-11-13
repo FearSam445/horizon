@@ -1947,7 +1947,8 @@ struct WorldRest {
     ambient: horizon_client::ambience::AmbientTables,
     nether_environment: Environment,
     end_environment: Environment,
-    behaviours: Behaviours,
+    /// Shared with the world generators (`Behaviours::share`).
+    behaviours: Arc<Behaviours>,
     /// The player model's right and left arms.
     player_arm: [Option<horizon_client::mobs::Part>; 2],
     /// The slim model's right and left arms (3 pixels wide).
@@ -12214,7 +12215,11 @@ fn load_world_rest(
         ambient,
         nether_environment,
         end_environment,
-        behaviours: behaviours?,
+        behaviours: {
+            let behaviours = Arc::new(behaviours?);
+            Behaviours::share(root, &behaviours);
+            behaviours
+        },
         mob_types,
         mob_data,
         player_type,
@@ -12348,7 +12353,10 @@ pub fn run_with() -> Result<()> {
     // A game window's hooks (Discord's presence): never for a server.
     activity::client_started(&options);
     // Snapshots of derived tables live in the game folder, never beside the
-    // shared resources.
+    // shared resources. Not in a page: keying one reads the 77 MB facts twice
+    // more, a page's memory never shrinks back, and the snapshot would be kept
+    // with the worlds in the browser's storage.
+    #[cfg(not(target_arch = "wasm32"))]
     Behaviours::set_cache_dir(horizon_fs::current_dir()?.join(".horizon-cache"));
     if !synchronous_startup(&options) {
         return run_loading(options, early_settings, vanilla_root, None, started);

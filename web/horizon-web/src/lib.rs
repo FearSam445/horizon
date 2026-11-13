@@ -10,6 +10,7 @@
 #![cfg(target_arch = "wasm32")]
 
 mod big_allocations;
+mod webgl_upload;
 
 use std::path::Path;
 
@@ -105,6 +106,7 @@ pub fn boot() -> Result<(), String> {
             .unwrap_or_default();
         web_sys::console::error_1(&format!("Horizon panicked: {info}\n{stack}").into());
     }));
+    webgl_upload::install();
     // A loop that sleeps until chunks are made makes them itself: no worker would.
     horizon_thread::set_idle(|budget| {
         horizon_threads::jobs::pump(budget);

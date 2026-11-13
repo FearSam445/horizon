@@ -867,6 +867,10 @@ pub trait GameplayStateSource {
     fn sound_id(&self, name: &str) -> &str;
 }
 
+/// The tables [`Behaviours::share`] lent, and the resources they are of.
+static SHARED: std::sync::Mutex<Option<(std::path::PathBuf, std::sync::Weak<Behaviours>)>> =
+    std::sync::Mutex::new(None);
+
 /// Immutable vanilla block-behaviour tables. Build once with [`Behaviours::load`].
 pub struct Behaviours {
     pub table: StateTable,
@@ -892,6 +896,23 @@ impl Behaviours {
     /// Load from a prepared client resource directory (`.local/horizon-client/<version>`).
     pub fn load(registry: &BlockRegistry, resources_dir: &Path) -> io::Result<Self> {
         data::load(registry, resources_dir)
+    }
+    /// Lets [`Behaviours::shared`] hand out these tables of `resources_dir`
+    /// while they live: the game's own, which a world generator then uses
+    /// instead of building its copy (gameplay-facts.json parsed again, hundreds
+    /// of megabytes at its peak).
+    pub fn share(resources_dir: &Path, behaviours: &Arc<Self>) {
+        *SHARED.lock().unwrap_or_else(|e| e.into_inner()) =
+            Some((resources_dir.to_owned(), Arc::downgrade(behaviours)));
+    }
+    /// The tables [`Behaviours::share`] lent for `resources_dir` and `registry`,
+    /// if they still live.
+    pub fn shared(registry: &BlockRegistry, resources_dir: &Path) -> Option<Arc<Self>> {
+        let shared = SHARED.lock().unwrap_or_else(|e| e.into_inner());
+        let (dir, behaviours) = shared.as_ref()?;
+        let behaviours = behaviours.upgrade()?;
+        (dir == resources_dir && behaviours.table.state_count() == registry.len())
+            .then_some(behaviours)
     }
     /// Reuse the client's typed gameplay projection while it is borrowed from the JSON bytes.
     pub fn load_with_gameplay<G: GameplayStateSource>(

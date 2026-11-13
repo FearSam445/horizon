@@ -245,9 +245,18 @@ fn unpack(data: &[u8], deflated: bool, len: u64) -> io::Result<Vec<u8>> {
     if !deflated {
         return Ok(data.to_vec());
     }
-    let out = miniz_oxide::inflate::decompress_to_vec_with_limit(data, len as usize)
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("{e:?}")))?;
-    if out.len() as u64 != len {
+    // Into a buffer of the file's own length: growing one as it fills would hold
+    // the old and the new buffer at once (a 77 MB file took 154 MB), and a page's
+    // memory never shrinks back.
+    let mut out = vec![0; len as usize];
+    let written = miniz_oxide::inflate::decompress_slice_iter_to_slice(
+        &mut out,
+        std::iter::once(data),
+        false,
+        true,
+    )
+    .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, format!("{e:?}")))?;
+    if written as u64 != len {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
             "a packed file's length is wrong",

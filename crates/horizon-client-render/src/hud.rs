@@ -427,6 +427,35 @@ fn wrap_border((name, w, h, data): &PackedImage) -> PackedImage {
     }
     (name.clone(), bw, bh, out)
 }
+/// The size of the pieces [`pack_pieces`] compresses one at a time.
+const PIECE: usize = 4 << 20;
+
+/// `raw` compressed (LZ4) a [`PIECE`] at a time, each piece's length before it:
+/// one call over the whole atlas made a buffer of its worst case beside it
+/// (105 MB for the default 96 MB atlas), kept at that size.
+fn pack_pieces(raw: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    for piece in raw.chunks(PIECE) {
+        let block = lz4_flex::compress_prepend_size(piece);
+        out.extend_from_slice(&(block.len() as u32).to_le_bytes());
+        out.extend_from_slice(&block);
+    }
+    out.shrink_to_fit();
+    out
+}
+
+/// [`pack_pieces`]' `size` bytes again; `None` when they don't come out whole.
+fn unpack_pieces(mut packed: &[u8], size: usize) -> Option<Vec<u8>> {
+    let mut out = Vec::with_capacity(size);
+    while let Some((len, rest)) = packed.split_first_chunk::<4>() {
+        let len = u32::from_le_bytes(*len) as usize;
+        let block = rest.get(..len)?;
+        out.extend_from_slice(&lz4_flex::decompress_size_prepended(block).ok()?);
+        packed = &rest[len..];
+    }
+    (out.len() == size).then_some(out)
+}
+
 /// The textures the enabled packs' Custom Item Textures rules draw, beyond those already packed:
 /// item rules' textures and their JSON models', armour and elytra rules' textures, under their
 /// `cit_assets` ids, with their flags and whether they animate. An animated strip keeps its
@@ -810,12 +839,7 @@ impl HudAtlas {
             return std::borrow::Cow::Borrowed(&self.pixels);
         };
         let size = (self.width * self.height * 4) as usize;
-        std::borrow::Cow::Owned(
-            lz4_flex::decompress_size_prepended(packed.wait())
-                .ok()
-                .filter(|p| p.len() == size)
-                .unwrap_or_else(|| vec![0; size]),
-        )
+        std::borrow::Cow::Owned(unpack_pieces(packed.wait(), size).unwrap_or_else(|| vec![0; size]))
     }
     /// Keep the pixels compressed from now on, once a renderer has them: the
     /// window's GPU holds the atlas, and a copy as built only serves a
@@ -832,10 +856,10 @@ impl HudAtlas {
         let spawned = horizon_thread::Builder::new()
             .name("Atlas packing".into())
             .spawn(move || {
-                let _ = job_slot.set(lz4_flex::compress_prepend_size(&job_raw));
+                let _ = job_slot.set(pack_pieces(&job_raw));
             });
         if spawned.is_err() {
-            let _ = slot.set(lz4_flex::compress_prepend_size(&raw));
+            let _ = slot.set(pack_pieces(&raw));
         }
         self.packed = Some(slot);
     }
@@ -3106,6 +3130,23 @@ mod coverage_tests;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_packed_atlas_comes_back_whole_from_its_pieces() {
+        let raw: Vec<u8> = (0..PIECE * 2 + 123).map(|i| (i * 7 % 251) as u8).collect();
+        let packed = pack_pieces(&raw);
+        assert_eq!(unpack_pieces(&packed, raw.len()).as_deref(), Some(&raw[..]));
+        assert_eq!(
+            unpack_pieces(&packed, raw.len() + 1),
+            None,
+            "a wrong size is refused"
+        );
+        assert_eq!(
+            unpack_pieces(&packed[..packed.len() - 1], raw.len()),
+            None,
+            "cut short"
+        );
+    }
 
     #[test]
     fn animated_texture_metadata_ignores_trailing_pack_signature() {
