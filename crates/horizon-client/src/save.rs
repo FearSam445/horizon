@@ -2511,7 +2511,71 @@ impl Folder {
 /// submission order.
 struct Writer {
     send: mpsc::Sender<WriteBatch>,
-    thread: horizon_thread::JoinHandle<()>,
+    thread: Option<horizon_thread::JoinHandle<()>>,
+    /// With no thread: the batches sent, written by the sender right after it sends them.
+    inline: Option<(mpsc::Receiver<WriteBatch>, WriteJob)>,
+}
+
+/// What the writer needs to put batches into the region files.
+struct WriteJob {
+    root: PathBuf,
+    regions: Arc<RegionCache>,
+    entity_regions: Arc<RegionCache>,
+    poi_regions: Arc<RegionCache>,
+    pending: Arc<PendingWrites>,
+    outstanding: Arc<Outstanding>,
+}
+impl WriteJob {
+    /// Writes one batch into its region files, then marks it done.
+    fn run(&self, (kind, batch): WriteBatch) {
+        let (root, pending, outstanding) = (&self.root, &self.pending, &self.outstanding);
+        let cache = match kind {
+            Folder::Region => &self.regions,
+            Folder::Entities => &self.entity_regions,
+            Folder::Poi => &self.poi_regions,
+        };
+        let folder = kind.name();
+        // IOWorker.pendingWrites: a chunk queued again since is
+        // written once, by its newest batch.
+        let newest = |k: &(i32, i32), seq: u64| {
+            pending.lock().map_or(true, |p| {
+                p.get(&(kind, k.0, k.1)).is_none_or(|p| p.0 <= seq)
+            })
+        };
+        let resolved: Vec<_> = batch
+            .iter()
+            .filter(|(k, _, seq)| newest(k, *seq))
+            .filter_map(|(k, r, _)| Some((*k, resolve_poi(root, cache, *k, r)?)))
+            .collect();
+        let records: Vec<_> = resolved.iter().map(|(k, r)| (*k, r)).collect();
+        let result = write_region_records(root, cache, folder, &records);
+        if let Err(e) = &result {
+            let message = format!("failed to write {folder} files: {e}");
+            log::warn!("Horizon: {message}");
+            *outstanding.error.lock().unwrap() = Some(message);
+            // `reportChunkSaveFailure` for each chunk of the batch.
+            for (k, _, _) in &batch {
+                crate::chunk_io::report_save_failure(root, k.0, k.1, e);
+            }
+        }
+        // Keep failed snapshots readable; never report them as durable.
+        if result.is_ok()
+            && let Ok(mut pending) = pending.lock()
+        {
+            for (k, _, seq) in &batch {
+                if pending.get(&(kind, k.0, k.1)).is_some_and(|p| p.0 == *seq) {
+                    pending.remove(&(kind, k.0, k.1));
+                }
+            }
+        }
+        if kind == Folder::Region {
+            outstanding.chunks.fetch_sub(batch.len(), Ordering::Relaxed);
+        }
+        if let Ok(mut count) = outstanding.count.lock() {
+            *count -= 1;
+            outstanding.done.notify_all();
+        }
+    }
 }
 
 /// Writes still queued or running, with a condition to wait for none.
@@ -3034,6 +3098,11 @@ impl SaveDir {
                 self.outstanding.done.notify_all();
                 return Err("the region writer stopped".into());
             }
+            if let Some((receive, job)) = &writer.inline {
+                for batch in receive.try_iter() {
+                    job.run(batch);
+                }
+            }
         }
         if wait {
             self.flush()?;
@@ -3041,69 +3110,41 @@ impl SaveDir {
         Ok(())
     }
     fn start_writer(&self) -> Writer {
+        let job = || WriteJob {
+            root: self.root.clone(),
+            regions: self.regions.clone(),
+            entity_regions: self.entity_regions.clone(),
+            poi_regions: self.poi_regions.clone(),
+            pending: self.pending.clone(),
+            outstanding: self.outstanding.clone(),
+        };
         let (send, receive) = mpsc::channel::<WriteBatch>();
-        let root = self.root.clone();
-        let (regions, entity_regions, poi_regions) = (
-            self.regions.clone(),
-            self.entity_regions.clone(),
-            self.poi_regions.clone(),
-        );
-        let pending = self.pending.clone();
-        let outstanding = self.outstanding.clone();
-        let thread = horizon_thread::Builder::new()
+        let on_thread = job();
+        let spawned = horizon_thread::Builder::new()
             .name("horizon-region-writer".into())
             .spawn(move || {
-                for (kind, batch) in receive {
-                    let cache = match kind {
-                        Folder::Region => &regions,
-                        Folder::Entities => &entity_regions,
-                        Folder::Poi => &poi_regions,
-                    };
-                    let folder = kind.name();
-                    // IOWorker.pendingWrites: a chunk queued again since is
-                    // written once, by its newest batch.
-                    let newest = |k: &(i32, i32), seq: u64| {
-                        pending.lock().map_or(true, |p| {
-                            p.get(&(kind, k.0, k.1)).is_none_or(|p| p.0 <= seq)
-                        })
-                    };
-                    let resolved: Vec<_> = batch
-                        .iter()
-                        .filter(|(k, _, seq)| newest(k, *seq))
-                        .filter_map(|(k, r, _)| Some((*k, resolve_poi(&root, cache, *k, r)?)))
-                        .collect();
-                    let records: Vec<_> = resolved.iter().map(|(k, r)| (*k, r)).collect();
-                    let result = write_region_records(&root, cache, folder, &records);
-                    if let Err(e) = &result {
-                        let message = format!("failed to write {folder} files: {e}");
-                        log::warn!("Horizon: {message}");
-                        *outstanding.error.lock().unwrap() = Some(message);
-                        // `reportChunkSaveFailure` for each chunk of the batch.
-                        for (k, _, _) in &batch {
-                            crate::chunk_io::report_save_failure(&root, k.0, k.1, e);
-                        }
-                    }
-                    // Keep failed snapshots readable; never report them as durable.
-                    if result.is_ok()
-                        && let Ok(mut pending) = pending.lock()
-                    {
-                        for (k, _, seq) in &batch {
-                            if pending.get(&(kind, k.0, k.1)).is_some_and(|p| p.0 == *seq) {
-                                pending.remove(&(kind, k.0, k.1));
-                            }
-                        }
-                    }
-                    if kind == Folder::Region {
-                        outstanding.chunks.fetch_sub(batch.len(), Ordering::Relaxed);
-                    }
-                    if let Ok(mut count) = outstanding.count.lock() {
-                        *count -= 1;
-                        outstanding.done.notify_all();
-                    }
+                for batch in receive {
+                    on_thread.run(batch);
                 }
-            })
-            .expect("spawn region writer");
-        Writer { send, thread }
+            });
+        match spawned {
+            Ok(thread) => Writer {
+                send,
+                thread: Some(thread),
+                inline: None,
+            },
+            // No thread (the browser build, or a system at its limit of threads): the
+            // queue writes each batch as it is sent, on the caller's thread.
+            Err(e) => {
+                log::warn!("Horizon: region writer: {e}; chunks are written as they are queued");
+                let (send, receive) = mpsc::channel::<WriteBatch>();
+                Writer {
+                    send,
+                    thread: None,
+                    inline: Some((receive, job())),
+                }
+            }
+        }
     }
     /// Wait until every queued write is on disk.
     pub fn flush(&self) -> Result<()> {
@@ -3241,7 +3282,9 @@ impl Drop for SaveDir {
     fn drop(&mut self) {
         if let Some(writer) = self.writer.get_mut().ok().and_then(Option::take) {
             drop(writer.send);
-            let _ = writer.thread.join();
+            if let Some(thread) = writer.thread {
+                let _ = thread.join();
+            }
         }
     }
 }

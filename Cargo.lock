@@ -2262,6 +2262,7 @@ dependencies = [
  "horizon-fs",
  "horizon-thread",
  "horizon-threads",
+ "js-sys",
  "log",
  "wasm-bindgen",
  "web-sys",

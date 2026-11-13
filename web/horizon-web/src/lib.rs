@@ -68,7 +68,13 @@ pub fn restore_kept_files(block: &[u8]) -> Result<u32, String> {
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn boot() -> Result<(), String> {
     std::panic::set_hook(Box::new(|info| {
-        web_sys::console::error_1(&format!("Horizon panicked: {info}").into());
+        // The page's stack names the Rust functions it went through: where it happened.
+        let error = js_sys::Error::new("");
+        let stack = js_sys::Reflect::get(&error, &"stack".into())
+            .ok()
+            .and_then(|s| s.as_string())
+            .unwrap_or_default();
+        web_sys::console::error_1(&format!("Horizon panicked: {info}\n{stack}").into());
     }));
     // A loop that sleeps until chunks are made makes them itself: no worker would.
     horizon_thread::set_idle(|budget| {

@@ -3,6 +3,8 @@
 // starts it. The packed text and the zip's JavaScript copies are dropped as soon
 // as the game holds them, so the page keeps each once.
 (function () {
+  // A failure's console line names where it happened, not only the last 10 calls (Chrome).
+  try { Error.stackTraceLimit = 60; } catch (e) {}
   var CHUNK = 8 << 20;
   var status = document.getElementById('horizon-status');
   var text = status.firstChild;

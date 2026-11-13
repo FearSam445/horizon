@@ -305,6 +305,7 @@ impl Integrated {
             match settled {
                 Ok(false) => return,
                 Ok(true) => {
+                    log::info!("Horizon web: the spawn area is ready; the server ticks");
                     host.settling = None;
                     host.game.native_lifecycle_world_ready();
                     host.game.integrated_profile();

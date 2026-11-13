@@ -59,8 +59,10 @@ To address this, we invalidate the vertex buffers based on:
 Between indirect, the lack of `first_instance` semantics, and the availability of `gl_BaseInstance`
 in shaders, getting buffers and builtins to work correctly is a bit tricky.
 
-We never emulate `base_vertex` and gl_VertexID behaves as `@builtin(vertex_index)` does, so we
-never need to do anything about that.
+Where GL has no base vertex (WebGL2), indexed draws bind their per-vertex buffers from the base
+vertex instead, as instance buffers are bound for `first_instance` below (Horizon's patch).
+Otherwise gl_VertexID behaves as `@builtin(vertex_index)` does, so we never need to do anything
+about that.
 
 ### GL 4.2+ with ARB_shader_draw_parameters
 
@@ -250,6 +252,9 @@ bitflags::bitflags! {
         /// `GL_ARB_shader_image_load_store`; GLES needs `GL_NV_image_formats`
         /// (which itself depends on `GL_EXT_texture_norm16`).
         const TEXTURE_FORMAT_NORM16_STORAGE = 1 << 20;
+        /// Indexed draws take a base vertex (GL 3.2, GLES 3.2). Without it (WebGL2) the
+        /// per-vertex buffers are bound from the base vertex instead (Horizon's patch).
+        const BASE_VERTEX = 1 << 21;
     }
 }
 

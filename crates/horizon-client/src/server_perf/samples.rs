@@ -7,8 +7,8 @@ use horizon_perf_format::v1::{Overhead, SampleProfile, Side, Symbols, Unit};
 pub const MAX_WINDOW_S: f64 = 600.0;
 
 /// Seconds per time block: 5 s, longer when the window would need more than 32 of them.
-// Only the samplers, which the browser build has none of, use it.
-#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
+// Only the Linux samplers use it (the browser build and other systems have none).
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 fn block_s(window_s: f64) -> f32 {
     (window_s / 32.0).ceil().max(5.0) as f32
 }

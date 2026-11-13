@@ -1086,17 +1086,21 @@ pub fn import(bytes: &[u8]) -> io::Result<usize> {
 mod tests {
     use super::*;
 
-    /// The tree is one per process: each test works under its own folder.
-    fn root(name: &str) -> PathBuf {
+    /// The tree is one per process: each test works under its own folder, and the
+    /// tests take turns (the change count is the whole tree's: another test's write
+    /// would move it in the middle of `writes_move_the_change_count`).
+    fn root(name: &str) -> (std::sync::MutexGuard<'static, ()>, PathBuf) {
+        static TURN: std::sync::Mutex<()> = std::sync::Mutex::new(());
+        let turn = TURN.lock().unwrap_or_else(|e| e.into_inner());
         let root = PathBuf::from("/test").join(name);
         let _ = remove_dir_all(&root);
         create_dir_all(&root).unwrap();
-        root
+        (turn, root)
     }
 
     #[test]
     fn files_are_written_read_listed_renamed_and_removed() {
-        let r = root("files");
+        let (_turn, r) = root("files");
         write(r.join("a.txt"), b"hello").unwrap();
         assert_eq!(read_to_string(r.join("a.txt")).unwrap(), "hello");
         assert!(
@@ -1125,7 +1129,7 @@ mod tests {
 
     #[test]
     fn open_options_append_truncate_and_seek_like_std() {
-        let r = root("options");
+        let (_turn, r) = root("options");
         let path = r.join("log");
         let mut f = OpenOptions::new()
             .create(true)
@@ -1177,7 +1181,7 @@ mod tests {
 
     #[test]
     fn a_mounted_zip_reads_its_entries_and_copies_one_when_written() {
-        let r = root("zip");
+        let (_turn, r) = root("zip");
         let bytes = zip(&[
             ("26.3/", b""),
             ("26.3/a.json", b"{}"),
@@ -1201,7 +1205,7 @@ mod tests {
 
     #[test]
     fn packed_files_read_as_their_bytes_and_stay_out_of_exports() {
-        let r = root("packed");
+        let (_turn, r) = root("packed");
         let text = b"a packed file, a packed file, a packed file".to_vec();
         let deflated = miniz_oxide::deflate::compress_to_vec(&text, 6);
         add_packed(r.join("res/a/b.json"), true, text.len() as u64, deflated).unwrap();
@@ -1231,7 +1235,7 @@ mod tests {
 
     #[test]
     fn an_export_restores_what_the_game_wrote_and_leaves_out_mounts_and_skipped_folders() {
-        let r = root("export");
+        let (_turn, r) = root("export");
         create_dir_all(r.join("saves/World/region")).unwrap();
         write(r.join("saves/World/level.dat"), [1, 2, 3]).unwrap();
         write(r.join("options.txt"), b"fov:70").unwrap();
@@ -1260,7 +1264,7 @@ mod tests {
 
     #[test]
     fn writes_move_the_change_count() {
-        let r = root("changes");
+        let (_turn, r) = root("changes");
         let before = changes();
         write(r.join("f"), b"1").unwrap();
         assert!(changes() > before);

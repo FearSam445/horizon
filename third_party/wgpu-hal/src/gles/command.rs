@@ -34,6 +34,8 @@ pub(super) struct State {
     instance_vbuf_mask: usize,
     dirty_vbuf_mask: usize,
     active_first_instance: u32,
+    /// The base vertex the per-vertex buffers are bound from, where GL has none.
+    active_base_vertex: u32,
     first_instance_location: Option<glow::UniformLocation>,
     immediates_descs: ArrayVec<super::ImmediateDesc, { super::MAX_IMMEDIATES_COMMANDS }>,
     // The current state of the immediate data block.
@@ -64,6 +66,7 @@ impl Default for State {
             instance_vbuf_mask: Default::default(),
             dirty_vbuf_mask: Default::default(),
             active_first_instance: Default::default(),
+            active_base_vertex: Default::default(),
             first_instance_location: Default::default(),
             immediates_descs: Default::default(),
             current_immediates_data: [0; super::MAX_IMMEDIATES],
@@ -131,7 +134,7 @@ impl super::CommandEncoder {
         }
     }
 
-    fn rebind_vertex_data(&mut self, first_instance: u32) {
+    fn rebind_vertex_data(&mut self, first_instance: u32, base_vertex: u32) {
         if self
             .private_caps
             .contains(super::PrivateCapabilities::VERTEX_BUFFER_LAYOUT)
@@ -146,7 +149,7 @@ impl super::CommandEncoder {
                     (_, _) => continue,
                 };
                 let instance_offset = match buffer_desc.step {
-                    wgt::VertexStepMode::Vertex => 0,
+                    wgt::VertexStepMode::Vertex => base_vertex * buffer_desc.stride,
                     wgt::VertexStepMode::Instance => first_instance * buffer_desc.stride,
                 };
 
@@ -177,6 +180,8 @@ impl super::CommandEncoder {
                 attribute_desc.offset += vb.offset as u32;
                 if buffer_desc.step == wgt::VertexStepMode::Instance {
                     attribute_desc.offset += buffer_desc.stride * first_instance;
+                } else {
+                    attribute_desc.offset += buffer_desc.stride * base_vertex;
                 }
 
                 self.cmd_buffer.commands.push(C::SetVertexAttribute {
@@ -207,7 +212,9 @@ impl super::CommandEncoder {
         }
     }
 
-    fn prepare_draw(&mut self, first_instance: u32) {
+    /// Before a draw: the vertex buffers bound for `first_instance` and, where GL has
+    /// no base vertex, for `base_vertex`. Returns the base vertex left for the draw.
+    fn prepare_draw(&mut self, first_instance: u32, base_vertex: i32) -> i32 {
         // If we support fully featured instancing, we want to bind everything as normal
         // and let the draw call sort it out.
         let emulated_first_instance_value = if self
@@ -224,9 +231,25 @@ impl super::CommandEncoder {
             self.state.dirty_vbuf_mask |= self.state.instance_vbuf_mask;
             self.state.active_first_instance = emulated_first_instance_value;
         }
-        if self.state.dirty_vbuf_mask != 0 {
-            self.rebind_vertex_data(emulated_first_instance_value);
+        // No base vertex in GL (WebGL2): the per-vertex buffers start at it instead.
+        let has_base_vertex = self
+            .private_caps
+            .contains(super::PrivateCapabilities::BASE_VERTEX);
+        let (emulated_base_vertex, left) = match u32::try_from(base_vertex) {
+            Ok(base) if !has_base_vertex => (base, 0),
+            _ => (0, base_vertex),
+        };
+        if emulated_base_vertex != self.state.active_base_vertex {
+            let bound = (0..self.state.vertex_buffers.len())
+                .filter(|&i| self.state.vertex_buffers[i].1.is_some())
+                .fold(0, |mask, i| mask | (1 << i));
+            self.state.dirty_vbuf_mask |= bound & !self.state.instance_vbuf_mask;
+            self.state.active_base_vertex = emulated_base_vertex;
         }
+        if self.state.dirty_vbuf_mask != 0 {
+            self.rebind_vertex_data(emulated_first_instance_value, emulated_base_vertex);
+        }
+        left
     }
 
     fn set_pipeline_inner(&mut self, inner: &super::PipelineInner) {
@@ -717,6 +740,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         self.state.instance_vbuf_mask = 0;
         self.state.dirty_vbuf_mask = 0;
         self.state.active_first_instance = 0;
+        self.state.active_base_vertex = 0;
         self.state.color_targets.clear();
         for vat in &self.state.vertex_attributes {
             self.cmd_buffer
@@ -1079,7 +1103,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         first_instance: u32,
         instance_count: u32,
     ) {
-        self.prepare_draw(first_instance);
+        self.prepare_draw(first_instance, 0);
         #[allow(
             clippy::clone_on_copy,
             reason = "False positive when cloning glow::UniformLocation"
@@ -1101,7 +1125,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         first_instance: u32,
         instance_count: u32,
     ) {
-        self.prepare_draw(first_instance);
+        let base_vertex = self.prepare_draw(first_instance, base_vertex);
         let (index_size, index_type) = match self.state.index_format {
             wgt::IndexFormat::Uint16 => (2, glow::UNSIGNED_SHORT),
             wgt::IndexFormat::Uint32 => (4, glow::UNSIGNED_INT),
@@ -1139,7 +1163,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         if draw_count == 0 {
             return;
         }
-        self.prepare_draw(0);
+        self.prepare_draw(0, 0);
         #[allow(
             clippy::clone_on_copy,
             reason = "False positive when cloning glow::UniformLocation"
@@ -1161,7 +1185,7 @@ impl crate::CommandEncoder for super::CommandEncoder {
         if draw_count == 0 {
             return;
         }
-        self.prepare_draw(0);
+        self.prepare_draw(0, 0);
         let index_type = match self.state.index_format {
             wgt::IndexFormat::Uint16 => glow::UNSIGNED_SHORT,
             wgt::IndexFormat::Uint32 => glow::UNSIGNED_INT,

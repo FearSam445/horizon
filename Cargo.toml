@@ -81,6 +81,8 @@ large_enum_variant = "allow"
 # And gfx-rs/wgpu#10714: on Windows, Vulkan waits for the acquire fence only in
 # FIFO (VSync), where it was meant to pace frames; with VSync off it made every
 # frame wait for the GPU to finish the one before (#4604).
+# And, for the browser build: WebGL2 has no base vertex, so the GL backend binds
+# indexed draws' vertex buffers from it instead of panicking (gles/command.rs).
 # Drop this and the folder once a wgpu release has these fixes.
 [patch.crates-io]
 wgpu-hal = { path = "third_party/wgpu-hal" }

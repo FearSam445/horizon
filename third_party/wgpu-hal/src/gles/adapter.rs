@@ -695,6 +695,10 @@ impl super::Adapter {
             super::PrivateCapabilities::INVALIDATE_FRAMEBUFFER,
             supported((3, 0), (4, 3)),
         );
+        private_caps.set(
+            super::PrivateCapabilities::BASE_VERTEX,
+            supported((3, 2), (3, 2)),
+        );
         if let Some(full_ver) = full_ver {
             let supported =
                 full_ver >= (4, 2) && extensions.contains("GL_ARB_shader_draw_parameters");

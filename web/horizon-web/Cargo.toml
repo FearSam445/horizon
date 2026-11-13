@@ -20,6 +20,7 @@ horizon-threads = { path = "../../crates/horizon-threads" }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.129"
 web-sys = { version = "0.3.106", features = ["console"] }
+js-sys = "0.3.106"
 
 [lints]
 workspace = true
