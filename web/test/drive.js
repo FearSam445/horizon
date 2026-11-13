@@ -9,6 +9,9 @@
 //   {"move": [dx, dy]}           (relative mouse motion, as a locked pointer sends)
 //   {"eval": "js expression"}    (prints its value)
 //   {"profile": seconds, "top": n} (prints where the time went)
+//   {"frames": seconds, "label": "x"} (frame rate and hitches)
+//   {"down": "KeyW"} / {"up": "KeyW"} (holds a key across other steps)
+// THROTTLE=4 slows the page's CPU fourfold, about an iPad's speed.
 // Coordinates are CSS pixels of the page.
 const { chromium } = require('playwright');
 const path = require('path');
@@ -79,6 +82,11 @@ async function profile(page, seconds, top) {
     ? { args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] }
     : { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage({ viewport: { width, height } });
+  // THROTTLE=n runs the page's CPU n times slower: about an iPad's speed at 4.
+  if (process.env.THROTTLE) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.THROTTLE) });
+  }
   const t0 = Date.now();
   const stamp = () => ((Date.now() - t0) / 1000).toFixed(1).padStart(6);
   page.on('console', (m) => console.log(`${stamp()} [${m.type()}] ${m.text()}`));
@@ -99,7 +107,21 @@ async function profile(page, seconds, top) {
     if (s.wait) await page.waitForTimeout(s.wait * 1000);
     else if (s.click) { await page.mouse.move(s.click[0], s.click[1]); await page.mouse.down(); await page.waitForTimeout(80); await page.mouse.up(); }
     else if (s.key) await page.keyboard.press(s.key);
+    else if (s.down) await page.keyboard.down(s.down);
+    else if (s.up) await page.keyboard.up(s.up);
     else if (s.profile) await profile(page, s.profile, s.top || 30);
+    else if (s.frames) {
+      // Frame times seen by requestAnimationFrame for `frames` seconds: the
+      // frame rate and the hitches a player feels.
+      const r = await page.evaluate((secs) => new Promise((ok) => {
+        const times = []; let last = performance.now(); const end = last + secs * 1000;
+        function tick(now) { times.push(now - last); last = now; if (now < end) requestAnimationFrame(tick); else ok(times); }
+        requestAnimationFrame(tick);
+      }), s.frames);
+      const sorted = [...r].sort((a, b) => a - b), q = (f) => sorted[Math.min(sorted.length - 1, Math.floor(f * sorted.length))];
+      const total = r.reduce((a, b) => a + b, 0);
+      console.log(`${stamp()} [frames] ${s.label || ''} ${(1000 * r.length / total).toFixed(1)} fps, median ${q(0.5).toFixed(1)} ms, 95% ${q(0.95).toFixed(1)} ms, worst ${sorted[sorted.length - 1].toFixed(0)} ms, ${r.filter((t) => t > 50).length} over 50 ms, ${r.filter((t) => t > 100).length} over 100 ms`);
+    }
     else if (s.eval) console.log(`${stamp()} [eval] ${JSON.stringify(await page.evaluate(s.eval).catch((e) => String(e)))}`);
     else if (s.type) await page.keyboard.type(s.type, { delay: 40 });
     else if (s.hold) { await page.keyboard.down(s.hold); await page.waitForTimeout((s.for || 1) * 1000); await page.keyboard.up(s.hold); }

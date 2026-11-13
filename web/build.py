@@ -49,6 +49,7 @@ def main():
         level = os.environ.get("HORIZON_WASM_OPT", "-O2")
         run([wasm_opt, level, "--enable-bulk-memory", "--enable-sign-ext", "--enable-mutable-globals",
              "--enable-nontrapping-float-to-int", "--enable-multivalue", "--enable-reference-types",
+             "--enable-simd",
              "--strip-debug", "--strip-producers", bg, "-o", bg])
     glue = open(os.path.join(pkg, "horizon_web.js"), encoding="utf-8").read()
     data = open(bg, "rb").read()
