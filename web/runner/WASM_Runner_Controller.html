@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- iPad: "Add to Home Screen" opens it as an app, without Safari's bars -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WASM Runner">
+    <meta name="theme-color" content="#111111">
+    <title>WASM Native Runner</title>
+    <style>
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: manipulation;
+        }
+        .container {
+            background-color: #222;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 450px;
+        }
+        h1 { margin-top: 0; font-size: 24px; color: #4CAF50; }
+        p { color: #aaa; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .btn {
+            border: 2px solid #4CAF50;
+            color: white;
+            background-color: #4CAF50;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:hover { background-color: #45a049; border-color: #45a049; }
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .again { margin-top: 14px; display: none; background: #1a1a1a; border-color: #4CAF50; }
+        .again:hover { background-color: #14231a; }
+        .forget { display: none; margin-top: 8px; background: none; border: 0; color: #777; font-size: 12px; text-decoration: underline; cursor: pointer; }
+        #loading { display: none; margin-top: 20px; color: #4CAF50; font-weight: bold; }
+        .pad-status { margin-top: 22px; font-size: 13px; color: #888; padding: 8px 12px; border-radius: 8px; background: #1a1a1a; border: 1px solid #333; transition: all .2s; }
+        .pad-status.on { color: #4CAF50; border-color: #4CAF50; background: #14231a; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="menu">
+        <h1>WASM Native Runner</h1>
+        <p>Select your Eaglercraft WASM <b>.html</b> file. This runner injects the game natively into the page, allocating maximum RAM to WASM and locking your saves permanently to this URL. Controllers work too — connect one and press any button.</p>
+
+        <div class="upload-btn-wrapper">
+            <button class="btn">Select WASM .html File</button>
+            <input type="file" id="file-input" accept=".html" />
+        </div>
+        <div><button class="btn again" id="play-again" type="button"></button></div>
+        <div><button class="forget" id="forget-last" type="button">Forget the remembered game</button></div>
+        <div id="loading">Injecting WASM Engine...</div>
+        <div id="pad-status" class="pad-status">🎮 Controller: press any button to connect</div>
+    </div>
+
+    <!-- CONTROLLER SUPPORT: injected into the game page together with the pointer-lock shim -->
+    <script type="text/plain" id="gamepad-src">
+/* ==========================================================================
+   Eaglercraft Controller Support  v1.0
+   Turns any gamepad into keyboard + mouse input for Eaglercraft.
+   - In game: Minecraft-console style layout (sticks move/look, triggers
+     attack/use, bumpers change hotbar slot, etc.)
+   - In menus: a virtual mouse cursor you drive with the left stick.
+   - Press View/Back/Share while in any menu to open Controller Settings.
+   ========================================================================== */
+(function () {
+    'use strict';
+    if (window.__eagControllerLoaded) return;
+    window.__eagControllerLoaded = true;
+    if (typeof navigator.getGamepads !== 'function') return;
+    var nativeGetPads = navigator.getGamepads.bind(navigator);
+
+    /* ------------------------------------------------------------------ */
+    /*  Settings                                                           */
+    /* ------------------------------------------------------------------ */
+    var ACTIONS = [
+        ['jump',        'Jump'],
+        ['sneak',       'Sneak'],
+        ['drop',        'Drop item'],
+        ['inventory',   'Inventory'],
+        ['hotbarPrev',  'Hotbar left'],
+        ['hotbarNext',  'Hotbar right'],
+        ['use',         'Use / place'],
+        ['attack',      'Attack / break'],
+        ['playerList',  'Player list'],
+        ['pause',       'Pause'],
+        ['sprint',      'Sprint'],
+        ['pickBlock',   'Pick block'],
+        ['perspective', 'Camera view'],
+        ['swapHands',   'Swap hands'],
+        ['chat',        'Chat'],
+        ['debug',       'Coords (F3)']
+    ];
+    var DEFAULT_BINDS = {
+        jump: 0, sneak: 1, drop: 2, inventory: 3, hotbarPrev: 4, hotbarNext: 5,
+        use: 6, attack: 7, playerList: 8, pause: 9, sprint: 10, pickBlock: 11,
+        perspective: 12, swapHands: 13, chat: 14, debug: 15
+    };
+    var DEFAULTS = {
+        lookSens: 1.0, lookSensY: 0.8, invertY: false, cursorSpeed: 1.0,
+        deadzone: 0.12, toggleSneak: false, autoSprint: false,
+        vibration: true, hints: true, binds: DEFAULT_BINDS
+    };
+    var STORE_KEY = 'eaglerControllerSettings_v1';
+    var cfg = loadCfg();
+
+    function clone(o) { return JSON.parse(JSON.stringify(o)); }
+    function loadCfg() {
+        var c = clone(DEFAULTS);
+        try {
+            var s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+            if (s && typeof s === 'object') {
+                for (var k in DEFAULTS) if (k !== 'binds' && typeof s[k] === typeof DEFAULTS[k]) c[k] = s[k];
+                if (s.binds) for (var b in DEFAULT_BINDS) if (typeof s.binds[b] === 'number') c.binds[b] = s.binds[b];
+            }
+        } catch (e) {}
+        return c;
+    }
+    function saveCfg() { try { localStorage.setItem(STORE_KEY, JSON.stringify(cfg)); } catch (e) {} }
+
+    /* ------------------------------------------------------------------ */
+    /*  Keyboard / mouse event synthesis                                   */
+    /* ------------------------------------------------------------------ */
+    // code: [key, legacy keyCode, location]
+    var KEYS = {
+        Space: [' ', 32, 0], ShiftLeft: ['Shift', 16, 1], ControlLeft: ['Control', 17, 1],
+        KeyW: ['w', 87, 0], KeyA: ['a', 65, 0], KeyS: ['s', 83, 0], KeyD: ['d', 68, 0],
+        KeyE: ['e', 69, 0], KeyQ: ['q', 81, 0], KeyF: ['f', 70, 0], KeyT: ['t', 84, 0],
+        Tab: ['Tab', 9, 0], Escape: ['Escape', 27, 0], Enter: ['Enter', 13, 0],
+        Backquote: ['`', 192, 0], Backspace: ['Backspace', 8, 0],
+        F3: ['F3', 114, 0], F5: ['F5', 116, 0]
+    };
+    var ACTION_OUT = {
+        jump: { key: 'Space' }, sneak: { key: 'ShiftLeft' }, drop: { key: 'KeyQ' },
+        inventory: { key: 'KeyE' }, use: { mouse: 2 }, attack: { mouse: 0 },
+        playerList: { key: 'Tab' }, pause: { key: 'Escape' }, sprint: { key: 'ControlLeft' },
+        pickBlock: { mouse: 1 }, perspective: { key: 'F5' }, swapHands: { key: 'KeyF' },
+        chat: { key: 'KeyT' }, debug: { key: 'F3' },
+        hotbarPrev: { wheel: -1 }, hotbarNext: { wheel: 1 }
+    };
+
+    function def(ev, name, val) {
+        try { Object.defineProperty(ev, name, { value: val, configurable: true }); } catch (e) {}
+    }
+
+    var keyHolders = {};   // code -> {source:true}
+    var mouseHolders = {}; // button -> {source:true}
+
+    function anyHolder(map) { for (var k in map) return true; return false; }
+    function keyIsDown(code) { return keyHolders[code] && anyHolder(keyHolders[code]); }
+
+    function sendKey(type, code) {
+        var d = KEYS[code];
+        var ev;
+        try {
+            ev = new KeyboardEvent(type, {
+                key: d[0], code: code, location: d[2], bubbles: true, cancelable: true,
+                shiftKey: !!keyIsDown('ShiftLeft'), ctrlKey: !!keyIsDown('ControlLeft')
+            });
+        } catch (e) { ev = document.createEvent('Event'); ev.initEvent(type, true, true); def(ev, 'key', d[0]); def(ev, 'code', code); }
+        def(ev, 'keyCode', d[1]); def(ev, 'which', d[1]); def(ev, 'repeat', false);
+        window.dispatchEvent(ev);
+    }
+    function setKey(src, code, on) {
+        var h = keyHolders[code] || (keyHolders[code] = {});
+        var was = anyHolder(h);
+        if (on) h[src] = true; else delete h[src];
+        var now = anyHolder(h);
+        if (was !== now) sendKey(now ? 'keydown' : 'keyup', code);
+    }
+
+    function getCanvas() {
+        return document.querySelector('canvas._eaglercraftX_canvas_element') || null;
+    }
+    var cursor = { x: 0, y: 0, init: false };
+    var lastMoveTarget = null;
+
+    function mouseEvent(type, btn, mvx, mvy) {
+        var cv = getCanvas(); if (!cv) return;
+        var r = cv.getBoundingClientRect();
+        var x = cursor.x, y = cursor.y;
+        if (isLocked()) { x = r.width / 2; y = r.height / 2; }
+        var buttons = 0;
+        for (var b in mouseHolders) if (anyHolder(mouseHolders[b])) buttons |= (b == 0 ? 1 : b == 2 ? 2 : 4);
+        var ev;
+        try {
+            ev = new MouseEvent(type, {
+                bubbles: type !== 'mouseenter', cancelable: true, view: window,
+                button: btn || 0, buttons: buttons,
+                clientX: r.left + x, clientY: r.top + y, screenX: r.left + x, screenY: r.top + y,
+                shiftKey: !!keyIsDown('ShiftLeft'), ctrlKey: !!keyIsDown('ControlLeft')
+            });
+        } catch (e) { return; }
+        def(ev, 'offsetX', x); def(ev, 'offsetY', y);
+        def(ev, 'movementX', mvx || 0); def(ev, 'movementY', mvy || 0);
+        cv.dispatchEvent(ev);
+        lastMoveTarget = cv;
+    }
+    function setMouse(src, btn, on) {
+        var h = mouseHolders[btn] || (mouseHolders[btn] = {});
+        var was = anyHolder(h);
+        if (on) h[src] = true; else delete h[src];
+        var now = anyHolder(h);
+        if (was !== now) mouseEvent(now ? 'mousedown' : 'mouseup', btn);
+    }
+    function wheel(dir) {
+        var cv = getCanvas(); if (!cv) return;
+        var r = cv.getBoundingClientRect();
+        var x = isLocked() ? r.width / 2 : cursor.x, y = isLocked() ? r.height / 2 : cursor.y;
+        var ev;
+        try {
+            ev = new WheelEvent('wheel', { deltaY: dir * 100, deltaMode: 0, bubbles: true, cancelable: true,
+                clientX: r.left + x, clientY: r.top + y });
+        } catch (e) { return; }
+        def(ev, 'offsetX', x); def(ev, 'offsetY', y);
+        cv.dispatchEvent(ev);
+    }
+    function releaseAll() {
+        var k, s;
+        for (k in keyHolders) for (s in keyHolders[k]) setKey(s, k, false);
+        for (k in mouseHolders) for (s in mouseHolders[k]) setMouse(s, +k, false);
+        sneakToggled = false;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Gamepad reading                                                    */
+    /* ------------------------------------------------------------------ */
+    var NB = 17;
+    var pads = [];
+    var activeIdx = -1;
+    var padAccessError = false;
+    var knownPads = {};
+
+    function readPads() {
+        try { pads = nativeGetPads() || []; }
+        catch (e) {
+            pads = [];
+            if (!padAccessError) {
+                padAccessError = true;
+                toast('Controller access is blocked here', 'Open the runner in its own tab / full screen to use a controller.', 6000);
+            }
+        }
+        var seen = {};
+        for (var i = 0; i < pads.length; i++) {
+            var p = pads[i];
+            if (!p || p.connected === false) continue;
+            seen[p.index] = true;
+            if (!knownPads[p.index]) {
+                knownPads[p.index] = p.id;
+                onConnect(p);
+            }
+        }
+        for (var j in knownPads) {
+            if (!seen[j]) {
+                var id = knownPads[j];
+                delete knownPads[j];
+                onDisconnect(id, +j);
+            }
+        }
+    }
+
+    function padType(id) {
+        id = (id || '').toLowerCase();
+        if (/054c|playstation|dualsense|dualshock|ps4|ps5|sony/.test(id)) return 'ps';
+        if (/057e|nintendo|pro controller|joy-con|switch/.test(id)) return 'nin';
+        if (/045e|xbox|xinput|microsoft/.test(id)) return 'xbox';
+        return 'xbox';
+    }
+    function cleanName(id) {
+        var n = (id || 'Controller').replace(/\(.*?(vendor|product|standard).*?\)/ig, '')
+            .replace(/^[0-9a-f]{4}-[0-9a-f]{4}-/i, '').replace(/\s+/g, ' ').trim();
+        return n || 'Controller';
+    }
+
+    function snapshot(p) {
+        var s = { b: new Array(NB), v: new Array(NB), lx: 0, ly: 0, rx: 0, ry: 0 };
+        var i, bt;
+        for (i = 0; i < NB; i++) {
+            bt = p.buttons[i];
+            var val = bt ? (typeof bt === 'object' ? (bt.value || (bt.pressed ? 1 : 0)) : bt) : 0;
+            s.v[i] = val;
+            s.b[i] = bt ? (typeof bt === 'object' ? !!bt.pressed : bt > 0.5) : false;
+        }
+        var a = p.axes || [];
+        s.lx = a[0] || 0; s.ly = a[1] || 0;
+        if (p.mapping === 'standard' || a.length < 6) { s.rx = a[2] || 0; s.ry = a[3] || 0; }
+        else { s.rx = a[2] || 0; s.ry = a[5] !== undefined ? a[5] : (a[3] || 0); }
+        // Non-standard pads often report the d-pad as a "hat" axis
+        if (p.mapping !== 'standard' && a.length > 9 && !s.b[12] && !s.b[13] && !s.b[14] && !s.b[15]) {
+            var hat = a[9];
+            if (typeof hat === 'number' && hat >= -1.01 && hat <= 1.01) {
+                // -1 up, -0.71 up-right, -0.43 right ... 1 up-left, >1 neutral
+                var dir = Math.round((hat + 1) / 2 * 7);
+                s.b[12] = dir === 7 || dir === 0 || dir === 1;
+                s.b[15] = dir >= 1 && dir <= 3;
+                s.b[13] = dir >= 3 && dir <= 5;
+                s.b[14] = dir >= 5 && dir <= 7;
+            }
+        }
+        // analog triggers with hysteresis
+        for (i = 6; i <= 7; i++) {
+            var wasDown = prevState && prevState.b[i];
+            s.b[i] = s.v[i] > (wasDown ? 0.22 : 0.38) || (s.b[i] && s.v[i] === 0);
+        }
+        return s;
+    }
+    function hasInput(s) {
+        for (var i = 0; i < NB; i++) if (s.b[i]) return true;
+        return Math.abs(s.lx) > 0.35 || Math.abs(s.ly) > 0.35 || Math.abs(s.rx) > 0.35 || Math.abs(s.ry) > 0.35;
+    }
+
+    function pickActive() {
+        var best = -1, i, p;
+        for (i = 0; i < pads.length; i++) {
+            p = pads[i];
+            if (!p || p.connected === false) continue;
+            if (best === -1) best = i;
+            if (i !== activeIdx && hasInput(snapshot(p))) { activeIdx = i; prevState = null; return pads[i]; }
+        }
+        if (activeIdx >= 0 && pads[activeIdx] && pads[activeIdx].connected !== false) return pads[activeIdx];
+        activeIdx = best;
+        return best >= 0 ? pads[best] : null;
+    }
+
+    function radial(x, y, dz) {
+        var m = Math.sqrt(x * x + y * y);
+        if (m < dz) return { x: 0, y: 0, m: 0 };
+        var n = Math.min(1, (m - dz) / (1 - dz - 0.04));
+        return { x: x / m * n, y: y / m * n, m: n };
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  State machine                                                      */
+    /* ------------------------------------------------------------------ */
+    var prevState = null, state = null;
+    var suppressed = {};
+    var mode = 'none';
+    var usingPad = false;
+    var lastPadInput = 0;
+    var sneakToggled = false;
+    var lookAccX = 0, lookAccY = 0, boostT = 0, cursorBoostT = 0;
+    var repeatT = {};
+    var wheelAcc = 0;
+    var currentPadType = 'xbox';
+    var inWorld = false, chatOpen = false, chatPending = false, menuBackKey = null, hintsUntil = 0;
+
+    function isLocked() { return !!document.pointerLockElement; }
+
+    function down(i) { return state && state.b[i] && !suppressed[i]; }
+    function pressed(i) { return state && state.b[i] && !(prevState && prevState.b[i]) && !suppressed[i]; }
+    function released(i) { return state && !state.b[i] && prevState && prevState.b[i]; }
+    function repeatPress(i, now, first, rate) {
+        if (pressed(i)) { repeatT[i] = now + first; return true; }
+        if (down(i) && repeatT[i] && now >= repeatT[i]) { repeatT[i] = now + rate; return true; }
+        if (!down(i)) repeatT[i] = 0;
+        return false;
+    }
+    function suppressHeld() {
+        if (!state) return;
+        for (var i = 0; i < NB; i++) if (state.b[i]) suppressed[i] = true;
+    }
+    function updateSuppression() {
+        if (!state) return;
+        for (var i in suppressed) if (!state.b[i]) delete suppressed[i];
+    }
+
+    function computeMode() {
+        if (settingsOpen) return 'settings';
+        var cv = getCanvas();
+        if (!cv) return 'boot';
+        return isLocked() ? 'game' : 'menu';
+    }
+
+    var lastT = 0;
+    function tick(t) {
+        requestAnimationFrame(tick);
+        var dt = lastT ? Math.min(0.05, (t - lastT) / 1000) : 0.016;
+        lastT = t;
+        readPads();
+        var p = pickActive();
+        if (!p) {
+            if (state) { releaseAll(); state = prevState = null; }
+            updateUI(null);
+            return;
+        }
+        currentPadType = padType(p.id);
+        prevState = state;
+        state = snapshot(p);
+        if (hasInput(state)) {
+            if (t - lastPadInput > 15000) hintsUntil = t + 5000;
+            lastPadInput = t;
+            if (!usingPad) { usingPad = true; firstPadUse(); }
+        }
+        updateSuppression();
+
+        var m = computeMode();
+        if (m !== mode) {
+            var old = mode;
+            mode = m;
+            releaseAll();
+            suppressHeld();
+            if (m === 'menu' && old === 'game') centerCursor();
+            if (m === 'menu' && !cursor.init) centerCursor();
+            if (m === 'game') { inWorld = true; chatOpen = chatPending = false; }
+            if (m === 'menu') { chatOpen = old === 'game' && chatPending; chatPending = false; hintsUntil = t + 6000; }
+            if (m === 'boot') inWorld = false;
+            menuBackKey = null;
+        }
+        if (mode === 'game') gameTick(dt, t);
+        else if (mode === 'menu') menuTick(dt, t);
+        else if (mode === 'boot') bootTick();
+        else if (mode === 'settings') settingsTick(dt, t);
+        updateUI(p);
+    }
+
+    function firstPadUse() {
+        // Make the game switch out of touch mode into mouse mode
+        var cv = getCanvas();
+        if (cv) { if (!cursor.init) centerCursor(); mouseEvent('mouseenter', 0); mouseEvent('mousemove', 0, 0, 0); }
+    }
+    function centerCursor() {
+        var cv = getCanvas(); if (!cv) return;
+        var r = cv.getBoundingClientRect();
+        cursor.x = r.width / 2; cursor.y = r.height / 2; cursor.init = true;
+    }
+
+    /* -------------------------- Boot screens -------------------------- */
+    function bootTick() {
+        if (pressed(0) || pressed(9)) {
+            var b = document.querySelector('._eaglercraftX_mobile_launch_client') ||
+                    document.getElementById('skipCountdown');
+            if (b) { try { b.click(); } catch (e) {} }
+            else { sendKey('keydown', 'Enter'); sendKey('keyup', 'Enter'); }
+            rumble(0.3, 0.1, 60);
+        }
+    }
+
+    /* ---------------------------- In game ----------------------------- */
+    function gameTick(dt, now) {
+        var B = cfg.binds, a, out, i;
+        // movement (8-way from the left stick)
+        var L = radial(state.lx, state.ly, Math.max(cfg.deadzone, 0.18));
+        var fw = false, bk = false, lf = false, rt = false;
+        if (L.m > 0.15) {
+            var ang = Math.atan2(L.x, -L.y) * 180 / Math.PI; // 0 = forward
+            var near = function (target) { var d = Math.abs(((ang - target + 540) % 360) - 180); return d < 67.5; };
+            fw = near(0); rt = near(90); bk = near(180); lf = near(-90);
+        }
+        setKey('move', 'KeyW', fw); setKey('move', 'KeyS', bk);
+        setKey('move', 'KeyA', lf); setKey('move', 'KeyD', rt);
+        setKey('autosprint', 'ControlLeft', cfg.autoSprint && fw && L.m > 0.92 && -L.y > 0.85);
+
+        // look (right stick -> mouse movement)
+        var R = radial(state.rx, state.ry, cfg.deadzone);
+        if (R.m > 0) {
+            var curve = 0.3 * R.m + 0.7 * R.m * R.m * R.m;
+            var k = curve / R.m;
+            if (R.m > 0.93) boostT += dt; else boostT = 0;
+            var boost = 1 + Math.min(Math.max(boostT - 0.15, 0) / 0.35, 1) * 0.65;
+            var speed = 1150 * cfg.lookSens;
+            lookAccX += R.x * k * speed * boost * dt;
+            lookAccY += R.y * k * speed * cfg.lookSensY * dt * (cfg.invertY ? -1 : 1);
+        } else { boostT = 0; }
+        var mx = Math.trunc(lookAccX), my = Math.trunc(lookAccY);
+        if (mx || my) {
+            lookAccX -= mx; lookAccY -= my;
+            mouseEvent('mousemove', 0, mx, my);
+        }
+
+        // buttons
+        for (i = 0; i < ACTIONS.length; i++) {
+            a = ACTIONS[i][0];
+            out = ACTION_OUT[a];
+            var btn = B[a];
+            if (btn === undefined || btn < 0) continue;
+            if (out.wheel) {
+                if (repeatPress(btn, now, 380, 110)) { wheel(out.wheel); rumble(0.0, 0.18, 25); }
+                continue;
+            }
+            if (a === 'sneak' && cfg.toggleSneak) {
+                if (pressed(btn)) { sneakToggled = !sneakToggled; rumble(0.15, 0.1, 40); }
+                setKey('act_sneak', 'ShiftLeft', sneakToggled);
+                continue;
+            }
+            var on = down(btn);
+            if (out.key) setKey('act_' + a, out.key, on);
+            else setMouse('act_' + a, out.mouse, on);
+            if (a === 'attack' && pressed(btn)) rumble(0.05, 0.12, 30);
+            if (a === 'chat' && pressed(btn)) chatPending = true;
+        }
+    }
+
+    /* ----------------------------- Menus ------------------------------ */
+    function menuTick(dt, now) {
+        var cv = getCanvas();
+        var r = cv.getBoundingClientRect();
+        if (!cursor.init) centerCursor();
+        var L = radial(state.lx, state.ly, cfg.deadzone);
+        var dx = 0, dy = 0;
+        if (L.m > 0) {
+            var curve = 0.25 * L.m + 0.75 * L.m * L.m;
+            var k = curve / L.m;
+            if (L.m > 0.95) cursorBoostT += dt; else cursorBoostT = 0;
+            var boost = 1 + Math.min(Math.max(cursorBoostT - 0.25, 0) / 0.4, 1) * 0.8;
+            var sp = Math.max(r.height, 300) * 1.15 * cfg.cursorSpeed * boost;
+            dx = L.x * k * sp * dt; dy = L.y * k * sp * dt;
+        } else cursorBoostT = 0;
+        // d-pad nudges (pixel precise)
+        var step = Math.max(3, Math.round(r.height / 110));
+        if (repeatPress(12, now, 320, 45)) dy -= step;
+        if (repeatPress(13, now, 320, 45)) dy += step;
+        if (repeatPress(14, now, 320, 45)) dx -= step;
+        if (repeatPress(15, now, 320, 45)) dx += step;
+        if (dx || dy) {
+            var ox = cursor.x, oy = cursor.y;
+            cursor.x = Math.max(0, Math.min(r.width - 1, cursor.x + dx));
+            cursor.y = Math.max(0, Math.min(r.height - 1, cursor.y + dy));
+            mouseEvent('mousemove', 0, Math.round(cursor.x - ox), Math.round(cursor.y - oy));
+        }
+        // clicks
+        setMouse('menu_a', 0, down(0) || down(7));
+        setMouse('menu_x', 2, down(2) || down(6));
+        // Y = shift-click (quick move stacks)
+        if (pressed(3)) { setKey('menu_y', 'ShiftLeft', true); setMouse('menu_y', 0, true); }
+        if (!down(3) && mouseHolders[0] && mouseHolders[0].menu_y) { setMouse('menu_y', 0, false); setKey('menu_y', 'ShiftLeft', false); }
+        // back / close.  Eaglercraft only accepts Escape in menus while no world is
+        // loaded; inside a world its "close" key is ` (backquote) instead.
+        if (pressed(1) || pressed(9)) {
+            if (chatOpen) {
+                // clear whatever was typed, then Enter on an empty line closes chat
+                for (var bs = 0; bs < 260; bs++) { sendKey('keydown', 'Backspace'); sendKey('keyup', 'Backspace'); }
+                menuBackKey = 'Enter';
+            } else menuBackKey = inWorld ? 'Backquote' : 'Escape';
+            setKey('menu_b', menuBackKey, true);
+            rumble(0.05, 0.12, 25);
+        }
+        if (menuBackKey && !down(1) && !down(9)) { setKey('menu_b', menuBackKey, false); menuBackKey = null; }
+        // scrolling
+        if (repeatPress(4, now, 350, 90)) wheel(-1);
+        if (repeatPress(5, now, 350, 90)) wheel(1);
+        var R = radial(state.rx, state.ry, Math.max(cfg.deadzone, 0.2));
+        if (Math.abs(R.y) > 0) {
+            wheelAcc += R.y * (4 + 14 * Math.abs(R.y)) * dt;
+            while (wheelAcc >= 1) { wheel(1); wheelAcc -= 1; }
+            while (wheelAcc <= -1) { wheel(-1); wheelAcc += 1; }
+        } else wheelAcc = 0;
+        // open controller settings (View/Share, or right-stick click as a backup
+        // for pads whose Share button is taken over by iPadOS for screenshots)
+        if (pressed(8) || pressed(11)) openSettings();
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Haptics                                                            */
+    /* ------------------------------------------------------------------ */
+    function rumble(strong, weak, ms) {
+        if (!cfg.vibration) return;
+        var p = pads[activeIdx];
+        if (!p || !p.vibrationActuator) return;
+        try {
+            p.vibrationActuator.playEffect(p.vibrationActuator.type || 'dual-rumble',
+                { startDelay: 0, duration: ms, strongMagnitude: strong, weakMagnitude: weak });
+        } catch (e) {}
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  UI: cursor, hints, toasts, settings                                */
+    /* ------------------------------------------------------------------ */
+    var ui = null;
+    var settingsOpen = false;
+
+    var CSS = [
+        '.egp-root{position:fixed;inset:0;pointer-events:none;z-index:2147483600;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-user-select:none;user-select:none}',
+        '.egp-cursor{position:fixed;left:0;top:0;width:26px;height:26px;margin:-2px 0 0 -3px;transition:opacity .25s,transform .08s;opacity:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));will-change:transform}',
+        '.egp-cursor.on{opacity:1}',
+        '.egp-cursor svg{width:100%;height:100%;transition:transform .08s}',
+        '.egp-cursor.click svg{transform:scale(.82)}',
+        '.egp-toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-30px);opacity:0;transition:transform .35s cubic-bezier(.2,.9,.3,1.2),opacity .3s;background:rgba(20,22,26,.92);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px 16px 10px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);max-width:80vw}',
+        '.egp-toast.on{transform:translate(-50%,0);opacity:1}',
+        '.egp-toast .ic{width:34px;height:34px;border-radius:10px;background:#4CAF50;display:flex;align-items:center;justify-content:center;flex:none}',
+        '.egp-toast .ic.bad{background:#e0533d}',
+        '.egp-toast b{display:block;font-size:14px;font-weight:600}',
+        '.egp-toast span{display:block;font-size:12px;color:#b9bec7;margin-top:2px}',
+        '.egp-hints{position:fixed;left:50%;bottom:14px;transform:translate(-50%,10px);opacity:0;transition:opacity .3s,transform .3s;display:flex;gap:14px;align-items:center;background:rgba(15,16,20,.78);color:#eee;font-size:12.5px;padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.1);white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}',
+        '.egp-hints.on{opacity:1;transform:translate(-50%,0)}',
+        '.egp-hints.on.dim{opacity:.12;transform:translate(-50%,24px)}',
+        '.egp-hints .h{display:flex;align-items:center;gap:6px}',
+        '.egp-g{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;border-radius:11px;background:#3a3f48;color:#fff;font-size:11px;font-weight:700;line-height:1;border:1px solid rgba(255,255,255,.18)}',
+        '.egp-g.round{width:22px;padding:0}',
+        '.egp-g.c0{background:#3d9a3a}.egp-g.c1{background:#c8372d}.egp-g.c2{background:#2f6fd0}.egp-g.c3{background:#d6a613;color:#1b1b1b}',
+        '.egp-g.p0{background:#2c3e66;color:#8fb4ff}.egp-g.p1{background:#5a2730;color:#ff8a95}.egp-g.p2{background:#4d2f58;color:#f4a3e6}.egp-g.p3{background:#264d40;color:#5fe0b5}',
+        '.egp-ovl{position:fixed;inset:0;background:rgba(5,6,8,.62);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;pointer-events:none;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}',
+        '.egp-ovl.on{opacity:1;pointer-events:auto}',
+        '.egp-panel{width:min(560px,94vw);max-height:90vh;display:flex;flex-direction:column;background:#1b1d22;color:#eee;border-radius:18px;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden;transform:scale(.96);transition:transform .2s}',
+        '.egp-ovl.on .egp-panel{transform:scale(1)}',
+        '.egp-head{display:flex;align-items:center;gap:12px;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.07)}',
+        '.egp-head h2{margin:0;font-size:18px;font-weight:700;color:#fff;flex:1}',
+        '.egp-head .sub{font-size:12px;color:#9aa0aa}',
+        '.egp-sticks{display:flex;gap:10px;align-items:center}',
+        '.egp-stick{width:38px;height:38px;border-radius:50%;background:#262a31;border:1px solid rgba(255,255,255,.12);position:relative}',
+        '.egp-stick i{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;border-radius:50%;background:#4CAF50;box-shadow:0 0 6px #4CAF50}',
+        '.egp-stick u{position:absolute;left:50%;top:50%;border-radius:50%;border:1px dashed rgba(255,255,255,.25);transform:translate(-50%,-50%)}',
+        '.egp-list{overflow-y:auto;padding:8px 10px 12px;-webkit-overflow-scrolling:touch}',
+        '.egp-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;font-size:14px;cursor:pointer;border:1px solid transparent}',
+        '.egp-row .lbl{flex:1}',
+        '.egp-row.sel{background:#2a2f37;border-color:#4CAF50}',
+        '.egp-sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7d8590;padding:14px 12px 4px}',
+        '.egp-sl{display:flex;align-items:center;gap:10px;width:200px}',
+        '.egp-sl .tr{flex:1;height:6px;border-radius:3px;background:#363b44;position:relative}',
+        '.egp-sl .tr b{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:#4CAF50}',
+        '.egp-sl .val{width:44px;text-align:right;font-variant-numeric:tabular-nums;color:#cfd3da;font-size:13px}',
+        '.egp-tg{width:42px;height:24px;border-radius:12px;background:#3a3f48;position:relative;transition:background .15s}',
+        '.egp-tg:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s}',
+        '.egp-tg.on{background:#4CAF50}.egp-tg.on:after{left:21px}',
+        '.egp-btnrow{justify-content:center;color:#fff;font-weight:600}',
+        '.egp-wait{color:#ffd54a;font-weight:600;font-size:13px}',
+        '.egp-foot{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;padding:10px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:#aab}',
+        '.egp-foot .h{display:flex;align-items:center;gap:6px}'
+    ].join('\n');
+
+    var GLYPHS = {
+        xbox: ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'View', 'Menu', 'LS', 'RS', '↑', '↓', '←', '→', 'Home'],
+        ps:   ['✕', '○', '□', '△', 'L1', 'R1', 'L2', 'R2', 'Share', 'Options', 'L3', 'R3', '↑', '↓', '←', '→', 'PS'],
+        nin:  ['B', 'A', 'Y', 'X', 'L', 'R', 'ZL', 'ZR', '−', '+', 'LS', 'RS', '↑', '↓', '←', '→', 'Home']
+    };
+    function glyph(i) {
+        var t = currentPadType;
+        var names = GLYPHS[t] || GLYPHS.xbox;
+        var label = i >= 0 && i < names.length ? names[i] : ('B' + i);
+        var cls = 'egp-g';
+        if (i >= 0 && i <= 3) cls += ' round ' + (t === 'ps' ? 'p' + i : t === 'xbox' ? 'c' + i : '');
+        if (i >= 12 && i <= 15) cls += ' round';
+        return '<span class="' + cls + '">' + label + '</span>';
+    }
+
+    var PAD_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><path d="M17.32 5H6.68a4 4 0 0 0-3.98 3.59l-.9 7.1A2.9 2.9 0 0 0 4.68 19c.9 0 1.73-.42 2.27-1.13L8.5 16h7l1.55 1.87A2.9 2.9 0 0 0 22.2 15.7l-.9-7.1A4 4 0 0 0 17.32 5z"/></svg>';
+
+    function ensureUI() {
+        if (ui) return ui;
+        if (!document.documentElement || !document.body) return null;
+        var st = document.createElement('style');
+        st.textContent = CSS;
+        var root = document.createElement('div');
+        root.className = 'egp-root';
+        root.innerHTML =
+            '<div class="egp-cursor"><svg viewBox="0 0 26 26"><path d="M3 2 L3 21 L8 16.5 L11.5 24 L15 22.5 L11.6 15 L18.5 15 Z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg></div>' +
+            '<div class="egp-toast"><div class="ic">' + PAD_SVG + '</div><div><b></b><span></span></div></div>' +
+            '<div class="egp-hints"></div>' +
+            '<div class="egp-ovl"><div class="egp-panel">' +
+              '<div class="egp-head"><div style="flex:1"><h2>Controller Settings</h2><div class="sub"></div></div>' +
+              '<div class="egp-sticks"><div class="egp-stick" data-s="l"><u></u><i></i></div><div class="egp-stick" data-s="r"><u></u><i></i></div></div></div>' +
+              '<div class="egp-list"></div>' +
+              '<div class="egp-foot"></div>' +
+            '</div></div>';
+        document.documentElement.appendChild(st);
+        document.documentElement.appendChild(root);
+        ui = {
+            root: root,
+            cursor: root.querySelector('.egp-cursor'),
+            toast: root.querySelector('.egp-toast'),
+            hints: root.querySelector('.egp-hints'),
+            ovl: root.querySelector('.egp-ovl'),
+            list: root.querySelector('.egp-list'),
+            sub: root.querySelector('.egp-head .sub'),
+            foot: root.querySelector('.egp-foot'),
+            sl: root.querySelector('[data-s="l"] i'), sr: root.querySelector('[data-s="r"] i'),
+            ul: root.querySelector('[data-s="l"] u'), ur: root.querySelector('[data-s="r"] u'),
+            hintKey: ''
+        };
+        ui.ovl.addEventListener('click', function (e) { if (e.target === ui.ovl) closeSettings(); });
+        // keep game handlers from eating touches on our panel
+        ['touchstart', 'touchmove', 'touchend', 'mousedown', 'mouseup', 'wheel'].forEach(function (n) {
+            ui.ovl.addEventListener(n, function (e) { e.stopPropagation(); }, { passive: true });
+        });
+        return ui;
+    }
+
+    var toastTimer = 0, pendingToast = null;
+    function toast(title, sub, ms, bad) {
+        if (!ensureUI()) { pendingToast = [title, sub, ms, bad]; return; }
+        ui.toast.querySelector('b').textContent = title;
+        ui.toast.querySelector('span').textContent = sub || '';
+        ui.toast.querySelector('.ic').className = 'ic' + (bad ? ' bad' : '');
+        ui.toast.classList.add('on');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { ui.toast.classList.remove('on'); }, ms || 3200);
+    }
+
+    function onConnect(p) {
+        currentPadType = padType(p.id);
+        var gl = GLYPHS[currentPadType];
+        toast(cleanName(p.id) + ' connected', 'In any menu, press ' + gl[8] + ' or click ' + gl[11] + ' for controller settings', 4500);
+        setTimeout(function () { var q = nativeGetPads()[p.index]; if (q && q.vibrationActuator && cfg.vibration) try { q.vibrationActuator.playEffect(q.vibrationActuator.type || 'dual-rumble', { duration: 120, strongMagnitude: 0.4, weakMagnitude: 0.6 }); } catch (e) {} }, 50);
+    }
+    function onDisconnect(id, idx) {
+        if (idx === activeIdx) { releaseAll(); activeIdx = -1; state = prevState = null; }
+        toast(cleanName(id) + ' disconnected', 'Reconnect it and press any button', 3500, true);
+    }
+
+    // Hide the virtual cursor as soon as real mouse / touch is used
+    function realInput(e) {
+        if (e.isTrusted === false) return;
+        // browsers fire "fake" mousemoves (no movement) when the page under a
+        // resting mouse changes; only real movement / touches count
+        if (e.type === 'mousemove' && !e.movementX && !e.movementY) return;
+        usingPad = false;
+    }
+    window.addEventListener('mousemove', realInput, true);
+    window.addEventListener('keydown', function (e) {
+        if (e.isTrusted !== false && mode === 'game' && (e.code === 'KeyT' || e.code === 'Slash')) chatPending = true;
+    }, true);
+    // Notice when the player leaves a world (so Back uses Escape again on the title screens)
+    ['log', 'info', 'warn', 'error'].forEach(function (fn) {
+        var orig = console[fn];
+        if (typeof orig !== 'function') return;
+        console[fn] = function () {
+            var a0 = arguments[0];
+            if (inWorld && typeof a0 === 'string' && /Stopping singleplayer server|Stopping server|Disconnected from|Connection closed|lost connection/i.test(a0)) inWorld = false;
+            return orig.apply(this, arguments);
+        };
+    });
+    window.addEventListener('touchstart', realInput, true);
+
+    function updateUI(p) {
+        if (!ensureUI()) return;
+        if (pendingToast) { var pt = pendingToast; pendingToast = null; toast(pt[0], pt[1], pt[2], pt[3]); }
+        var now = performance.now();
+        var cv = getCanvas();
+        // cursor
+        var showCursor = p && usingPad && mode === 'menu' && cv;
+        if (showCursor) {
+            var r = cv.getBoundingClientRect();
+            ui.cursor.style.transform = 'translate(' + (r.left + cursor.x) + 'px,' + (r.top + cursor.y) + 'px)';
+            ui.cursor.classList.add('on');
+            ui.cursor.classList.toggle('click', !!(mouseHolders[0] && anyHolder(mouseHolders[0])) || !!(mouseHolders[2] && anyHolder(mouseHolders[2])));
+        } else ui.cursor.classList.remove('on');
+        // hint bar
+        var showHints = cfg.hints && p && usingPad && mode === 'menu' && now < hintsUntil;
+        if (showHints) {
+            var key = currentPadType + '|menu';
+            if (ui.hintKey !== key) {
+                ui.hintKey = key;
+                ui.hints.innerHTML =
+                    hint(glyph(0), 'Select') + hint(glyph(2), 'Right-click') + hint(glyph(3), 'Quick move') +
+                    hint(glyph(1), 'Back') + hint(glyph(8), 'Controller settings');
+            }
+        }
+        ui.hints.classList.toggle('on', !!showHints);
+        // get out of the way when the cursor goes near the hint bar
+        if (showHints && showCursor) {
+            var hr = ui.hints.getBoundingClientRect(), cr = cv.getBoundingClientRect();
+            var px = cr.left + cursor.x, py = cr.top + cursor.y;
+            ui.hints.classList.toggle('dim', px > hr.left - 60 && px < hr.right + 60 && py > hr.top - 90);
+        }
+        if (settingsOpen) renderSticks();
+    }
+    function hint(g, txt) { return '<span class="h">' + g + txt + '</span>'; }
+
+    /* ---------------------------- Settings ----------------------------- */
+    var items = [];
+    var sel = 0;
+    var waitingBind = null, waitingUntil = 0;
+
+    function buildItems() {
+        items = [
+            { t: 'sec', label: 'Feel' },
+            { t: 'slider', k: 'lookSens', label: 'Look sensitivity', min: 0.2, max: 3, step: 0.05, fmt: function (v) { return Math.round(v * 100) + '%'; } },
+            { t: 'slider', k: 'lookSensY', label: 'Vertical look speed', min: 0.3, max: 1.5, step: 0.05, fmt: function (v) { return Math.round(v * 100) + '%'; } },
+            { t: 'toggle', k: 'invertY', label: 'Invert look up/down' },
+            { t: 'slider', k: 'cursorSpeed', label: 'Menu cursor speed', min: 0.3, max: 3, step: 0.05, fmt: function (v) { return Math.round(v * 100) + '%'; } },
+            { t: 'slider', k: 'deadzone', label: 'Stick deadzone', min: 0.03, max: 0.35, step: 0.01, fmt: function (v) { return Math.round(v * 100) + '%'; } },
+            { t: 'sec', label: 'Gameplay' },
+            { t: 'toggle', k: 'toggleSneak', label: 'Sneak is a toggle' },
+            { t: 'toggle', k: 'autoSprint', label: 'Auto-sprint at full forward' },
+            { t: 'toggle', k: 'vibration', label: 'Vibration' },
+            { t: 'toggle', k: 'hints', label: 'Show button hints in menus' },
+            { t: 'sec', label: 'Button mapping (in game) — select one, then press a button' }
+        ];
+        for (var i = 0; i < ACTIONS.length; i++) items.push({ t: 'bind', a: ACTIONS[i][0], label: ACTIONS[i][1] });
+        items.push({ t: 'sec', label: '' });
+        items.push({ t: 'btn', label: 'Reset everything to defaults', fn: function () { cfg = clone(DEFAULTS); saveCfg(); renderList(); toast('Controller settings reset', '', 1800); } });
+        items.push({ t: 'btn', label: 'Done', fn: closeSettings });
+    }
+    function selectable(i) { return items[i] && items[i].t !== 'sec'; }
+
+    function openSettings() {
+        if (!ensureUI()) return;
+        releaseAll();
+        settingsOpen = true;
+        buildItems();
+        sel = 1;
+        waitingBind = null;
+        renderList();
+        ui.ovl.classList.add('on');
+        suppressHeld();
+    }
+    function closeSettings() {
+        settingsOpen = false;
+        waitingBind = null;
+        saveCfg();
+        if (ui) ui.ovl.classList.remove('on');
+        suppressHeld();
+    }
+
+    function renderList() {
+        var h = '';
+        for (var i = 0; i < items.length; i++) {
+            var it = items[i];
+            if (it.t === 'sec') { h += '<div class="egp-sec">' + it.label + '</div>'; continue; }
+            var right = '';
+            if (it.t === 'slider') {
+                var v = cfg[it.k], pct = (v - it.min) / (it.max - it.min) * 100;
+                right = '<div class="egp-sl"><div class="tr"><b style="width:' + pct + '%"></b></div><div class="val">' + it.fmt(v) + '</div></div>';
+            } else if (it.t === 'toggle') {
+                right = '<div class="egp-tg' + (cfg[it.k] ? ' on' : '') + '"></div>';
+            } else if (it.t === 'bind') {
+                right = waitingBind === it.a ? '<span class="egp-wait">Press a button…</span>' : glyph(cfg.binds[it.a]);
+            }
+            h += '<div class="egp-row' + (it.t === 'btn' ? ' egp-btnrow' : '') + (i === sel ? ' sel' : '') + '" data-i="' + i + '"><div class="lbl">' + it.label + '</div>' + right + '</div>';
+        }
+        ui.list.innerHTML = h;
+        var rows = ui.list.querySelectorAll('.egp-row');
+        for (var j = 0; j < rows.length; j++) {
+            rows[j].addEventListener('click', onRowClick);
+        }
+        var p = pads[activeIdx];
+        ui.sub.textContent = p ? cleanName(p.id) : 'No controller';
+        ui.foot.innerHTML = hint(glyph(12) + glyph(13), 'Move') + hint(glyph(14) + glyph(15), 'Adjust') +
+            hint(glyph(0), 'Select') + hint(glyph(1), 'Close');
+        var s = ui.list.querySelector('.sel');
+        if (s && s.scrollIntoView) { try { s.scrollIntoView({ block: 'nearest' }); } catch (e) { s.scrollIntoView(false); } }
+    }
+    function onRowClick(e) {
+        var i = +this.getAttribute('data-i');
+        sel = i;
+        var it = items[i];
+        if (it.t === 'slider') {
+            var tr = this.querySelector('.tr');
+            var r = tr.getBoundingClientRect();
+            var x = (e.clientX - r.left) / r.width;
+            if (x >= -0.1 && x <= 1.1) {
+                var v = it.min + Math.max(0, Math.min(1, x)) * (it.max - it.min);
+                cfg[it.k] = Math.round(v / it.step) * it.step;
+                saveCfg();
+            }
+            renderList();
+        } else activate(it);
+    }
+    function activate(it) {
+        if (it.t === 'toggle') { cfg[it.k] = !cfg[it.k]; saveCfg(); }
+        else if (it.t === 'bind') { waitingBind = it.a; waitingUntil = performance.now() + 6000; suppressHeld(); }
+        else if (it.t === 'btn') { it.fn(); if (!settingsOpen) return; }
+        renderList();
+        rumble(0.1, 0.1, 25);
+    }
+    function adjust(it, dir) {
+        if (it.t === 'slider') {
+            var v = cfg[it.k] + dir * it.step;
+            v = Math.max(it.min, Math.min(it.max, v));
+            cfg[it.k] = Math.round(v / it.step) * it.step;
+            saveCfg(); renderList();
+        } else if (it.t === 'toggle') { cfg[it.k] = dir > 0; saveCfg(); renderList(); }
+    }
+
+    var navAxisT = 0, navAxisDir = 0;
+    function settingsTick(dt, now) {
+        if (waitingBind) {
+            for (var i = 0; i < NB; i++) {
+                if (pressed(i)) {
+                    var a = waitingBind, old = cfg.binds[a];
+                    for (var k in cfg.binds) if (cfg.binds[k] === i && k !== a) cfg.binds[k] = old;
+                    cfg.binds[a] = i;
+                    waitingBind = null; saveCfg(); renderList(); suppressHeld(); rumble(0.3, 0.2, 60);
+                    return;
+                }
+            }
+            if (now > waitingUntil) { waitingBind = null; renderList(); }
+            return;
+        }
+        var L = radial(state.lx, state.ly, 0.5);
+        var vdir = L.y < -0.3 ? -1 : L.y > 0.3 ? 1 : 0;
+        var hdir = Math.abs(L.x) > Math.abs(L.y) ? (L.x < -0.3 ? -1 : L.x > 0.3 ? 1 : 0) : 0;
+        if (hdir) vdir = 0;
+        var stickMove = 0, stickAdj = 0;
+        var dir = vdir || hdir * 10;
+        if (dir !== navAxisDir) { navAxisDir = dir; navAxisT = now + 330; if (vdir) stickMove = vdir; if (hdir) stickAdj = hdir; }
+        else if (dir && now > navAxisT) { navAxisT = now + (hdir ? 60 : 110); if (vdir) stickMove = vdir; if (hdir) stickAdj = hdir; }
+
+        var move = stickMove;
+        if (repeatPress(12, now, 330, 100)) move = -1;
+        if (repeatPress(13, now, 330, 100)) move = 1;
+        if (move) {
+            var n = sel;
+            do { n += move; } while (n >= 0 && n < items.length && !selectable(n));
+            if (n >= 0 && n < items.length) { sel = n; renderList(); }
+        }
+        var adj = stickAdj;
+        if (repeatPress(14, now, 330, 60)) adj = -1;
+        if (repeatPress(15, now, 330, 60)) adj = 1;
+        if (adj) adjust(items[sel], adj);
+        if (pressed(0)) activate(items[sel]);
+        if (pressed(1) || pressed(8) || pressed(9) || pressed(11)) closeSettings();
+        // right stick scrolls the list
+        var R = radial(state.rx, state.ry, 0.2);
+        if (R.y) ui.list.scrollTop += R.y * 900 * dt;
+    }
+    function renderSticks() {
+        if (!state) return;
+        var dz = cfg.deadzone;
+        ui.sl.style.transform = 'translate(' + (state.lx * 14) + 'px,' + (state.ly * 14) + 'px)';
+        ui.sr.style.transform = 'translate(' + (state.rx * 14) + 'px,' + (state.ry * 14) + 'px)';
+        var d = Math.max(2, dz * 28 + 10) + 'px';
+        ui.ul.style.width = ui.ul.style.height = d;
+        ui.ur.style.width = ui.ur.style.height = d;
+    }
+
+    window.addEventListener('gamepadconnected', function () { readPads(); });
+    requestAnimationFrame(tick);
+
+    // Small API for debugging from the console
+    window.eaglerController = {
+        openSettings: openSettings,
+        get settings() { return cfg; },
+        get mode() { return mode; }
+    };
+})();
+
+    </script>
+
+    <script>
+        // FAKE POINTER LOCK
+        // CodeHS runs this page in a sandboxed iframe that blocks pointer lock.
+        // Eaglercraft pauses whenever the lock fails, so "Back to Game" instantly
+        // re-pauses. This shim makes every lock request "succeed".
+        const POINTER_LOCK_SHIM = `<script>
+(function () {
+    var lockedEl = null;
+    function fire(type) {
+        setTimeout(function () { document.dispatchEvent(new Event(type)); }, 0);
+    }
+    Object.defineProperty(Document.prototype, 'pointerLockElement', {
+        configurable: true,
+        get: function () { return lockedEl; }
+    });
+    Element.prototype.requestPointerLock = function () {
+        lockedEl = this;
+        fire('pointerlockchange');
+        return Promise.resolve();
+    };
+    Document.prototype.exitPointerLock = function () {
+        if (!lockedEl) return;
+        lockedEl = null;
+        fire('pointerlockchange');
+    };
+    // iPad Safari pretends to be a Mac, and with the fake pointer lock above
+    // Eaglercraft would skip its mobile launch screen. Mark touch devices as
+    // tablets so it still shows "Mobile Browser Detected".
+    if (navigator.maxTouchPoints > 0) {
+        var ua = navigator.userAgent + ' Tablet';
+        Object.defineProperty(Navigator.prototype, 'userAgent', {
+            configurable: true,
+            get: function () { return ua; }
+        });
+    }
+})();
+<\/script>`;
+
+        const GAMEPAD_SHIM = '<script>' + document.getElementById('gamepad-src').textContent + '<\/script>';
+
+        // Live controller indicator on this menu
+        (function () {
+            const el = document.getElementById('pad-status');
+            function poll() {
+                if (!document.getElementById('pad-status')) return;
+                let pad = null;
+                try { pad = Array.from(navigator.getGamepads ? navigator.getGamepads() : []).find(p => p && p.connected); } catch (e) {}
+                if (pad) {
+                    el.textContent = '🎮 ' + pad.id.replace(/\(.*?\)/g, '').trim() + ' ready';
+                    el.classList.add('on');
+                } else {
+                    el.textContent = '🎮 Controller: press any button to connect';
+                    el.classList.remove('on');
+                }
+                requestAnimationFrame(poll);
+            }
+            requestAnimationFrame(poll);
+        })();
+
+        // The last game file is remembered (IndexedDB) so it can be played again
+        // without picking it; where storage is blocked, picking works as before.
+        const LAST = { db: 'wasm-runner', store: 'files', key: 'last-game' };
+        function lastDb() {
+            return new Promise(function (ok, no) {
+                try {
+                    const open = indexedDB.open(LAST.db, 1);
+                    open.onupgradeneeded = function () { open.result.createObjectStore(LAST.store); };
+                    open.onsuccess = function () { ok(open.result); };
+                    open.onerror = function () { no(open.error); };
+                } catch (e) { no(e); }
+            });
+        }
+        function lastDo(mode, f) {
+            return lastDb().then(function (db) {
+                return new Promise(function (ok) {
+                    try {
+                        const request = f(db.transaction(LAST.store, mode).objectStore(LAST.store));
+                        request.onsuccess = function () { ok(request.result || null); };
+                        request.onerror = function () { ok(null); };
+                    } catch (e) { ok(null); }
+                });
+            }).catch(function () { return null; });
+        }
+        const rememberGame = function (file) { return lastDo('readwrite', function (s) { return s.put(file, LAST.key); }); };
+        const rememberedGame = function () { return lastDo('readonly', function (s) { return s.get(LAST.key); }); };
+        const forgetGame = function () { return lastDo('readwrite', function (s) { return s.delete(LAST.key); }); };
+
+        // The page's head gets the shims (before any of the game's own scripts run)
+        // and the web-app tags, then replaces this page.
+        const WEB_APP_TAGS = '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">' +
+            '<meta name="apple-mobile-web-app-capable" content="yes">' +
+            '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">';
+        function launch(file) {
+            if (!file) return;
+            // Show loading text so it doesn't just freeze while reading a big file
+            document.getElementById('loading').style.display = 'block';
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let htmlContent = e.target.result;
+                const inject = WEB_APP_TAGS + POINTER_LOCK_SHIM + GAMEPAD_SHIM;
+                if (/<head[^>]*>/i.test(htmlContent)) {
+                    htmlContent = htmlContent.replace(/<head[^>]*>/i, m => m + inject);
+                } else {
+                    htmlContent = inject + htmlContent;
+                }
+                // NATIVE DOM INJECTION METHOD
+                document.open();
+                document.write(htmlContent);
+                document.close();
+            };
+            // Read as plain text instead of a Blob to avoid cross-origin blocks
+            reader.readAsText(file);
+        }
+
+        document.getElementById('file-input').addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            await rememberGame(file);
+            launch(file);
+        });
+
+        rememberedGame().then(function (file) {
+            if (!file) return;
+            const again = document.getElementById('play-again');
+            const forget = document.getElementById('forget-last');
+            again.textContent = '▶ Play ' + (file.name || 'the last game') + ' again';
+            again.style.display = 'inline-block';
+            forget.style.display = 'inline-block';
+            again.addEventListener('click', function () { launch(file); });
+            forget.addEventListener('click', function () {
+                forgetGame();
+                again.style.display = 'none';
+                forget.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>
