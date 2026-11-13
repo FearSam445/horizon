@@ -1520,11 +1520,20 @@ impl Streaming {
                 Some((k, proto))
             })
             .collect();
-        if !protos.is_empty() {
+        // The browser build saves a few at a time, a job each: its one thread runs
+        // a job whole inside a frame (a hundred protos took 280 ms).
+        let piece = if cfg!(target_arch = "wasm32") {
+            4
+        } else {
+            usize::MAX
+        };
+        let mut protos = protos;
+        while !protos.is_empty() {
+            let rest = protos.split_off(protos.len().min(piece));
             self.saving += 1;
             // Ahead of every other job: a column generated again meanwhile
             // would not find them saved.
-            self.submit(None, 0, Job::Save(protos));
+            self.submit(None, 0, Job::Save(std::mem::replace(&mut protos, rest)));
         }
     }
     fn receive_generated(&mut self, mut chunk: Chunk, world: &mut World) {
