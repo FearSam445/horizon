@@ -292,6 +292,7 @@ impl Integrated {
         if let Some(deadline) = host.settling {
             // The spawn area, for most of the frame: the loading screen is all there is.
             let until = Instant::now() + Duration::from_millis(40);
+            horizon_threads::jobs::frame_until(Some(until), false);
             let settled = loop {
                 match host.game.settle_spawn_step(deadline) {
                     Ok(true) => break Ok(true),

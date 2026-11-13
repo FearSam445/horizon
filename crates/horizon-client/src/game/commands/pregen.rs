@@ -264,9 +264,15 @@ impl Game<'_> {
             if now >= until {
                 break;
             }
-            self.streaming
+            let came = self
+                .streaming
                 .wait((until - now).min(Duration::from_millis(5)));
             self.update_world();
+            // In the browser build nothing more comes once the frame's job time is
+            // spent (`jobs::frame_until`): looking again until `until` only spun.
+            if cfg!(target_arch = "wasm32") && !came {
+                break;
+            }
         }
     }
 

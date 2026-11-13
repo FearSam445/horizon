@@ -185,6 +185,31 @@ pub fn pump(budget: Duration) -> usize {
     pool().run_for(budget)
 }
 
+/// Jobs [`Pool::run_for`] ran on the calling threads, all told ([`run_here`]).
+static RUN_HERE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// How many jobs [`Pool::run_for`] has run so far (the browser build's status line).
+pub fn run_here() -> usize {
+    RUN_HERE.load(Ordering::Relaxed)
+}
+
+thread_local! {
+    /// The browser build's frame ([`frame_until`]): when its job time ends, and
+    /// whether a job ran in it yet.
+    static FRAME: std::cell::Cell<(Option<Instant>, bool)> = const { std::cell::Cell::new((None, false)) };
+}
+
+/// The browser build's frame: jobs run on this thread ([`pump`], and the waits
+/// that pump) stop at `end` whatever their own budget, once one has run in the
+/// frame, so a frame's job time stays one budget however many places pump it.
+/// `fresh` starts a new frame (no job has run in it yet); `None` lifts the limit.
+pub fn frame_until(end: Option<Instant>, fresh: bool) {
+    FRAME.with(|f| {
+        let ran = !fresh && f.get().1;
+        f.set((end, ran));
+    });
+}
+
 /// The process's pool, started on first use.
 pub fn pool() -> &'static Pool {
     POOL.get_or_init(|| {
@@ -294,10 +319,18 @@ impl Pool {
         let _done = Done;
         let started = Instant::now();
         let mut ran = 0;
-        while started.elapsed() < budget {
+        loop {
+            let now = Instant::now();
+            let (frame_end, frame_ran) = FRAME.with(std::cell::Cell::get);
+            if now.duration_since(started) >= budget
+                || (frame_ran && frame_end.is_some_and(|end| now >= end))
+            {
+                break;
+            }
             let Some((entry, far)) = choose(&self.inner) else {
                 break;
             };
+            FRAME.with(|f| f.set((frame_end, true)));
             let _ = catch_unwind(AssertUnwindSafe(|| entry.source.run(0)));
             if far {
                 self.inner.far.fetch_sub(1, Ordering::SeqCst);
@@ -311,6 +344,7 @@ impl Pool {
             }
             ran += 1;
         }
+        RUN_HERE.fetch_add(ran, Ordering::Relaxed);
         ran
     }
 
@@ -639,6 +673,44 @@ mod tests {
             recv_n(&rx, 5),
             ["gate", "urgent9", "near1", "near5", "far0"]
         );
+    }
+
+    #[test]
+    fn a_spent_frame_runs_one_job_then_none_until_the_next() {
+        let pool = Pool::new(1, "test-job");
+        let (tx, rx) = mpsc::channel();
+        // The worker holds this one, so the jobs below run on this thread only.
+        let gate = Arc::new((Mutex::new(false), Condvar::new()));
+        let held = Arc::new(Fixed {
+            jobs: Mutex::new([(Rank::new(Class::Urgent, 0), "held")].into()),
+            ran: tx.clone(),
+            hold: Some(gate.clone()),
+        });
+        let _held = pool.register(held);
+        horizon_thread::sleep(Duration::from_millis(100));
+        let jobs = fixed(
+            &[
+                (Rank::new(Class::Near, 0), "a"),
+                (Rank::new(Class::Near, 1), "b"),
+                (Rank::new(Class::Near, 2), "c"),
+            ],
+            tx,
+        );
+        let _jobs = pool.register(jobs);
+        let long = Duration::from_secs(10);
+        // A frame whose time is already up still runs one job, then no more.
+        frame_until(Some(Instant::now()), true);
+        assert_eq!(pool.run_for(long), 1);
+        assert_eq!(pool.run_for(long), 0);
+        // The next frame runs one again; without a frame the budget alone counts.
+        frame_until(Some(Instant::now()), true);
+        assert_eq!(pool.run_for(long), 1);
+        frame_until(None, false);
+        assert_eq!(pool.run_for(long), 1);
+        assert_eq!(recv_n(&rx, 3), ["a", "b", "c"]);
+        *gate.0.lock().unwrap() = true;
+        gate.1.notify_all();
+        assert_eq!(recv_n(&rx, 1), ["held"]);
     }
 
     #[test]

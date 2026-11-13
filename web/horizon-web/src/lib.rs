@@ -61,6 +61,13 @@ pub fn game_file_missing(path: &str) {
     horizon_fs::not_found(&Path::new(RESOURCES).join(path));
 }
 
+/// Turns the frame's shared work budget on or off, for measuring
+/// (`horizon_client::web_frame`): `wasm_bindgen.set_frame_budget(false)`.
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn set_frame_budget(on: bool) {
+    horizon_client::web_frame::set_shared_budget(on);
+}
+
 /// Folders the page doesn't keep between visits: the player's game files (they
 /// come from the zip each time), the zip's mount, temporary files, and the logs
 /// and crash reports of the game's home (`logging::data_dir`, `/data` here).

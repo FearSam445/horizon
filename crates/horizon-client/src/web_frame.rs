@@ -11,6 +11,10 @@ use web_time::{Duration, Instant};
 
 /// How long the work between two frames may take: about half a 60 Hz frame.
 const BUDGET: Duration = Duration::from_millis(8);
+/// A 60 Hz frame. winit's loop turns after every input event too (each mouse
+/// move), so the budget is the frame's, shared by all the turns in it: else a
+/// frame with ten pointer moves ran ten budgets of chunk work.
+const FRAME: Duration = Duration::from_micros(16_600);
 /// Rounds of connection work at most per turn.
 const ROUNDS: usize = 16;
 /// How often the console gets a line on the work between frames.
@@ -22,36 +26,61 @@ struct Counts {
     turns: u32,
     tasks_pending: usize,
     jobs: usize,
+    /// [`horizon_threads::jobs::run_here`] at the last report.
+    jobs_before: usize,
     server_ms: f32,
 }
 
 thread_local! {
     static COUNTS: Cell<(Option<Instant>, Counts)> = const {
-        Cell::new((None, Counts { turns: 0, tasks_pending: 0, jobs: 0, server_ms: 0.0 }))
+        Cell::new((None, Counts { turns: 0, tasks_pending: 0, jobs: 0, jobs_before: 0, server_ms: 0.0 }))
     };
+    /// The frame this turn is in: when it started and the work time spent in it.
+    static WINDOW: Cell<Option<(Instant, Duration)>> = const { Cell::new(None) };
+}
+
+/// Whether the frame's budget is shared by its turns ([`FRAME`]): on, but a test
+/// can turn it off to compare (horizon-web's `set_frame_budget`).
+static SHARED_BUDGET: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+
+/// Turns the shared frame budget on or off (for measuring).
+pub fn set_shared_budget(on: bool) {
+    SHARED_BUDGET.store(on, std::sync::atomic::Ordering::Relaxed);
 }
 
 /// Runs one turn: the connections, `server`, then chunk work.
 pub fn run(server: impl FnOnce()) {
     let started = Instant::now();
-    let pending_before = connections(started);
+    let shared = SHARED_BUDGET.load(std::sync::atomic::Ordering::Relaxed);
+    let (frame, spent) = match WINDOW.with(Cell::get) {
+        Some((frame, spent)) if shared && started.duration_since(frame) < FRAME => (frame, spent),
+        _ => (started, Duration::ZERO),
+    };
+    let budget = BUDGET.saturating_sub(spent);
+    // Chunk jobs (wherever this turn pumps them) stop once the frame's budget is
+    // spent; one still runs in each frame, so the world keeps loading.
+    horizon_threads::jobs::frame_until(shared.then_some(started + budget), frame == started);
+    let pending_before = connections(started, budget);
     let server_start = Instant::now();
     server();
     let server_ms = server_start.elapsed().as_secs_f32() * 1000.0;
-    let pending = connections(started).max(pending_before);
-    let left = BUDGET.saturating_sub(started.elapsed());
-    let jobs = horizon_threads::jobs::pump(left.max(Duration::from_millis(1)));
+    let pending = connections(started, budget).max(pending_before);
+    let left = budget.saturating_sub(started.elapsed());
+    horizon_threads::jobs::pump(left.max(Duration::from_millis(1)));
+    horizon_threads::jobs::frame_until(None, false);
+    let jobs = horizon_threads::jobs::run_here();
+    WINDOW.with(|w| w.set(Some((frame, spent + started.elapsed()))));
     report(pending, jobs, server_ms);
 }
 
 /// The connections' tasks and the network's turn, until nothing waits or the
 /// budget is spent. Returns the tasks still waiting.
-fn connections(started: Instant) -> usize {
+fn connections(started: Instant, budget: Duration) -> usize {
     let mut pending = 0;
     for _ in 0..ROUNDS {
         pending = horizon_thread::run_local_tasks();
         crate::lan::io_pool_pump();
-        if pending == 0 || started.elapsed() >= BUDGET {
+        if pending == 0 || started.elapsed() >= budget {
             break;
         }
     }
@@ -73,7 +102,7 @@ fn report(pending: usize, jobs: usize, server_ms: f32) {
         let (since, mut c) = cell.get();
         c.turns += 1;
         c.tasks_pending = pending;
-        c.jobs += jobs;
+        c.jobs = jobs;
         c.server_ms += server_ms;
         let now = Instant::now();
         match since {
@@ -83,11 +112,17 @@ fn report(pending: usize, jobs: usize, server_ms: f32) {
                     "Horizon web: {} turns, {} connection tasks waiting, {} chunk jobs, server {:.0} ms, memory {} MiB",
                     c.turns,
                     c.tasks_pending,
-                    c.jobs,
+                    c.jobs - c.jobs_before,
                     c.server_ms,
                     memory_mib()
                 );
-                cell.set((Some(now), Counts::default()));
+                cell.set((
+                    Some(now),
+                    Counts {
+                        jobs_before: jobs,
+                        ..Counts::default()
+                    },
+                ));
             }
             Some(_) => cell.set((since, c)),
         }

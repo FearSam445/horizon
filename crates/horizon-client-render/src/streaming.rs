@@ -2491,10 +2491,15 @@ impl Streaming {
     }
     /// Wait up to `timeout` for a worker to finish a job; the next `update`
     /// takes it. A server pumps generation with this between its ticks.
-    pub fn wait(&mut self, timeout: web_time::Duration) {
-        // In the browser build the wait runs the jobs itself (`Done::recv_timeout`).
-        if let Some(done) = self.shared.done.recv_timeout(timeout) {
-            self.deferred.push(done);
+    /// Whether a result came. In the browser build the wait runs the jobs itself
+    /// (`Done::recv_timeout`), and none comes once the frame's job time is spent.
+    pub fn wait(&mut self, timeout: web_time::Duration) -> bool {
+        match self.shared.done.recv_timeout(timeout) {
+            Some(done) => {
+                self.deferred.push(done);
+                true
+            }
+            None => false,
         }
     }
 }
