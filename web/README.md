@@ -9,12 +9,12 @@ and `document.write()`s it. The plan and its status are in
 
 1. On a computer, let the Horizon launcher prepare the game files from your own
    Minecraft: Java Edition (it does on first start). They are in its
-   `game-files/horizon-client/26.3` folder.
+   `game-files/horizon-client/26.3` folder (on Windows,
+   `%APPDATA%\horizon-launcher\versions\<version>\.local\horizon-client\26.3`).
 2. Zip that `26.3` folder (on an iPad: long-press it in the Files app, then
    Compress). Put the zip where the device can reach it (iCloud Drive,
    AirDrop...). The page reads only the files the game uses from it: not
-   `horizon-data.bin`, which it never needs, nor the sounds while it has no
-   sound.
+   `horizon-data.bin`, which it never needs, nor the sounds until they play.
 3. Open `horizon.html`, or drop it into an Eaglercraft-style runner, and choose
    the zip when it asks.
 
@@ -25,11 +25,16 @@ again and worlds last until the page closes.
 ### What to expect
 
 - One thread does everything: the world, the chunks and the drawing take turns
-  in each frame, so a world's first opening freezes the page until its spawn
-  area is made.
+  in each frame. A new world's spawn area takes a few seconds on a computer.
 - Many iPad keyboards have no Escape key: the backquote key (`) works as Escape.
-- No sound yet, no screenshots, no multiplayer (a page can't open sockets), no shader packs or
-  far terrain.
+- Sound plays through Web Audio once you tap or press a key (browsers start a
+  page muted). Each sound is read from your zip the first time it plays, so
+  keep the zip where the page found it. Music and records don't play: a track
+  takes tens of megabytes decoded.
+- Only English and your device's language are loaded (the Language menu lists
+  those).
+- No screenshots, no multiplayer (a page can't open sockets), no shader packs
+  or far terrain.
 - Defaults are set for little memory: render distance 6, simulation distance 5.
   If it runs slowly, lower Resolution Scale in Horizon's graphics settings.
 - Fullscreen does nothing: the page stays the size the runner gives it.
@@ -50,6 +55,20 @@ Check it boots in headless Chromium (prints the console, saves a screenshot):
 ```bash
 node web/test/boot.js 20 web/out/boot.png
 ```
+
+Drive it through the menus with a real zip (`npm install playwright` first):
+`web/test/drive.js` takes a list of steps (waits, clicks, keys, mouse moves,
+screenshots, JavaScript to print); `GPU=1` draws with the graphics card, as a
+player's browser does (the software renderer is slow and draws leaves
+differently).
+
+```bash
+GPU=1 node web/test/drive.js path/to/26.3.zip steps.json
+```
+
+The status line every 2 s (`Horizon web: … turns, … memory N MiB`) gives the
+frames run and the page's memory; each time the memory grows past another
+64 MB the console shows the stack that grew it.
 
 ## Layout
 

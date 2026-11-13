@@ -91,26 +91,22 @@ the chunk worker pool (`streaming.rs`) must become a per-frame job queue.
   block in IndexedDB.
 
 ## Known limits and next steps
-- A world's first opening runs in one go and freezes the page until its spawn
-  area is made: make `prepare_levels`/`settle_spawn` steps of the frame.
-- No sound (a WebAudio mixer for `audio.rs`), no screenshots, no multiplayer
-  (WebSocket relay), no shader packs.
-- Not yet tested with real game files or in WebKit (the iPad's engine).
-- Size: 18.5 MiB page, 36 MiB wasm; leaving out unused features (mods,
+- Tested in desktop Chromium with real game files (Nov 13): a new world opens,
+  renders and plays, with sound. Not yet confirmed in WebKit (the iPad).
+- Memory: title 407 MB, a world ~490 MB (see HANDOFF.md for what remains).
+- No music (a decoded track is tens of MB; needs streaming decode), no
+  screenshots, no multiplayer (WebSocket relay), no shader packs.
+- Size: the shipped page is about 18.5 MiB; leaving out unused features (mods,
   telemetry, realms) would shrink it.
 
 ## Milestones
 1. ✅ `cargo check -p horizon-client --target wasm32-unknown-unknown` passes (cfg-gates above).
-2. ✅ Renders through WebGL2 in a page: the "no game files" screen, then the
-   title menu with a stand-in zip.
-3. ⏳ Loads the player's game files (picker, IndexedDB, zip mount: done) and
-   renders a world. Written and checked as far as possible without game files:
-   the server runs in the window's frames, the in-memory connection's login runs
-   as futures on one thread (tested), chunk work is pumped, and every wait on the
-   single-player path was audited (no condvar, no sleeping loop that waits for a
-   worker). Needs a real zip to test.
-4. Playable single-player with input through the runner.
-5. Bundled into one `.html` and tested in the runner; measure RAM.
-6. Worlds and options kept in IndexedDB: ✅ (when the runner allows storage).
-7. Later: WebAudio sound, WebSocket multiplayer, opening a world in steps (it
-   freezes the page until its spawn area is made), a smaller wasm.
+2. ✅ Renders through WebGL2 in a page.
+3. ✅ Loads the player's game files and renders a world (Nov 13: the region
+   writer's thread and WebGL2's missing base vertex were what stopped it).
+4. ✅ Playable single-player with input through the runner (the bridge's
+   synthetic mouse turns the view); ⏳ confirm on the iPad.
+5. ✅ Bundled into one `.html`; RAM measured (status line, "memory now" stacks).
+6. ✅ Worlds and options kept in IndexedDB (when the runner allows storage).
+7. ✅ WebAudio sound (effects, read from the zip as they play). Later: music,
+   WebSocket multiplayer, a smaller wasm.
