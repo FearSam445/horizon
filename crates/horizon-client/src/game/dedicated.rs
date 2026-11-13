@@ -1534,16 +1534,29 @@ impl Game<'_> {
                 .map(|s| horizon_core::geometry::Vec3::new(s[0] + 0.5, s[1], s[2] + 0.5));
             return Ok(());
         }
-        while self.player.is_none() {
-            self.update_world();
-            self.spawn_player()?;
-            if Instant::now() > deadline {
-                return Err("the spawn area did not load".into());
-            }
+        while !self.settle_spawn_step(deadline)? {
             horizon_thread::sleep(Duration::from_millis(2));
         }
-        self.player = None;
         Ok(())
+    }
+
+    /// One round of an integrated server's [`Game::settle_spawn`]: true once the
+    /// spawn area has loaded. The browser build runs rounds in the window's frames.
+    pub(super) fn settle_spawn_step(&mut self, deadline: Instant) -> Result<bool> {
+        if self.player.is_some() {
+            self.player = None;
+            return Ok(true);
+        }
+        self.update_world();
+        self.spawn_player()?;
+        if self.player.is_some() {
+            self.player = None;
+            return Ok(true);
+        }
+        if Instant::now() > deadline {
+            return Err("the spawn area did not load".into());
+        }
+        Ok(false)
     }
 
     /// The chunks to keep loaded: the players' (lan_update_streaming). While

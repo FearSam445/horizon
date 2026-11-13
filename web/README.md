@@ -30,8 +30,9 @@ again and worlds last until the page closes.
 - Many iPad keyboards have no Escape key: the backquote key (`) works as Escape.
 - No sound yet, no screenshots, no multiplayer (a page can't open sockets), no shader packs or
   far terrain.
-- Defaults are set for little memory: render distance 6, simulation distance 5,
-  one game pixel per screen point.
+- Defaults are set for little memory: render distance 6, simulation distance 5.
+  If it runs slowly, lower Resolution Scale in Horizon's graphics settings.
+- Fullscreen does nothing: the page stays the size the runner gives it.
 
 ## Build
 

@@ -25,12 +25,6 @@
 <body>
 <canvas class="_eaglercraftX_canvas_element" id="horizon-canvas" tabindex="0"></canvas>
 <div id="horizon-status">Starting Horizon…<div class="bar"><i></i></div></div>
-<script>
-// Draw at one game pixel per CSS pixel, not per screen pixel: on a Retina screen
-// (an iPad's ratio is 2) that is a quarter of the pixels to draw and to hold in
-// GPU memory, and the browser scales the frame up.
-try { Object.defineProperty(window, 'devicePixelRatio', { get: function () { return 1; }, configurable: true }); } catch (e) {}
-</script>
 <script>/*INPUT_BRIDGE*/</script>
 <script>/*ZIP_READER*/</script>
 <script>/*GLUE*/</script>

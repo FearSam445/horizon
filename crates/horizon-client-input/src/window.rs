@@ -585,10 +585,15 @@ fn monitor_current_mode(
 /// state first: winit keeps a maximized window's client area inside the work area, so a
 /// borderless fullscreen kept the taskbar over its bottom and pushed its top off screen (#9984).
 pub fn enter_fullscreen(window: &winit::window::Window, fullscreen: winit::window::Fullscreen) {
+    // The browser build is a page, often in a runner's frame that may not take the
+    // whole screen: the page stays as it is.
+    #[cfg(target_arch = "wasm32")]
+    let _ = (window, fullscreen);
     #[cfg(target_os = "windows")]
     if window.is_maximized() {
         window.set_maximized(false);
     }
+    #[cfg(not(target_arch = "wasm32"))]
     window.set_fullscreen(Some(fullscreen));
 }
 

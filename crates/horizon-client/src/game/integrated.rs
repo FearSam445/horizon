@@ -289,6 +289,39 @@ impl Integrated {
         let Some(host) = slot.as_mut() else {
             return;
         };
+        if let Some(deadline) = host.settling {
+            // The spawn area, for most of the frame: the loading screen is all there is.
+            let until = Instant::now() + Duration::from_millis(40);
+            let settled = loop {
+                match host.game.settle_spawn_step(deadline) {
+                    Ok(true) => break Ok(true),
+                    Ok(false) if Instant::now() >= until => break Ok(false),
+                    Ok(false) => {
+                        horizon_threads::jobs::pump(Duration::from_millis(8));
+                    }
+                    Err(e) => break Err(e),
+                }
+            };
+            match settled {
+                Ok(false) => return,
+                Ok(true) => {
+                    host.settling = None;
+                    host.game.native_lifecycle_world_ready();
+                    host.game.integrated_profile();
+                    host.turn.next = Instant::now();
+                    return;
+                }
+                Err(e) => {
+                    log::error!("Horizon: integrated server: {e}");
+                    *self.flags.failure.lock().unwrap() = Some(e.to_string());
+                    host.game.native_lifecycle_world_failed(&e.to_string());
+                    let failed: Result<()> = Err(e.to_string().into());
+                    host.game.integrated_closed(&failed);
+                    *slot = None;
+                    return;
+                }
+            }
+        }
         if let Some(ended) = host.game.integrated_frame(&self.flags, &mut host.turn) {
             if let Err(e) = &ended {
                 log::error!("Horizon: integrated server: {e}");
@@ -556,6 +589,7 @@ impl Game<'_> {
                         next: Instant::now(),
                         was_paused: false,
                     },
+                    settling: Some(Instant::now() + Duration::from_secs(600)),
                 }),
                 Err(e) => {
                     log::error!("Horizon: integrated server: {e}");
@@ -1000,6 +1034,20 @@ impl Game<'_> {
         ready: &Sender<Ready>,
         opening: Opening,
     ) -> Result<()> {
+        self.integrated_open_until_spawn(launch, flags, tasks, ready, opening)?;
+        startup::time("server.settle_spawn", || self.settle_spawn())
+    }
+
+    /// `integrated_open` up to the spawn area: the window is told the world is ready
+    /// to join, and the spawn's chunks are still to be made (`settle_spawn`).
+    fn integrated_open_until_spawn(
+        &mut self,
+        launch: &Launch,
+        flags: &Arc<Flags>,
+        tasks: Receiver<Task>,
+        ready: &Sender<Ready>,
+        opening: Opening,
+    ) -> Result<()> {
         // The mods' server configs, read before the server starts.
         if let Ok(dir) = horizon_fs::current_dir() {
             self.native_configs_server_start(&dir.join("saves").join(&launch.folder), false);
@@ -1109,7 +1157,7 @@ impl Game<'_> {
         startup::time("server.prepare_levels", || self.prepare_levels())?;
         view.finish(Stage::LoadInitialChunks);
         let _ = ready.send(Ok((pipe, self.level.name.clone())));
-        startup::time("server.settle_spawn", || self.settle_spawn())
+        Ok(())
     }
 
     /// `MinecraftServer.stopServer`: the players are saved and sent away,
@@ -1475,13 +1523,15 @@ fn serve_here(
 ) -> Result<Box<Game<'static>>> {
     let (server, opening) = prepare_server(res, pack, options, settings, &launch, &flags)?;
     let mut server = Box::new(server);
-    let begun = server.integrated_begin(&launch, &flags, tasks, ready, opening);
+    // The spawn area is made in the window's frames (`Integrated::step`), so the page
+    // keeps drawing the loading screen meanwhile.
+    let begun = server.integrated_open_until_spawn(&launch, &flags, tasks, ready, opening);
     if let Err(error) = begun {
+        server.native_lifecycle_world_failed(&error.to_string());
         let failed: Result<()> = Err(error.to_string().into());
         server.integrated_closed(&failed);
         return Err(error);
     }
-    server.integrated_profile();
     Ok(server)
 }
 
@@ -1541,6 +1591,8 @@ fn prepare_server<'r>(
 struct Host {
     game: Box<Game<'static>>,
     turn: Turn,
+    /// While the spawn area is being made: when to give up (as `settle_spawn` does).
+    settling: Option<Instant>,
 }
 
 /// Where the server thread's loop is between its turns.
