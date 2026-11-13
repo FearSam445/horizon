@@ -67,10 +67,13 @@ Fixed on Nov 13 (see `git log`):
    The status line every 2 s gives the longest turn, server step and drawing,
    and each chunk job kind's count/total/longest ms (`streaming::job_times`);
    build with `HORIZON_SPIKES=40` for the slow-tick report. Chunk loading
-   stutter was fixed Nov 13 (generation in two jobs: `generate_noise` /
-   `generate_rest`; saves as pool jobs of 4 chunks: `InlineWrites`). Left:
-   an occasional generation half of 50-80 ms (chunks with structures),
-   decoration jobs of ~15 ms, mob AI in the server tick. Lower render
+   stutter was fixed Nov 13: generation in three jobs (`generate_noise`,
+   `fill_noise_step`, `generate_rest`, chained by `generate_proto_more` /
+   `proto_rest`; a test checks the blocks match), region saves as pool jobs of
+   4 chunks (`InlineWrites`), proto saves 4 to a job. Left: the first chunk
+   near a new structure plans it whole (a village: 100-300 ms at 4x, once
+   per structure); a noise fill of 10-40 ms (could sample the density
+   volume in two halves); decoration ~15 ms; mob AI in the server tick. Lower render
    distance helps everything. `wasm_bindgen.set_frame_budget(false)` turns
    the frame budget off to compare.
 3. **Memory**: the remaining peaks, from the "memory now" lines: the HUD atlas
