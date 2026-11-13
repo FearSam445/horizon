@@ -7,6 +7,7 @@
 //   {"type": "text"}             {"shot": "path.png"}    {"hold": "KeyW", "for": seconds}
 //   {"move": [dx, dy]}           (relative mouse motion, as a locked pointer sends)
 //   {"eval": "js expression"}    (prints its value)
+//   {"profile": seconds, "top": n} (prints where the time went)
 // Coordinates are CSS pixels of the page.
 const { chromium } = require('playwright');
 const path = require('path');
@@ -23,6 +24,42 @@ function serve() {
     fs.createReadStream(file).pipe(res);
   });
   return new Promise((ok) => server.listen(0, '127.0.0.1', () => ok(server)));
+}
+
+// Samples the page's JavaScript and wasm for `seconds` and prints the functions
+// that took the most time, by their own time and with what they called.
+async function profile(page, seconds, top) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Profiler.enable');
+  await cdp.send('Profiler.setSamplingInterval', { interval: 500 });
+  await cdp.send('Profiler.start');
+  await page.waitForTimeout(seconds * 1000);
+  const { profile: p } = await cdp.send('Profiler.stop');
+  const byId = new Map(p.nodes.map((n) => [n.id, n]));
+  const self = new Map(), total = new Map(), parent = new Map();
+  for (const n of p.nodes) for (const c of n.children || []) parent.set(c, n.id);
+  const counts = new Map();
+  for (const id of p.samples) counts.set(id, (counts.get(id) || 0) + 1);
+  const name = (n) => (n.callFrame.functionName || '(anonymous)').replace(/\[[0-9a-f]{16}\]/g, '').slice(0, 140);
+  for (const [id, c] of counts) {
+    const n = byId.get(id);
+    self.set(name(n), (self.get(name(n)) || 0) + c);
+    const seen = new Set();
+    for (let at = id; at !== undefined; at = parent.get(at)) {
+      const nm = name(byId.get(at));
+      if (seen.has(nm)) continue;
+      seen.add(nm);
+      total.set(nm, (total.get(nm) || 0) + c);
+    }
+  }
+  const all = p.samples.length;
+  const show = (m, title) => {
+    console.log(`[profile] ${title} (${all} samples)`);
+    [...m].sort((a, b) => b[1] - a[1]).slice(0, top)
+      .forEach(([n, c]) => console.log(`  ${(100 * c / all).toFixed(1).padStart(5)}%  ${n}`));
+  };
+  show(self, 'own time');
+  show(new Map([...total].filter(([n]) => /horizon|wgpu|winit|naga/.test(n))), 'with callees (game functions)');
 }
 
 (async () => {
@@ -50,6 +87,7 @@ function serve() {
     if (s.wait) await page.waitForTimeout(s.wait * 1000);
     else if (s.click) { await page.mouse.move(s.click[0], s.click[1]); await page.mouse.down(); await page.waitForTimeout(80); await page.mouse.up(); }
     else if (s.key) await page.keyboard.press(s.key);
+    else if (s.profile) await profile(page, s.profile, s.top || 30);
     else if (s.eval) console.log(`${stamp()} [eval] ${JSON.stringify(await page.evaluate(s.eval).catch((e) => String(e)))}`);
     else if (s.type) await page.keyboard.type(s.type, { delay: 40 });
     else if (s.hold) { await page.keyboard.down(s.hold); await page.waitForTimeout((s.for || 1) * 1000); await page.keyboard.up(s.hold); }

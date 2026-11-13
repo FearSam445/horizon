@@ -839,9 +839,15 @@ impl Game<'_> {
             #[cfg(not(target_arch = "wasm32"))]
             let until = *next;
             self.pump_chunks(until, paused);
-            let now = Instant::now();
-            if *next > now {
-                horizon_thread::sleep(*next - now);
+            // Not in the browser build: there a sleep does chunk work until the
+            // tick, the whole frame's time (20 frames a second while terrain
+            // generates); the page's loop comes back for the tick.
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let now = Instant::now();
+                if *next > now {
+                    horizon_thread::sleep(*next - now);
+                }
             }
         } else if now - *next > Duration::from_secs(2) {
             let behind = now - *next;
