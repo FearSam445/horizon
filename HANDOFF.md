@@ -33,7 +33,11 @@ Works:
 - **Sound** through Web Audio (cpal's web host): effects play, read from the zip
   as each first plays. Music and records don't (a decoded track is tens of MB).
 - **Memory** (the page's wasm memory, which never shrinks): title 407 MB, a new
-  world about 490 MB (was 708 MB at the title before Nov 13).
+  world about 430-490 MB (was 708 MB at the title before Nov 13).
+- **Speed**: the shipped file (commit `259e4187a4`, 24.9 MB, on the owner's
+  Desktop since Nov 13) runs ~70 frames a second while a new world's terrain
+  generates and reaches full speed after ~18 s on the PC (it was 20 frames a
+  second for ~35 s); normal play leaves the PC's CPU idle 84% of the time.
 
 Not yet confirmed on the iPad itself (WebKit): the fixes were tested in Chromium.
 The owner tests on the iPad; ask what they saw.
