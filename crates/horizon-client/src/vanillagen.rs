@@ -36,6 +36,13 @@ use structure_mobs::StructureMobFinalizer;
 /// The references a saved chunk keeps for its structure start: `(structure, chunk x, chunk z)`.
 pub type SavedReferences = std::sync::Arc<dyn Fn(&str, i32, i32) -> i32 + Send + Sync>;
 
+/// A column's generation stopped after its noise fill (`proto_part`).
+struct VanillaPart {
+    x: i32,
+    z: i32,
+    filled: Box<horizon_world::worldgen::generator::NoiseFilled>,
+}
+
 pub struct VanillaTerrain {
     generator: OverworldGenerator,
     /// Generator biome index -> client biome table index.
@@ -856,6 +863,36 @@ impl ChunkGenerator for VanillaTerrain {
             std::sync::atomic::Ordering::Relaxed,
         );
         match worker.generate_proto(ChunkPos::new(x, z)) {
+            Ok(chunk) => Box::new(VanillaProto::Ready(Box::new(chunk))),
+            Err(e) => {
+                log::warn!("Horizon: generating chunk {x} {z} failed: {e}");
+                Box::new(VanillaProto::Failed(x, z))
+            }
+        }
+    }
+    /// The noise fill, then the surface and carvers in another job.
+    fn proto_part(&self, worker: &mut GeneratorWorker, x: i32, z: i32) -> Result<Proto, Proto> {
+        self.last_proto.store(
+            self.elapsed_ms().max(1),
+            std::sync::atomic::Ordering::Relaxed,
+        );
+        use horizon_world::worldgen::generator::Generated;
+        match worker.generate_proto_noise(ChunkPos::new(x, z)) {
+            Ok(Generated::Whole(chunk)) => Ok(Box::new(VanillaProto::Ready(chunk))),
+            Ok(Generated::NoiseFilled(filled)) => Err(Box::new(VanillaPart { x, z, filled })),
+            Err(e) => {
+                log::warn!("Horizon: generating chunk {x} {z} failed: {e}");
+                Ok(Box::new(VanillaProto::Failed(x, z)))
+            }
+        }
+    }
+    fn proto_rest(&self, worker: &mut GeneratorWorker, _x: i32, _z: i32, part: Proto) -> Proto {
+        let part = match part.downcast::<VanillaPart>() {
+            Ok(part) => part,
+            Err(other) => return other,
+        };
+        let VanillaPart { x, z, filled } = *part;
+        match worker.generate_proto_rest(*filled) {
             Ok(chunk) => Box::new(VanillaProto::Ready(Box::new(chunk))),
             Err(e) => {
                 log::warn!("Horizon: generating chunk {x} {z} failed: {e}");

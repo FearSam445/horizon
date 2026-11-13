@@ -80,6 +80,17 @@ pub trait ChunkGenerator: Send + Sync + 'static {
     /// next to each other in a run. Results do not change.
     fn all_idle(&self) {}
     fn proto(&self, worker: &mut Self::Worker, x: i32, z: i32) -> Proto;
+    /// [`ChunkGenerator::proto`] where it may stop halfway: `Ok` the chunk,
+    /// `Err` a part made, which [`ChunkGenerator::proto_rest`] finishes in a job
+    /// of its own (the browser build's frames take one job at a time). Whole by
+    /// default.
+    fn proto_part(&self, worker: &mut Self::Worker, x: i32, z: i32) -> Result<Proto, Proto> {
+        Ok(self.proto(worker, x, z))
+    }
+    /// Finishes the chunk at (x, z) [`ChunkGenerator::proto_part`] stopped making.
+    fn proto_rest(&self, _worker: &mut Self::Worker, _x: i32, _z: i32, part: Proto) -> Proto {
+        part
+    }
     fn decorates(&self) -> bool {
         false
     }
@@ -250,6 +261,8 @@ struct MeshSettings {
 }
 enum Job {
     Generate(i32, i32),
+    /// The rest of a column's generation that stopped halfway (`proto_part`).
+    GenerateRest(i32, i32, Proto),
     /// A region to decorate, with the final chunks in it (region index and
     /// the chunk as it is): their slots hold nothing until the worker makes
     /// their proto chunks.
@@ -879,7 +892,7 @@ impl<G: ChunkGenerator> Source for Jobs<G> {
         }
         let started = job_stats::enabled().then(|| {
             let kind = match &job.job {
-                Job::Generate(..) => 1,
+                Job::Generate(..) | Job::GenerateRest(..) => 1,
                 Job::Decorate(..) => 2,
                 Job::Finish(..) => 3,
                 Job::Light(..) => 4,
@@ -896,13 +909,14 @@ impl<G: ChunkGenerator> Source for Jobs<G> {
             (kind, cpu)
         });
         let _tag = horizon_threads::heap_tag(match &job.job {
-            Job::Generate(..) => "stream.generate",
+            Job::Generate(..) | Job::GenerateRest(..) => "stream.generate",
             Job::Decorate(..) => "stream.decorate",
             Job::Finish(..) => "stream.finish",
             Job::Light(..) => "stream.light",
             Job::Mesh(..) => "stream.mesh",
             _ => "stream.other",
         });
+        let (priority, at, bias, order) = (job.priority, job.at, job.bias, job.order);
         let done = self.locals.with(
             worker,
             || {
@@ -917,7 +931,7 @@ impl<G: ChunkGenerator> Source for Jobs<G> {
         );
         if let Some((kind, started)) = started {
             // A generation job that found the column saved loaded it.
-            let kind = if kind == 1 && matches!(done, Some(Done::Generated(_))) {
+            let kind = if kind == 1 && matches!(done, Ok(Some(Done::Generated(_)))) {
                 0
             } else {
                 kind
@@ -930,8 +944,21 @@ impl<G: ChunkGenerator> Source for Jobs<G> {
             };
             job_stats::add(kind, nanos);
         }
-        if let Some(done) = done {
-            self.shared.done.send(done);
+        match done {
+            Ok(Some(done)) => self.shared.done.send(done),
+            Ok(None) => {}
+            // Its rest goes back in its place, first of its rank. Only the browser
+            // build splits a job, and there this thread runs them all: no worker
+            // to wake.
+            Err(rest) => {
+                self.shared.queue.lock().unwrap().push(Queued {
+                    priority,
+                    at,
+                    bias,
+                    order,
+                    job: rest,
+                });
+            }
         }
         true
     }
@@ -953,8 +980,62 @@ impl<G: ChunkGenerator> Source for Jobs<G> {
         self.generator.all_idle();
     }
 }
+/// The kinds of streaming jobs, for [`job_times`].
+const JOB_KINDS: [&str; 8] = [
+    "generate",
+    "decorate",
+    "finish",
+    "light",
+    "mesh",
+    "save",
+    "light view",
+    "free",
+];
+/// Per job kind: how many ran, their total and their longest time (µs), since
+/// the last [`job_times`].
+static JOB_TIMES: std::sync::Mutex<[(u32, u64, u64); 8]> = std::sync::Mutex::new([(0, 0, 0); 8]);
+
+/// Each job kind's count, total and longest time in ms since the last call: the
+/// browser build's status line, which shows what a long frame was.
+pub fn job_times() -> Vec<(&'static str, u32, f32, f32)> {
+    let mut times = JOB_TIMES.lock().unwrap_or_else(|e| e.into_inner());
+    let out = JOB_KINDS
+        .iter()
+        .zip(times.iter())
+        .filter(|(_, t)| t.0 > 0)
+        .map(|(name, &(n, total, max))| (*name, n, total as f32 / 1000.0, max as f32 / 1000.0))
+        .collect();
+    *times = [(0, 0, 0); 8];
+    out
+}
+
 impl<G: ChunkGenerator> Jobs<G> {
-    fn run_job(&self, job: Job, local: &mut WorkerLocal<G::Worker>) -> Option<Done> {
+    /// `Err`: a job to queue again in this one's place (a generation's rest).
+    fn run_job(&self, job: Job, local: &mut WorkerLocal<G::Worker>) -> Result<Option<Done>, Job> {
+        let kind = match &job {
+            Job::Generate(..) | Job::GenerateRest(..) => 0,
+            Job::Decorate(..) => 1,
+            Job::Finish(..) => 2,
+            Job::Light(..) => 3,
+            Job::Mesh(..) => 4,
+            Job::Save(..) => 5,
+            Job::LightView(..) => 6,
+            Job::Free(..) => 7,
+        };
+        let started = web_time::Instant::now();
+        let done = self.run_job_timed(job, local);
+        let took = started.elapsed().as_micros() as u64;
+        if let Ok(mut times) = JOB_TIMES.lock() {
+            let t = &mut times[kind];
+            *t = (t.0 + 1, t.1 + took, t.2.max(took));
+        }
+        done
+    }
+    fn run_job_timed(
+        &self,
+        job: Job,
+        local: &mut WorkerLocal<G::Worker>,
+    ) -> Result<Option<Done>, Job> {
         let (generator, shared, light) = (&self.generator, &self.shared, &self.light);
         let WorkerLocal {
             worker,
@@ -968,11 +1049,25 @@ impl<G: ChunkGenerator> Jobs<G> {
                     Done::Generated(chunk)
                 }
                 None => {
-                    let proto = generator.proto(&mut *worker, x, z);
+                    // The browser build makes a column in two jobs where the
+                    // generator can stop halfway.
+                    let proto = if cfg!(target_arch = "wasm32") {
+                        match generator.proto_part(&mut *worker, x, z) {
+                            Ok(proto) => proto,
+                            Err(part) => return Err(Job::GenerateRest(x, z, part)),
+                        }
+                    } else {
+                        generator.proto(&mut *worker, x, z)
+                    };
                     let decorated = generator.is_decorated(&proto);
                     Done::Proto(x, z, proto, decorated)
                 }
             },
+            Job::GenerateRest(x, z, part) => {
+                let proto = generator.proto_rest(&mut *worker, x, z, part);
+                let decorated = generator.is_decorated(&proto);
+                Done::Proto(x, z, proto, decorated)
+            }
             Job::Decorate(x, z, mut region, finals) => {
                 // The final chunks' proto chunks, made here: a
                 // generated proto chunk holding their blocks.
@@ -1013,7 +1108,7 @@ impl<G: ChunkGenerator> Jobs<G> {
                     let rejected = shared.meshes.lock().unwrap().put(mesh);
                     drop(rejected);
                 }
-                return None;
+                return Ok(None);
             }
             Job::Light(x, z, region, seq, sky) => {
                 Done::Lit(x, z, light_chunk(&borrow(&region), light, sky), seq)
@@ -1051,7 +1146,7 @@ impl<G: ChunkGenerator> Jobs<G> {
                 Done::Meshed(x, sy, z, mesh, seq)
             }
         };
-        Some(done)
+        Ok(Some(done))
     }
 }
 pub struct WorkerContext {

@@ -212,8 +212,14 @@ impl Options {
             offscreen: false,
             headless: false,
             window_size: [1280, 720],
+            // A page has no environment: the browser build takes it from its build's.
             spikes: std::env::var("HORIZON_SPIKES")
                 .ok()
+                .or_else(|| {
+                    cfg!(target_arch = "wasm32")
+                        .then(|| option_env!("HORIZON_SPIKES").map(str::to_owned))
+                        .flatten()
+                })
                 .and_then(|v| v.parse().ok()),
             server: None,
             player_name: std::env::var("HORIZON_PLAYER_NAME")

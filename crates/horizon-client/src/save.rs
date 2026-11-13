@@ -2512,8 +2512,46 @@ impl Folder {
 struct Writer {
     send: mpsc::Sender<WriteBatch>,
     thread: Option<horizon_thread::JoinHandle<()>>,
-    /// With no thread: the batches sent, written by the sender right after it sends them.
-    inline: Option<(mpsc::Receiver<WriteBatch>, WriteJob)>,
+    /// With no thread (the browser build): the batches sent, written a few
+    /// chunks at a time as jobs of the process's pool, so a frame takes a piece
+    /// of a save at most; a flush writes what is left at once.
+    inline: Option<(Arc<InlineWrites>, horizon_threads::jobs::Registration)>,
+}
+
+/// How many chunks a job of [`InlineWrites`] writes: a few milliseconds' work.
+const INLINE_PIECE: usize = 4;
+
+/// The writer's batches as the pool's jobs, where there is no writer thread.
+struct InlineWrites {
+    receive: Mutex<mpsc::Receiver<WriteBatch>>,
+    job: WriteJob,
+    /// Batches sent and not yet taken.
+    queued: AtomicUsize,
+}
+impl InlineWrites {
+    /// Writes every batch still queued (a flush waits for them).
+    fn drain(&self) {
+        while self.run_one() {}
+    }
+    fn run_one(&self) -> bool {
+        let Some(batch) = self.receive.lock().ok().and_then(|r| r.try_recv().ok()) else {
+            return false;
+        };
+        self.queued.fetch_sub(1, Ordering::Relaxed);
+        self.job.run(batch);
+        true
+    }
+}
+impl horizon_threads::jobs::Source for InlineWrites {
+    fn next(&self) -> Option<horizon_threads::jobs::Rank> {
+        // Among the nearest chunk work: unsaved chunks wait in memory meanwhile.
+        (self.queued.load(Ordering::Relaxed) > 0).then(|| {
+            horizon_threads::jobs::Rank::new(horizon_threads::jobs::Class::Near, 0)
+        })
+    }
+    fn run(&self, _worker: usize) -> bool {
+        self.run_one()
+    }
 }
 
 /// What the writer needs to put batches into the region files.
@@ -3070,38 +3108,55 @@ impl SaveDir {
                     batch.push((key, record, seq));
                 }
             }
-            *self
-                .outstanding
-                .count
-                .lock()
-                .map_err(|_| "writer poisoned")? += 1;
             let mut writer = self.writer.lock().map_err(|_| "writer poisoned")?;
             let writer = writer.get_or_insert_with(|| self.start_writer());
-            let chunks = if folder == Folder::Region {
-                batch.len()
+            // The pool's jobs take a few chunks each; the writer thread the batch.
+            let pieces: Vec<_> = if writer.inline.is_some() {
+                let mut pieces = Vec::new();
+                let mut rest = batch;
+                while rest.len() > INLINE_PIECE {
+                    let tail = rest.split_off(INLINE_PIECE);
+                    pieces.push(std::mem::replace(&mut rest, tail));
+                }
+                pieces.push(rest);
+                pieces
             } else {
-                0
+                vec![batch]
             };
-            self.outstanding.chunks.fetch_add(chunks, Ordering::Relaxed);
-            if writer.send.send((folder, batch)).is_err() {
-                self.outstanding.chunks.fetch_sub(chunks, Ordering::Relaxed);
-                *self
-                    .outstanding
-                    .error
-                    .lock()
-                    .map_err(|_| "writer poisoned")? = Some("the region writer stopped".into());
+            for piece in pieces {
                 *self
                     .outstanding
                     .count
                     .lock()
-                    .map_err(|_| "writer poisoned")? -= 1;
-                self.outstanding.done.notify_all();
-                return Err("the region writer stopped".into());
-            }
-            if let Some((receive, job)) = &writer.inline {
-                for batch in receive.try_iter() {
-                    job.run(batch);
+                    .map_err(|_| "writer poisoned")? += 1;
+                let chunks = if folder == Folder::Region {
+                    piece.len()
+                } else {
+                    0
+                };
+                self.outstanding.chunks.fetch_add(chunks, Ordering::Relaxed);
+                if writer.send.send((folder, piece)).is_err() {
+                    self.outstanding.chunks.fetch_sub(chunks, Ordering::Relaxed);
+                    *self
+                        .outstanding
+                        .error
+                        .lock()
+                        .map_err(|_| "writer poisoned")? =
+                        Some("the region writer stopped".into());
+                    *self
+                        .outstanding
+                        .count
+                        .lock()
+                        .map_err(|_| "writer poisoned")? -= 1;
+                    self.outstanding.done.notify_all();
+                    return Err("the region writer stopped".into());
                 }
+                if let Some((writes, _)) = &writer.inline {
+                    writes.queued.fetch_add(1, Ordering::Relaxed);
+                }
+            }
+            if let Some((_, registration)) = &writer.inline {
+                registration.notify();
             }
         }
         if wait {
@@ -3136,18 +3191,34 @@ impl SaveDir {
             // No thread (the browser build, or a system at its limit of threads): the
             // queue writes each batch as it is sent, on the caller's thread.
             Err(e) => {
-                log::warn!("Horizon: region writer: {e}; chunks are written as they are queued");
+                log::warn!("Horizon: region writer: {e}; chunks are written by the job pool");
                 let (send, receive) = mpsc::channel::<WriteBatch>();
+                let writes = Arc::new(InlineWrites {
+                    receive: Mutex::new(receive),
+                    job: job(),
+                    queued: AtomicUsize::new(0),
+                });
+                let registration = horizon_threads::jobs::pool().register(writes.clone());
                 Writer {
                     send,
                     thread: None,
-                    inline: Some((receive, job())),
+                    inline: Some((writes, registration)),
                 }
             }
         }
     }
     /// Wait until every queued write is on disk.
     pub fn flush(&self) -> Result<()> {
+        // Without a writer thread the pool's jobs may still hold some: written now.
+        let inline = self
+            .writer
+            .lock()
+            .map_err(|_| "writer poisoned")?
+            .as_ref()
+            .and_then(|w| w.inline.as_ref().map(|(writes, _)| writes.clone()));
+        if let Some(writes) = inline {
+            writes.drain();
+        }
         let mut count = self
             .outstanding
             .count
@@ -3281,6 +3352,10 @@ impl Drop for SaveDir {
     /// Finish queued writes before the world is let go.
     fn drop(&mut self) {
         if let Some(writer) = self.writer.get_mut().ok().and_then(Option::take) {
+            // The pool's jobs hold what a writer thread would finish: written here.
+            if let Some((writes, _)) = &writer.inline {
+                writes.drain();
+            }
             drop(writer.send);
             if let Some(thread) = writer.thread {
                 let _ = thread.join();
@@ -5358,6 +5433,19 @@ impl SaveDir {
     }
 }
 
+impl<G: ChunkGenerator> Persistent<G> {
+    /// A generated proto chunk at (x, z), with what the save keeps of it put back.
+    fn restored(&self, mut proto: crate::streaming::Proto, x: i32, z: i32) -> crate::streaming::Proto {
+        if let Some(saved) = self
+            .save
+            .load_proto(x, z, self.registry.registry, &self.biomes)
+        {
+            self.inner.restore_proto(&mut proto, saved);
+        }
+        proto
+    }
+}
+
 impl<G: ChunkGenerator> ChunkGenerator for Persistent<G> {
     type Worker = G::Worker;
     fn worker(&self) -> G::Worker {
@@ -5419,14 +5507,29 @@ impl<G: ChunkGenerator> ChunkGenerator for Persistent<G> {
         self.inner.idle(worker);
     }
     fn proto(&self, worker: &mut G::Worker, x: i32, z: i32) -> crate::streaming::Proto {
-        let mut proto = self.inner.proto(worker, x, z);
-        if let Some(saved) = self
-            .save
-            .load_proto(x, z, self.registry.registry, &self.biomes)
-        {
-            self.inner.restore_proto(&mut proto, saved);
+        let proto = self.inner.proto(worker, x, z);
+        self.restored(proto, x, z)
+    }
+    fn proto_part(
+        &self,
+        worker: &mut G::Worker,
+        x: i32,
+        z: i32,
+    ) -> std::result::Result<crate::streaming::Proto, crate::streaming::Proto> {
+        match self.inner.proto_part(worker, x, z) {
+            Ok(proto) => Ok(self.restored(proto, x, z)),
+            Err(part) => Err(part),
         }
-        proto
+    }
+    fn proto_rest(
+        &self,
+        worker: &mut G::Worker,
+        x: i32,
+        z: i32,
+        part: crate::streaming::Proto,
+    ) -> crate::streaming::Proto {
+        let proto = self.inner.proto_rest(worker, x, z, part);
+        self.restored(proto, x, z)
     }
     fn is_decorated(&self, proto: &crate::streaming::Proto) -> bool {
         self.inner.is_decorated(proto)

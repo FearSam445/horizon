@@ -8924,7 +8924,12 @@ impl Game<'_> {
         if self.screenshot_sequence.is_some() {
             return self.render_sequence_frame();
         }
-        self.render_frame()
+        #[cfg(target_arch = "wasm32")]
+        let started = Instant::now();
+        let drawn = self.render_frame();
+        #[cfg(target_arch = "wasm32")]
+        horizon_client::web_frame::note_render(started.elapsed());
+        drawn
     }
     fn render_frame(&mut self) -> Result<bool> {
         let prepare = spans::guard("prepare");

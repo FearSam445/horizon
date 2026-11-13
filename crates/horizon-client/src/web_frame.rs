@@ -29,11 +29,15 @@ struct Counts {
     /// [`horizon_threads::jobs::run_here`] at the last report.
     jobs_before: usize,
     server_ms: f32,
+    /// The longest server step, frame drawn and turn (ms).
+    server_max: f32,
+    render_max: f32,
+    turn_max: f32,
 }
 
 thread_local! {
     static COUNTS: Cell<(Option<Instant>, Counts)> = const {
-        Cell::new((None, Counts { turns: 0, tasks_pending: 0, jobs: 0, jobs_before: 0, server_ms: 0.0 }))
+        Cell::new((None, Counts { turns: 0, tasks_pending: 0, jobs: 0, jobs_before: 0, server_ms: 0.0, server_max: 0.0, render_max: 0.0, turn_max: 0.0 }))
     };
     /// The frame this turn is in: when it started and the work time spent in it.
     static WINDOW: Cell<Option<(Instant, Duration)>> = const { Cell::new(None) };
@@ -70,7 +74,16 @@ pub fn run(server: impl FnOnce()) {
     horizon_threads::jobs::frame_until(None, false);
     let jobs = horizon_threads::jobs::run_here();
     WINDOW.with(|w| w.set(Some((frame, spent + started.elapsed()))));
-    report(pending, jobs, server_ms);
+    report(pending, jobs, server_ms, started.elapsed().as_secs_f32() * 1000.0);
+}
+
+/// How long a frame took to draw: its longest goes in the status line.
+pub fn note_render(took: Duration) {
+    COUNTS.with(|cell| {
+        let (since, mut c) = cell.get();
+        c.render_max = c.render_max.max(took.as_secs_f32() * 1000.0);
+        cell.set((since, c));
+    });
 }
 
 /// The connections' tasks and the network's turn, until nothing waits or the
@@ -97,10 +110,12 @@ fn memory_mib() -> usize {
 
 /// A console line every [`REPORT_EVERY`]: turns, connection tasks still waiting,
 /// chunk jobs run and the server's time, so a stalled world shows what stopped.
-fn report(pending: usize, jobs: usize, server_ms: f32) {
+fn report(pending: usize, jobs: usize, server_ms: f32, turn_ms: f32) {
     COUNTS.with(|cell| {
         let (since, mut c) = cell.get();
         c.turns += 1;
+        c.server_max = c.server_max.max(server_ms);
+        c.turn_max = c.turn_max.max(turn_ms);
         c.tasks_pending = pending;
         c.jobs = jobs;
         c.server_ms += server_ms;
@@ -115,6 +130,19 @@ fn report(pending: usize, jobs: usize, server_ms: f32) {
                     c.jobs - c.jobs_before,
                     c.server_ms,
                     memory_mib()
+                );
+                // What the longest frames were made of: the longest turn, server
+                // step and drawing, and each chunk job kind's count, total and longest.
+                let times: Vec<String> = horizon_client_render::streaming::job_times()
+                    .iter()
+                    .map(|(kind, n, total, max)| format!("{kind} {n}x {total:.0}/{max:.0}"))
+                    .collect();
+                log::info!(
+                    "Horizon web: longest turn {:.0} ms, server step {:.0}, drawing {:.0}; jobs (count total/longest ms): {}",
+                    c.turn_max,
+                    c.server_max,
+                    c.render_max,
+                    times.join(", ")
                 );
                 cell.set((
                     Some(now),
