@@ -64,9 +64,7 @@ Fixed on Nov 13 (see `git log`):
    (`gfx::mip_chain`, ~66 MB), `Sprites::lay_out`, facts.json read whole
    (77 MB) by `BlockFacts::load_with_projection`. Reading JSON through a
    reader and smaller atlases would cut more.
-4. Leaves close up looked flat in Chromium's software renderer only; on the GPU
-   they look right. Check on the iPad.
-5. Not done: music (would need streaming decode), screenshots, multiplayer
+4. Not done: music (would need streaming decode), screenshots, multiplayer
    (no sockets in a page; a WebSocket relay), shader packs, a smaller wasm.
 
 ## How the browser build works
@@ -157,6 +155,10 @@ The owner's zip for tests: `C:\Users\samma\OneDrive\Documents\mconipadreal\26.3.
   (590,377), Create New World (355,770), then click the world (590,410) to
   capture the mouse. `{"eval": "window.horizonServed"}` counts the sounds read
   from the zip, `window.horizonAudioContexts` the audio contexts.
+- `RUNNER=1` opens the page through `web/runner/WASM_Runner_Controller.html`
+  (picks the game file in it, as the owner does); `OUT=folder` tests another
+  build's `horizon.html` (e.g. `%USERPROFILE%\horizon-ship\web\out`). Checked
+  Nov 13 through the runner: world, sounds, the runner's pointer-lock shim.
 - `web/test/boot.js` boots headless and prints the console.
 - On the iPad: drop `horizon.html` into the runner. Safari is WebKit; Chrome on
   the PC is not.

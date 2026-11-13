@@ -2,6 +2,7 @@
 // the console and taking screenshots on the way:
 //   node web/test/drive.js game-files.zip steps.json [width] [height]
 // OUT=folder serves the horizon.html in that folder instead of web/out.
+// RUNNER=1 opens it through web/runner/WASM_Runner_Controller.html, as the owner does.
 // steps.json is a list of steps, each one of:
 //   {"wait": seconds}            {"click": [x, y]}       {"key": "Escape"}
 //   {"type": "text"}             {"shot": "path.png"}    {"hold": "KeyW", "for": seconds}
@@ -18,6 +19,11 @@ function serve() {
   // OUT=folder serves another build's page (the shipped one in another checkout).
   const root = path.resolve(process.env.OUT || path.join(__dirname, '..', 'out'));
   const server = http.createServer((req, res) => {
+    if (req.url === '/runner.html') {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      fs.createReadStream(path.join(__dirname, '..', 'runner', 'WASM_Runner_Controller.html')).pipe(res);
+      return;
+    }
     const file = path.join(root, decodeURIComponent(req.url.split('?')[0]));
     if (!file.startsWith(root) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
     res.writeHead(200, { 'Content-Type': file.endsWith('.html') ? 'text/html' : 'application/octet-stream' });
@@ -79,7 +85,13 @@ async function profile(page, seconds, top) {
   page.on('pageerror', (e) => console.log(`${stamp()} [pageerror] ${e.message}`));
   page.on('crash', () => console.log(`${stamp()} [crash] the page crashed`));
   const server = await serve();
-  await page.goto(`http://127.0.0.1:${server.address().port}/horizon.html`);
+  if (process.env.RUNNER) {
+    // Through the owner's runner: it reads the picked game file as text and writes it in.
+    await page.goto(`http://127.0.0.1:${server.address().port}/runner.html`);
+    await page.setInputFiles('#file-input', path.join(path.resolve(process.env.OUT || path.join(__dirname, '..', 'out')), 'horizon.html'));
+  } else {
+    await page.goto(`http://127.0.0.1:${server.address().port}/horizon.html`);
+  }
   await page.waitForSelector('#horizon-files', { timeout: 120000 });
   await page.setInputFiles('#horizon-files input[type=file]', path.resolve(zip));
   for (const s of steps) {
