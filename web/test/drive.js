@@ -11,6 +11,8 @@
 //   {"profile": seconds, "top": n} (prints where the time went)
 //   {"frames": seconds, "label": "x"} (frame rate and hitches)
 //   {"down": "KeyW"} / {"up": "KeyW"} (holds a key across other steps)
+//   with TOUCH=1: {"tap": [x, y]}, {"press": [x, y], "ms": n}, {"swipe": [[x, y], [x, y]], "ms": n},
+//   {"touches": [[[x, y], [x, y]], ...], "ms": n} (several fingers at once)
 // THROTTLE=4 slows the page's CPU fourfold, about an iPad's speed.
 // Coordinates are CSS pixels of the page.
 const { chromium } = require('playwright');
@@ -71,6 +73,22 @@ async function profile(page, seconds, top) {
   show(new Map([...total].filter(([n]) => /horizon|wgpu|winit|naga/.test(n))), 'with callees (game functions)');
 }
 
+// Fingers down at `from`, moving to `to` over `ms`, then up: real touch events
+// (Input.dispatchTouchEvent), several fingers at once when given several.
+async function touch(page, fingers, ms) {
+  const cdp = await page.context().newCDPSession(page);
+  const at = (f, k) => ({ x: f.from[0] + (f.to[0] - f.from[0]) * k, y: f.from[1] + (f.to[1] - f.from[1]) * k });
+  const points = (k) => fingers.map((f, i) => ({ ...at(f, k), id: i + 1, radiusX: 8, radiusY: 8, force: 1 }));
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points(0) });
+  const steps = Math.max(1, Math.round(ms / 16));
+  for (let i = 1; i <= steps; i++) {
+    await new Promise((r) => setTimeout(r, ms / steps));
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: points(i / steps) });
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+}
+
 (async () => {
   const [zip, stepsFile, w, h] = process.argv.slice(2);
   const steps = JSON.parse(fs.readFileSync(stepsFile, 'utf8'));
@@ -81,7 +99,8 @@ async function profile(page, seconds, top) {
   const browser = await chromium.launch(gpu
     ? { args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] }
     : { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] });
-  const page = await browser.newPage({ viewport: { width, height } });
+  // TOUCH=1: a touch screen, as an iPad's (the touch steps below need it).
+  const page = await browser.newPage({ viewport: { width, height }, hasTouch: !!process.env.TOUCH });
   // THROTTLE=n runs the page's CPU n times slower: about an iPad's speed at 4.
   if (process.env.THROTTLE) {
     const cdp = await page.context().newCDPSession(page);
@@ -107,6 +126,10 @@ async function profile(page, seconds, top) {
     if (s.wait) await page.waitForTimeout(s.wait * 1000);
     else if (s.click) { await page.mouse.move(s.click[0], s.click[1]); await page.mouse.down(); await page.waitForTimeout(80); await page.mouse.up(); }
     else if (s.key) await page.keyboard.press(s.key);
+    else if (s.tap) await touch(page, [{ from: s.tap, to: s.tap }], 60);
+    else if (s.press) await touch(page, [{ from: s.press, to: s.press }], s.ms || 600);
+    else if (s.swipe) await touch(page, [{ from: s.swipe[0], to: s.swipe[1] }], s.ms || 400);
+    else if (s.touches) await touch(page, s.touches.map((t) => ({ from: t[0], to: t[1] || t[0] })), s.ms || 600);
     else if (s.down) await page.keyboard.down(s.down);
     else if (s.up) await page.keyboard.up(s.up);
     else if (s.profile) await profile(page, s.profile, s.top || 30);

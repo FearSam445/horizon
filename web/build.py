@@ -57,9 +57,11 @@ def main():
     page = open(os.path.join(WEB, "page", "index.html"), encoding="utf-8").read()
     loader = open(os.path.join(WEB, "page", "loader.js"), encoding="utf-8").read()
     bridge = open(os.path.join(WEB, "page", "input_bridge.js"), encoding="utf-8").read()
+    touch = open(os.path.join(WEB, "page", "touch_controls.js"), encoding="utf-8").read()
     zip_reader = open(os.path.join(WEB, "page", "zip_reader.js"), encoding="utf-8").read()
     html = (
         page.replace("/*INPUT_BRIDGE*/", bridge)
+        .replace("/*TOUCH_CONTROLS*/", touch)
         .replace("/*ZIP_READER*/", zip_reader)
         .replace("/*GLUE*/", glue.replace("</script", "<\\/script"))
         .replace("/*LOADER*/", loader)

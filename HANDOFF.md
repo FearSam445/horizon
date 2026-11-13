@@ -129,6 +129,16 @@ runner's synthetic mouse/key events to what winit listens for; ~ / ` is the
 pause key, sent as Escape, and the keyboard's real Escape is dropped: the owner
 asked for ~ to pause, not Esc).
 
+Touch: `web/page/touch_controls.js` draws the controls over the canvas and sends
+the game keys and mouse events (marked, straight to the canvas). In a world
+(the pointer is locked: on touch it fakes the lock) a left-half joystick (WASD,
+Ctrl at its edge), right-half drag to look (movement x1.5), tap = right click,
+hold 300 ms = left button held; buttons as in web/README.md. In menus the touch
+is a mouse. The hotbar is found from the GUI Scale option (`gui_scale_setting`)
+and the canvas size, as `Window.calculateScale`. Typing goes through a hidden
+input (Enter hands the focus back, or the game pauses). Test with `TOUCH=1` and
+the `tap` / `press` / `swipe` / `touches` steps of `web/test/drive.js`.
+
 Sound: `audio.rs` on wasm decodes a static sound on the game's thread once
 `horizon_fs::fetch` says its file is here (`pump_waiting` each tick), then drops
 the file; the page polls `wanted_files()` every 50 ms. The sound registry lists

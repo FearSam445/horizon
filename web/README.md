@@ -26,6 +26,14 @@ again and worlds last until the page closes.
 
 - One thread does everything: the world, the chunks and the drawing take turns
   in each frame. A new world's spawn area takes a few seconds on a computer.
+- Touch controls appear on the first touch (and hide when a mouse moves): a
+  joystick on the left half moves (pushed to its edge it sprints), dragging on
+  the right half looks, a tap there uses or places, holding still there breaks;
+  buttons jump, sneak (a toggle), attack, use, inventory (right of the hotbar),
+  drop (left of it), and top left pause, camera and chat (with the keyboard).
+  Tapping the hotbar picks a slot. In menus a tap clicks, a drag drags, a long
+  press right-clicks, two fingers scroll, and the keyboard button (top left)
+  types; the cross goes back.
 - The pause key is ~ (the ` key): it pauses and closes menus, as Escape does elsewhere.
   The keyboard's own Escape key does nothing (a runner's controller still pauses).
 - Sound plays through Web Audio once you tap or press a key (browsers start a

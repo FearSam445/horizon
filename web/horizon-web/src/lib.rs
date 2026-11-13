@@ -61,6 +61,13 @@ pub fn game_file_missing(path: &str) {
     horizon_fs::not_found(&Path::new(RESOURCES).join(path));
 }
 
+/// The GUI Scale option (0: automatic), for the page's touch controls to find
+/// the hotbar (`page/touch_controls.js`).
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn gui_scale_setting() -> u32 {
+    horizon_client::hud::GUI_SCALE.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// Turns the frame's shared work budget on or off, for measuring
 /// (`horizon_client::web_frame`): `wasm_bindgen.set_frame_budget(false)`.
 #[wasm_bindgen::prelude::wasm_bindgen]

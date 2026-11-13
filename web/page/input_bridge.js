@@ -53,8 +53,9 @@
       if (e[MARK] || pauseKey(e) || realEscape(e)) return;
       var target = canvas();
       if (!target || e.target === target) return;
-      // A key typed into the page's own controls (the file picker) stays there.
-      if (e.target && e.target.closest && e.target.closest('#horizon-files')) return;
+      // A key typed into the page's own controls (the file picker, the touch
+      // controls' typing field) stays there.
+      if (e.target && e.target.closest && e.target.closest('#horizon-files, #horizon-touch')) return;
       if (e.isTrusted) e.preventDefault();
       var ev = new KeyboardEvent(type, {
         key: e.key, code: e.code, location: e.location, repeat: e.repeat,
