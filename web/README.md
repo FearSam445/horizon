@@ -67,6 +67,10 @@ differently).
 GPU=1 node web/test/drive.js path/to/26.3.zip steps.json
 ```
 
+`THROTTLE=4` slows the page's CPU fourfold (about an iPad's speed), a
+`{"frames": 20}` step prints the frame rate and the hitches, `{"profile": 15}`
+where the time went, and `RUNNER=1` opens the page through the runner.
+
 The status line every 2 s (`Horizon web: … turns, … memory N MiB`) gives the
 frames run and the page's memory; each time the memory grows past another
 64 MB the console shows the stack that grew it.

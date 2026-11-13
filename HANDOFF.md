@@ -33,10 +33,13 @@ Works:
   as each first plays. Music and records don't (a decoded track is tens of MB).
 - **Memory** (the page's wasm memory, which never shrinks): title 407 MB, a new
   world about 430-490 MB (was 708 MB at the title before Nov 13).
-- **Speed**: the shipped file (commit `259e4187a4`, 24.9 MB, on the owner's
-  Desktop since Nov 13) runs ~70 frames a second while a new world's terrain
-  generates and reaches full speed after ~18 s on the PC (it was 20 frames a
-  second for ~35 s); normal play leaves the PC's CPU idle 84% of the time.
+- **Speed** (Nov 13, measured in Chromium with the CPU slowed 4x, about an
+  iPad's speed; `THROTTLE=4` and `{"frames": s}` in `web/test/drive.js`):
+  a world loading 34 fps, a new world 40, walking 42 with a 16.7 ms median
+  frame (the morning's file: 13, 27, 27). What did it: the server no longer
+  sleeps (= runs chunk jobs) to its next tick; wasm SIMD; one work budget per
+  60 Hz frame shared by winit's turns (`jobs::frame_until`); no spinning in
+  `pump_chunks` once it is spent. Shipped with opt-level 2 / wasm-opt -O2.
 
 **Confirmed on the owner's iPad (Nov 13)**: the shipped file runs in the runner
 at 60 fps. Ask the owner what to improve next.
@@ -59,9 +62,12 @@ Fixed on Nov 13 (see `git log`):
 
 1. **iPad feedback**: it works at 60 fps; ask about anything else that differs
    in Safari (sound, input, longer play). Safari's console: on a Mac, Develop menu.
-2. **Speed on the iPad**: the shipped build uses `opt-level` and `wasm-opt`
-   settings chosen on Nov 13 (see "Building"); compare frames (`turns` in the
-   status line) if changed. Lower render distance helps most.
+2. **Speed**: profile with `{"profile": s}` at `THROTTLE=4` (the dev build has
+   function names). While walking, the time goes to terrain generation (~30%),
+   the server tick (~30%, half of it mob AI) and drawing (~13%). A single
+   chunk-generation job can't be split, so it can still make a 50-100 ms frame
+   at 4x; splitting `generate_proto` into stages is the next step there.
+   `wasm_bindgen.set_frame_budget(false)` turns the frame budget off to compare.
 3. **Memory**: the remaining peaks, from the "memory now" lines: the HUD atlas
    (96 MB of pixels while it is built; 4096x5120), the block sprites' mip chain
    (`gfx::mip_chain`, ~66 MB), `Sprites::lay_out`, facts.json read whole
