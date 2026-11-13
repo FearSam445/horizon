@@ -232,7 +232,12 @@ fn parse_sound(v: &Value) -> Option<Sound> {
 }
 /// The files under a namespace's `sounds/`, as `sounds/<path>` with `/`.
 fn sound_files(namespace: &Path) -> HashSet<String> {
-    let mut files = HashSet::new();
+    // The browser build's page reads each sound from the zip when it first plays.
+    let mut files: HashSet<String> = fs::withheld_under(&namespace.join("sounds"))
+        .iter()
+        .filter_map(|p| p.strip_prefix(namespace).ok())
+        .map(|rel| rel.to_string_lossy().replace('\\', "/"))
+        .collect();
     let mut stack = vec![namespace.join("sounds")];
     while let Some(dir) = stack.pop() {
         let Ok(entries) = fs::read_dir(&dir) else {

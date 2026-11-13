@@ -39,7 +39,7 @@ fn report(size: usize) {
     }
     let mut text = *b"Horizon: allocating          MiB";
     let mut mib = size >> 20;
-    let mut at = 29;
+    let mut at = 27;
     loop {
         text[at] = b'0' + (mib % 10) as u8;
         mib /= 10;
@@ -49,5 +49,6 @@ fn report(size: usize) {
         at -= 1;
     }
     let text = std::str::from_utf8(&text).unwrap_or("Horizon: allocating a lot");
-    web_sys::console::warn_1(&wasm_bindgen::JsValue::from_str(text));
+    // As an Error: the console shows where in the game it was asked for.
+    web_sys::console::warn_1(&js_sys::Error::new(text));
 }

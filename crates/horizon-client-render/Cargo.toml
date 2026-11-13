@@ -87,6 +87,8 @@ js-sys = "0.3.106"
 web-sys = { version = "0.3.106", features = ["console", "Window"] }
 chrono = { version = "0.4.42", default-features = false, features = ["clock", "std", "wasmbind"] }
 horizon-web-ureq = { path = "../../web/shims/ureq" }
+# The `audio` feature's output in a page: cpal's Web Audio host.
+cpal = { version = "0.16", optional = true, features = ["wasm-bindgen"] }
 
 [features]
 # Sound output: horizon-client's `audio` feature.

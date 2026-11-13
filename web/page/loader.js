@@ -136,6 +136,38 @@
       Math.round(handed.bytes / 1048576) + ' MiB packed), ' + handed.skipped + ' left out');
   }
 
+  // The files the game asks for later (its sounds, as each first plays: all of
+  // them would take hundreds of megabytes): named to it before it starts (it
+  // plays only the sounds it knows are there), read from the zip when it asks.
+  async function withholdSounds(file) {
+    var zip = await HorizonZip.withheld(file);
+    var sounds = zip.sounds();
+    sounds.forEach(function (path) { wasm_bindgen.game_file_later(path); });
+    console.log('Horizon: ' + sounds.length + ' sounds read from the zip as they play');
+    return zip;
+  }
+  function serveLater(zip) {
+    var served = window.horizonServed = { read: 0, missing: 0 };
+    var busy = false;
+    setInterval(async function () {
+      if (busy) return;
+      busy = true;
+      try {
+        var wanted = wasm_bindgen.wanted_files();
+        for (var i = 0; i < wanted.length; i++) {
+          var path = wanted[i], entry = null;
+          try { entry = await zip.read(path); } catch (e) { console.warn('Horizon: ' + path, e); }
+          if (entry) wasm_bindgen.game_file(path, entry.deflated, entry.length, entry.data);
+          else wasm_bindgen.game_file_missing(path);
+          served[entry ? 'read' : 'missing']++;
+        }
+      } catch (e) {
+        console.warn('Horizon: reading a game file later failed', e);
+      }
+      busy = false;
+    }, 50);
+  }
+
   async function start() {
     var holder = document.getElementById('horizon-wasm');
     var packed = fromBase64(holder.textContent.trim());
@@ -152,7 +184,7 @@
     module = null;
     await restoreKept();
 
-    var file = await remembered(), reason = null;
+    var file = await remembered(), reason = null, later = null;
     for (;;) {
       if (!file) {
         status.style.display = 'none';
@@ -163,6 +195,10 @@
       if (file) {
         try {
           await handOver(file);
+          later = await withholdSounds(file).catch(function (e) {
+            console.warn('Horizon: no sounds', e);
+            return null;
+          });
         } catch (error) {
           // A zip the game can't use: forget it and ask again.
           reason = String(error.message || error);
@@ -181,6 +217,7 @@
     }
     status.style.display = 'none';
     keepFiles();
+    if (later) serveLater(later);
     if (window.horizonFocus) window.horizonFocus();
   }
   start().catch(fail);

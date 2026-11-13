@@ -162,6 +162,117 @@ impl MetaExt for DirEntry {
     }
 }
 
+/// Whether a file can be read now ([`fetch`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Fetch {
+    /// It is there.
+    Here,
+    /// The page was asked for it: ask again later.
+    Waiting,
+    /// There is no such file.
+    Missing,
+}
+
+/// Whether `path` can be read now. On the desktop a file is there or not. The
+/// browser build's page holds some of the player's files back until the game
+/// first needs one (the sounds: hundreds of megabytes it would keep in memory,
+/// each named first with [`withhold`]): the first call asks the page for it
+/// ([`take_requests`]), and it is [`Fetch::Waiting`] until the page hands it
+/// over or says it has none ([`not_found`]).
+pub fn fetch(path: &Path) -> Fetch {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if path.is_file() {
+            Fetch::Here
+        } else {
+            Fetch::Missing
+        }
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        let mut asked = ASKED.lock().unwrap_or_else(|e| e.into_inner());
+        if metadata(path).is_ok_and(|m| m.is_file()) {
+            // Handed over: once let go again (`remove_file`), it is asked for again.
+            asked.state.remove(path);
+            return Fetch::Here;
+        }
+        if !asked.withheld.contains(path) {
+            return Fetch::Missing;
+        }
+        match asked.state.get(path) {
+            Some(false) => Fetch::Missing,
+            Some(true) => Fetch::Waiting,
+            None => {
+                asked.state.insert(path.to_owned(), true);
+                asked.queue.push(path.to_owned());
+                Fetch::Waiting
+            }
+        }
+    }
+}
+
+/// What the game asked the page for ([`fetch`]) and the page has not answered.
+#[cfg(target_arch = "wasm32")]
+#[derive(Default)]
+struct Asked {
+    /// true while waiting, false once the page said it has no such file.
+    state: std::collections::HashMap<PathBuf, bool>,
+    /// Not yet handed to the page.
+    queue: Vec<PathBuf>,
+    /// The files the page holds back ([`withhold`]).
+    withheld: std::collections::BTreeSet<PathBuf>,
+}
+#[cfg(target_arch = "wasm32")]
+static ASKED: std::sync::LazyLock<std::sync::Mutex<Asked>> =
+    std::sync::LazyLock::new(Default::default);
+
+/// The files [`fetch`] asked for since the last call, for the page to look up.
+#[cfg(target_arch = "wasm32")]
+pub fn take_requests() -> Vec<PathBuf> {
+    std::mem::take(&mut ASKED.lock().unwrap_or_else(|e| e.into_inner()).queue)
+}
+
+/// The page holds the file at `path` back until it is asked for ([`fetch`]).
+#[cfg(target_arch = "wasm32")]
+pub fn withhold(path: &Path) {
+    ASKED
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .withheld
+        .insert(path.to_owned());
+}
+
+/// The files under `folder` that the page holds back ([`withhold`]): they are
+/// there for the game, though no folder listing shows them. None on the desktop.
+pub fn withheld_under(folder: &Path) -> Vec<PathBuf> {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = folder;
+        Vec::new()
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        ASKED
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .withheld
+            .range(folder.to_owned()..)
+            .take_while(|p| p.starts_with(folder))
+            .cloned()
+            .collect()
+    }
+}
+
+/// The page has no file at `path`: [`fetch`] says [`Fetch::Missing`] from now on.
+#[cfg(target_arch = "wasm32")]
+pub fn not_found(path: &Path) {
+    ASKED
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .state
+        .insert(path.to_owned(), false);
+}
+
 /// `std::env::temp_dir()`: `/tmp` in the browser build, where std's panics.
 pub fn temp_dir() -> PathBuf {
     #[cfg(target_arch = "wasm32")]

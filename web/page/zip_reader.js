@@ -44,13 +44,39 @@ var HorizonZip = (function () {
     return entries;
   }
 
+  // The languages kept: English (the game's own) and the device's, as the game
+  // names them (fr-CA -> fr_ca, and any fr_* when none matches exactly). The
+  // other 140 files are about 17 MB the page would hold for nothing; the
+  // Language menu lists only the languages whose file is there.
+  function keptLanguages() {
+    var asked = [];
+    try { asked = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language]) || []; } catch (e) {}
+    var exact = {}, prefix = {};
+    asked.forEach(function (tag) {
+      if (!tag) return;
+      var parts = String(tag).toLowerCase().split(/[-_]/);
+      exact[parts.join('_')] = true;
+      prefix[parts[0]] = true;
+    });
+    return { exact: exact, prefix: prefix };
+  }
+  var languages = null;
+  function languageKept(base) {
+    if (base === 'en_us.json' || base === 'deprecated.json') return true;
+    languages = languages || keptLanguages();
+    var code = base.replace(/\.json$/, '');
+    return !!(languages.exact[code] || languages.prefix[code.split('_')[0]]);
+  }
+
   // What the page leaves out: folders, macOS's extra files, the prepared data
-  // file (never read in a page), and sounds while the page has no sound.
+  // file (never read in a page), sounds while the page has no sound, and the
+  // languages nobody here reads (`languageKept`).
   function skipped(path) {
     var base = path.slice(path.lastIndexOf('/') + 1);
     return path.endsWith('/') || path.startsWith('__MACOSX/') || base.startsWith('._') ||
       base === '.DS_Store' || path === 'horizon-data.bin' ||
-      path.startsWith('assets/minecraft/sounds/');
+      path.startsWith('assets/minecraft/sounds/') ||
+      (path.startsWith('assets/minecraft/lang/') && !languageKept(base));
   }
 
   // The folder in the zip holding horizon-resources.json ('' for the zip's root).
@@ -108,6 +134,41 @@ var HorizonZip = (function () {
     return { files: given, bytes: total, skipped: entries.length - given };
   }
 
-  return { index: index, each: each, skipped: skipped, rootOf: rootOf };
+  // The files `each` left out that the game may still ask for (the sounds), read
+  // one at a time when it does: `read(path)` resolves to { deflated, length,
+  // data } as the zip packs it, or null when the zip has no such file.
+  async function withheld(blob) {
+    var entries = await index(blob);
+    var root = rootOf(entries) || '';
+    var byPath = new Map();
+    entries.forEach(function (e) {
+      if (e.name.startsWith(root) && !e.encrypted && (e.method === 0 || e.method === 8)) {
+        byPath.set(e.name.slice(root.length), e);
+      }
+    });
+    entries = null;
+    return {
+      // The sounds `each` left out, which the game plays from the zip as it needs them.
+      sounds: function () {
+        var out = [];
+        byPath.forEach(function (e, path) {
+          if (/^assets\/[^/]+\/sounds\/.+\.ogg$/.test(path)) out.push(path);
+        });
+        return out;
+      },
+      read: async function (path) {
+        var e = byPath.get(path);
+        if (!e) return null;
+        var head = await bytes(blob, e.header, e.header + 30);
+        var view = new DataView(head.buffer);
+        if (u32(view, 0) !== 0x04034b50) return null;
+        var dataAt = e.header + 30 + u16(view, 26) + u16(view, 28);
+        var data = await bytes(blob, dataAt, dataAt + e.packed);
+        return { deflated: e.method === 8, length: e.length, data: data };
+      }
+    };
+  }
+
+  return { index: index, each: each, skipped: skipped, rootOf: rootOf, withheld: withheld };
 })();
 if (typeof module !== 'undefined') module.exports = HorizonZip;

@@ -58,6 +58,14 @@ fn connections(started: Instant) -> usize {
     pending
 }
 
+/// The page's memory for the game: wasm's linear memory, which only grows.
+fn memory_mib() -> usize {
+    #[cfg(target_arch = "wasm32")]
+    return core::arch::wasm32::memory_size(0) * 65536 >> 20;
+    #[allow(unreachable_code)]
+    0
+}
+
 /// A console line every [`REPORT_EVERY`]: turns, connection tasks still waiting,
 /// chunk jobs run and the server's time, so a stalled world shows what stopped.
 fn report(pending: usize, jobs: usize, server_ms: f32) {
@@ -72,11 +80,12 @@ fn report(pending: usize, jobs: usize, server_ms: f32) {
             None => cell.set((Some(now), c)),
             Some(at) if now.duration_since(at) >= REPORT_EVERY => {
                 log::info!(
-                    "Horizon web: {} turns, {} connection tasks waiting, {} chunk jobs, server {:.0} ms",
+                    "Horizon web: {} turns, {} connection tasks waiting, {} chunk jobs, server {:.0} ms, memory {} MiB",
                     c.turns,
                     c.tasks_pending,
                     c.jobs,
-                    c.server_ms
+                    c.server_ms,
+                    memory_mib()
                 );
                 cell.set((Some(now), Counts::default()));
             }

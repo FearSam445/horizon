@@ -5,6 +5,7 @@
 //   {"wait": seconds}            {"click": [x, y]}       {"key": "Escape"}
 //   {"type": "text"}             {"shot": "path.png"}    {"hold": "KeyW", "for": seconds}
 //   {"move": [dx, dy]}           (relative mouse motion, as a locked pointer sends)
+//   {"eval": "js expression"}    (prints its value)
 // Coordinates are CSS pixels of the page.
 const { chromium } = require('playwright');
 const path = require('path');
@@ -30,7 +31,7 @@ function serve() {
   // otherwise Chromium's software renderer, which is slow and draws some things differently.
   const gpu = !!process.env.GPU;
   const browser = await chromium.launch(gpu
-    ? { args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] }
+    ? { args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] }
     : { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage({ viewport: { width, height } });
   const t0 = Date.now();
@@ -47,6 +48,7 @@ function serve() {
     if (s.wait) await page.waitForTimeout(s.wait * 1000);
     else if (s.click) { await page.mouse.move(s.click[0], s.click[1]); await page.mouse.down(); await page.waitForTimeout(80); await page.mouse.up(); }
     else if (s.key) await page.keyboard.press(s.key);
+    else if (s.eval) console.log(`${stamp()} [eval] ${JSON.stringify(await page.evaluate(s.eval).catch((e) => String(e)))}`);
     else if (s.type) await page.keyboard.type(s.type, { delay: 40 });
     else if (s.hold) { await page.keyboard.down(s.hold); await page.waitForTimeout((s.for || 1) * 1000); await page.keyboard.up(s.hold); }
     else if (s.move) await page.evaluate(([dx, dy]) => {

@@ -11,7 +11,8 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-horizon-client = { path = "../../crates/horizon-client", default-features = false }
+# Sound plays through Web Audio (cpal's web host); controllers and Horizon's extras stay out.
+horizon-client = { path = "../../crates/horizon-client", default-features = false, features = ["audio"] }
 log = "0.4"
 horizon-fs = { path = "../fs" }
 horizon-thread = { path = "../thread" }

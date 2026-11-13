@@ -339,6 +339,10 @@ pub struct MixerBackend {
     cache: Arc<Mutex<SoundCache>>,
     /// The decoder thread for static sounds, started with the first one.
     decoder: Option<std::sync::mpsc::Sender<Decode>>,
+    /// The browser build's sounds whose files the page is still reading from the
+    /// zip (`horizon_fs::fetch`), decoded by [`MixerBackend::pump_waiting`].
+    #[cfg(target_arch = "wasm32")]
+    waiting: Vec<Decode>,
     next: ChannelId,
     live: bool,
     /// Whose channels these are (`Channel::owner`).
@@ -380,7 +384,11 @@ struct SoundCache {
     bytes: usize,
     clock: u64,
 }
+#[cfg(not(target_arch = "wasm32"))]
 const CACHE_BYTES: usize = 64 << 20;
+/// A page has much less memory (an iPad's tab is closed past about 1 GB).
+#[cfg(target_arch = "wasm32")]
+const CACHE_BYTES: usize = 16 << 20;
 impl SoundCache {
     fn get(&mut self, key: &str) -> Option<Samples> {
         self.clock += 1;
@@ -677,6 +685,38 @@ impl MixerBackend {
         }
     }
 }
+/// The browser build's sounds: decoded on the game's thread, as their files arrive.
+#[cfg(target_arch = "wasm32")]
+impl MixerBackend {
+    /// Decodes `job`'s file (then lets it go: the samples are kept in the cache, and
+    /// the page reads it again if they are dropped), caches and plays it.
+    fn decode_now(&mut self, job: Decode) {
+        let cached = self.cache.lock().ok().and_then(|mut c| c.get(&job.key));
+        let samples = cached.unwrap_or_else(|| {
+            let samples = decode(&job.file).map(|(s, r, c)| (Arc::new(s), r, c));
+            let _ = fs::remove_file(&job.file);
+            if let Ok(mut c) = self.cache.lock() {
+                c.insert(job.key.clone(), samples.clone());
+            }
+            samples
+        });
+        attach(&self.mixer, job.channel, samples, job.looping);
+    }
+    /// The waiting sounds whose files the page has handed over (or has not got).
+    fn pump_waiting(&mut self) {
+        if self.waiting.is_empty() {
+            return;
+        }
+        let jobs = std::mem::take(&mut self.waiting);
+        for job in jobs {
+            match fs::fetch(&job.file) {
+                fs::Fetch::Here => self.decode_now(job),
+                fs::Fetch::Waiting => self.waiting.push(job),
+                fs::Fetch::Missing => {}
+            }
+        }
+    }
+}
 impl Backend for MixerBackend {
     fn create(&mut self, _streaming: bool) -> Option<ChannelId> {
         self.next += 1;
@@ -764,6 +804,12 @@ impl Backend for MixerBackend {
         if !looping && self.duplicate(channel, (namespace, &path)) {
             return;
         }
+        // The browser build plays no streamed sounds (music and records): a track
+        // decodes whole, tens of megabytes a page can't spare.
+        #[cfg(target_arch = "wasm32")]
+        if sound.stream {
+            return;
+        }
         if sound.stream {
             // A streamed sound loops by restarting its stream.
             let mixer = self.mixer.clone();
@@ -779,6 +825,24 @@ impl Backend for MixerBackend {
             attach(&self.mixer, channel, samples, looping);
             return;
         }
+        // The browser build has no threads: a sound decodes here once the page has
+        // read its file from the zip (`pump_waiting`).
+        #[cfg(target_arch = "wasm32")]
+        {
+            let job = Decode {
+                key,
+                file,
+                channel,
+                looping,
+            };
+            if fs::fetch(&job.file) == fs::Fetch::Here {
+                self.decode_now(job);
+            } else {
+                self.waiting.push(job);
+            }
+            return;
+        }
+        #[allow(unreachable_code)]
         let decoder = self.decoder.get_or_insert_with(|| {
             let (send, receive) = std::sync::mpsc::channel::<Decode>();
             let (mixer, cache) = (self.mixer.clone(), self.cache.clone());
@@ -810,6 +874,7 @@ impl Backend for MixerBackend {
     }
     /// `alSourceStop`: any state becomes stopped, an initial source too (a
     /// sound still decoding then never starts).
+
     fn stop(&mut self, channel: ChannelId) {
         self.with(channel, |c| c.state = State::Stopped);
     }
@@ -1477,6 +1542,8 @@ impl Audio {
                 root: root.to_owned(),
                 cache: Arc::default(),
                 decoder: None,
+                #[cfg(target_arch = "wasm32")]
+                waiting: Vec::new(),
                 next: 0,
                 live,
                 owner: 0,
@@ -1645,6 +1712,8 @@ impl Audio {
                 root: self.backend.root.clone(),
                 cache: self.backend.cache.clone(),
                 decoder: None,
+                #[cfg(target_arch = "wasm32")]
+                waiting: Vec::new(),
                 next: (SHARED_CHANNELS.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1)
                     << 40,
                 live: self.backend.live,
@@ -1718,6 +1787,10 @@ impl Audio {
             self.cards_seen = card_fingerprint();
             self.devices_seen = output_devices();
             return true;
+        }
+        // A page has one output, Web Audio's; and no thread to look for others on.
+        if cfg!(target_arch = "wasm32") {
+            return false;
         }
         if let Some(pending) = &self.device_probe {
             let Some(probe) = pending.lock().ok().and_then(|mut found| found.take()) else {
@@ -1816,6 +1889,9 @@ impl Audio {
                 self.reopen_output(true);
             }
         }
+        // The browser build: sounds whose files the page has read from the zip since.
+        #[cfg(target_arch = "wasm32")]
+        self.backend.pump_waiting();
         self.sync_volumes();
         self.engine.tick(paused, ctx, &mut self.backend);
         // A paused game holds a mod's muffle where it is, as it holds the sounds.
@@ -2757,6 +2833,8 @@ mod tests {
             root: PathBuf::new(),
             cache: Arc::default(),
             decoder: None,
+            #[cfg(target_arch = "wasm32")]
+            waiting: Vec::new(),
             next: (u64::from(owner)) << 40,
             live: true,
             owner,

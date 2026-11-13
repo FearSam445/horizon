@@ -31,6 +31,35 @@ pub fn game_file(path: &str, deflated: bool, length: f64, data: &[u8]) -> Result
     .map_err(|e| format!("{path}: {e}"))
 }
 
+/// The game files the game asked for since the last call (`horizon_fs::fetch`:
+/// the sounds, which the page reads from the zip only when one first plays),
+/// as paths under the prepared folder. One outside it can't be in the zip.
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn wanted_files() -> Vec<String> {
+    let mut wanted = Vec::new();
+    for path in horizon_fs::take_requests() {
+        match path.strip_prefix(RESOURCES) {
+            Ok(inside) => wanted.push(inside.to_string_lossy().replace('\\', "/")),
+            Err(_) => horizon_fs::not_found(&path),
+        }
+    }
+    wanted
+}
+
+/// A file of the zip (`path` under the prepared folder) the page holds back
+/// until the game asks for it (`wanted_files`): the sounds. Named before [`boot`].
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn game_file_later(path: &str) {
+    horizon_fs::withhold(&Path::new(RESOURCES).join(path));
+}
+
+/// The zip has no file at `path` (under the prepared folder), which the game
+/// asked for: it stops waiting for it.
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn game_file_missing(path: &str) {
+    horizon_fs::not_found(&Path::new(RESOURCES).join(path));
+}
+
 /// Folders the page doesn't keep between visits: the player's game files (they
 /// come from the zip each time), the zip's mount, temporary files, and the logs
 /// and crash reports of the game's home (`logging::data_dir`, `/data` here).

@@ -314,6 +314,12 @@ impl Game<'_> {
     /// saved icon is on the screen, grab the rendered frame once a second until
     /// the save has one. The Select World list shows it as the world's preview.
     pub(super) fn tick_world_icon(&mut self) {
+        // The browser build saves no screenshots: each try read a frame back from the
+        // GPU, a stall, once a second.
+        if cfg!(target_arch = "wasm32") {
+            self.world_icon = None;
+            return;
+        }
         // Its grab would take a sequence's frame.
         if self.screenshot_sequence.is_some() {
             return;

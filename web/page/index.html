@@ -32,6 +32,32 @@
 <div id="horizon-status">Starting Horizon…<div class="bar"><i></i></div></div>
 <script>/*INPUT_BRIDGE*/</script>
 <script>/*ZIP_READER*/</script>
+<script>
+// Browsers (an iPad's above all) keep a page's sound off until the player
+// touches or types: the game's audio contexts are resumed on the first press. It runs before the
+// game's glue, which keeps the AudioContext it finds when it loads.
+(function () {
+  var Native = window.AudioContext || window.webkitAudioContext;
+  if (!Native) return;
+  var contexts = window.horizonAudioContexts = [];
+  function Tracked(options) {
+    var context = new Native(options);
+    contexts.push(context);
+    return context;
+  }
+  Tracked.prototype = Native.prototype;
+  try { Object.setPrototypeOf(Tracked, Native); } catch (e) {}
+  window.AudioContext = Tracked;
+  function wake() {
+    contexts.forEach(function (c) {
+      if (c.state !== 'running' && c.state !== 'closed') c.resume().catch(function () {});
+    });
+  }
+  ['pointerdown', 'touchend', 'keydown', 'mousedown'].forEach(function (type) {
+    window.addEventListener(type, wake, true);
+  });
+})();
+</script>
 <script>/*GLUE*/</script>
 <script type="application/octet-stream" id="horizon-wasm">WASM_BASE64</script>
 <script>/*LOADER*/</script>
