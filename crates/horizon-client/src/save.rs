@@ -5527,9 +5527,11 @@ impl<G: ChunkGenerator> ChunkGenerator for Persistent<G> {
         x: i32,
         z: i32,
         part: crate::streaming::Proto,
-    ) -> crate::streaming::Proto {
-        let proto = self.inner.proto_rest(worker, x, z, part);
-        self.restored(proto, x, z)
+    ) -> std::result::Result<crate::streaming::Proto, crate::streaming::Proto> {
+        match self.inner.proto_rest(worker, x, z, part) {
+            Ok(proto) => Ok(self.restored(proto, x, z)),
+            Err(part) => Err(part),
+        }
     }
     fn is_decorated(&self, proto: &crate::streaming::Proto) -> bool {
         self.inner.is_decorated(proto)

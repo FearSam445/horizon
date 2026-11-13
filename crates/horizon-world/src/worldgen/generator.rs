@@ -1555,7 +1555,10 @@ where
     ) -> Result<ProtoChunk, GeneratorError> {
         match self.generate_noise(worker, pos, context)? {
             Generated::Whole(chunk) => Ok(*chunk),
-            Generated::NoiseFilled(filled) => self.generate_rest(worker, *filled, context, false),
+            Generated::NoiseFilled(mut filled) => {
+                self.fill_noise_step(worker, &mut filled, context)?;
+                self.generate_rest(worker, *filled, context, false)
+            }
         }
     }
     /// A chunk's generation up to its noise fill (biomes, structures, the noise
@@ -1778,7 +1781,7 @@ where
         }
         worker.timings.structures += lap(&mut clock);
         worker.timings.noise += lap(&mut clock);
-        let mut aquifer: Box<dyn TerrainAquifer + Send> = match &self.aquifer {
+        let aquifer: Box<dyn TerrainAquifer + Send> = match &self.aquifer {
             Some(samplers) => Box::new(
                 NoiseBasedAquifer::new(
                     AquiferSamplers::new(samplers.clone()),
@@ -1798,6 +1801,45 @@ where
             )),
         };
         worker.timings.noise += lap(&mut clock);
+        Ok(Generated::NoiseFilled(Box::new(NoiseFilled {
+            pos,
+            chunk,
+            center,
+            biomes,
+            possible,
+            references,
+            own_starts,
+            features,
+            run_surface,
+            run_carvers,
+            volume,
+            blender,
+            aquifer,
+            chunk_fields,
+            context: None,
+            native,
+            noised: false,
+        })))
+    }
+    /// A prepared chunk's noise fill ([`Pipeline::generate_noise`] stops before
+    /// it): the second of the chunk's three parts, which the browser build runs
+    /// as a job of its own.
+    fn fill_noise_step(
+        &self,
+        worker: &mut WorkerState,
+        filled: &mut NoiseFilled,
+        context: &mut SamplerContext,
+    ) -> Result<(), GeneratorError> {
+        let mut clock = web_time::Instant::now();
+        let NoiseFilled {
+            pos,
+            chunk,
+            volume,
+            aquifer,
+            native,
+            ..
+        } = filled;
+        let (pos, volume, native) = (*pos, *volume, *native);
         if native {
             // The mod's blocks stand where the noise's would: the surface rule
             // reads the heightmaps noise filling builds.
@@ -1818,8 +1860,8 @@ where
                     .collect()
             };
             context.set_lattice(lattice);
-            let filled = fill_noise(
-                &mut chunk,
+            let result = fill_noise(
+                chunk,
                 volume,
                 self.router.get(RouterField::FinalDensity).as_ref(),
                 context,
@@ -1827,26 +1869,11 @@ where
                 self.settings.default_block,
             );
             context.clear_lattice();
-            filled.map_err(stage("noise"))?;
+            result.map_err(stage("noise"))?;
         }
         worker.timings.noise += lap(&mut clock);
-        Ok(Generated::NoiseFilled(Box::new(NoiseFilled {
-            pos,
-            chunk,
-            center,
-            biomes,
-            possible,
-            references,
-            own_starts,
-            features,
-            run_surface,
-            run_carvers,
-            volume,
-            blender,
-            aquifer,
-            chunk_fields,
-            context: None,
-        })))
+        filled.noised = true;
+        Ok(())
     }
     /// The rest of a chunk's generation after [`Pipeline::generate_noise`]: its
     /// surface, carvers and heightmaps. `fresh`: the worker's density context
@@ -1876,6 +1903,8 @@ where
             mut aquifer,
             chunk_fields,
             context: _,
+            native: _,
+            noised: _,
         } = filled;
         if fresh && let Some(fields) = chunk_fields {
             *context = std::mem::take(context).with_world_fields(fields);
@@ -2590,15 +2619,17 @@ pub trait StructureMobs: Send + Sync {
 /// A start chunk's saved `structures.starts`, including pending writes.
 pub type SavedStructureStarts = dyn Fn(ChunkPos) -> Option<crate::nbt::Compound> + Send + Sync;
 
-/// A chunk's generation after its first part ([`Pipeline::generate_noise`]).
+/// A chunk's generation after one of its parts ([`GeneratorWorker::generate_proto_noise`],
+/// [`GeneratorWorker::generate_proto_more`]).
 pub enum Generated {
-    /// Made whole in one go (a superflat chunk).
+    /// Made whole (a superflat chunk at once, any other after its last part).
     Whole(Box<ProtoChunk>),
-    /// Filled with noise; the surface and carvers are still to run.
+    /// Prepared, or filled with noise: more parts to run.
     NoiseFilled(Box<NoiseFilled>),
 }
 
-/// A chunk filled with noise, and what its surface and carvers need.
+/// A chunk being generated: prepared (biomes, structures, aquifer), then
+/// filled with noise, and what its surface and carvers need.
 pub struct NoiseFilled {
     pos: ChunkPos,
     chunk: TerrainChunk<'static, GenBlockStates>,
@@ -2617,6 +2648,10 @@ pub struct NoiseFilled {
     /// The density context the noise filled with, its caches warm for the
     /// surface and carvers (`SeededPipeline::generate_noise` moves it here).
     context: Option<SamplerContext>,
+    /// A native mod made the terrain (no noise to fill).
+    native: bool,
+    /// Whether the noise fill ran ([`Pipeline::fill_noise_step`]).
+    noised: bool,
 }
 
 trait SeededPipeline: Send + Sync {
@@ -2632,12 +2667,13 @@ trait SeededPipeline: Send + Sync {
         worker: &mut WorkerState,
         pos: ChunkPos,
     ) -> Result<Generated, GeneratorError>;
-    /// ...and the rest, on a worker that may have generated other chunks since.
-    fn generate_rest(
+    /// ...and the next part (the noise fill, then the rest), on a worker that
+    /// may have generated other chunks since.
+    fn generate_more(
         &self,
         worker: &mut WorkerState,
         filled: NoiseFilled,
-    ) -> Result<ProtoChunk, GeneratorError>;
+    ) -> Result<Generated, GeneratorError>;
     fn decorate(
         &self,
         worker: &mut WorkerState,
@@ -2768,19 +2804,36 @@ where
             }
         }
     }
-    fn generate_rest(
+    fn generate_more(
         &self,
         worker: &mut WorkerState,
         mut filled: NoiseFilled,
-    ) -> Result<ProtoChunk, GeneratorError> {
+    ) -> Result<Generated, GeneratorError> {
         let (mut context, fresh) = match filled.context.take() {
             Some(context) => (context, false),
             None => (std::mem::take(&mut worker.terrain_context), true),
         };
+        if !filled.noised {
+            if fresh && let Some(fields) = filled.chunk_fields.clone() {
+                context = context.with_world_fields(fields);
+            }
+            let result = self.fill_noise_step(worker, &mut filled, &mut context);
+            return match result {
+                Ok(()) => {
+                    filled.context = Some(context);
+                    Ok(Generated::NoiseFilled(Box::new(filled)))
+                }
+                Err(e) => {
+                    context.reset();
+                    worker.terrain_context = context;
+                    Err(e)
+                }
+            };
+        }
         let result = Pipeline::generate_rest(self, worker, filled, &mut context, fresh);
         context.reset();
         worker.terrain_context = context;
-        result
+        result.map(|chunk| Generated::Whole(Box::new(chunk)))
     }
     fn decorate(
         &self,
@@ -3974,13 +4027,16 @@ impl GeneratorWorker {
     pub fn generate_proto_noise(&mut self, pos: ChunkPos) -> Result<Generated, GeneratorError> {
         self.pipeline.generate_noise(&mut self.state, pos)
     }
-    /// The rest of a chunk [`GeneratorWorker::generate_proto_noise`] filled.
-    pub fn generate_proto_rest(
+    /// The next part of a chunk [`GeneratorWorker::generate_proto_noise`]
+    /// prepared: its noise fill, then its surface and carvers (`Whole`).
+    pub fn generate_proto_more(
         &mut self,
         filled: NoiseFilled,
-    ) -> Result<ProtoChunk, GeneratorError> {
-        let result = self.pipeline.generate_rest(&mut self.state, filled);
-        self.state.timings.chunks += 1;
+    ) -> Result<Generated, GeneratorError> {
+        let result = self.pipeline.generate_more(&mut self.state, filled);
+        if matches!(result, Ok(Generated::Whole(_))) {
+            self.state.timings.chunks += 1;
+        }
         result
     }
     /// Noise/aquifer surface and its material rule, without chunks, structures or features.
@@ -4556,12 +4612,25 @@ mod tests {
             .iter()
             .map(|&pos| split_worker.generate_proto_noise(pos).expect("noise"))
             .collect();
-        let split: Vec<ProtoChunk> = filled
+        // Then every noise fill, then every rest.
+        let noised: Vec<Generated> = filled
+            .into_iter()
+            .map(|part| match part {
+                Generated::NoiseFilled(filled) => {
+                    split_worker.generate_proto_more(*filled).expect("fill")
+                }
+                whole => whole,
+            })
+            .collect();
+        let split: Vec<ProtoChunk> = noised
             .into_iter()
             .map(|part| match part {
                 Generated::Whole(chunk) => *chunk,
                 Generated::NoiseFilled(filled) => {
-                    split_worker.generate_proto_rest(*filled).expect("rest")
+                    match split_worker.generate_proto_more(*filled).expect("rest") {
+                        Generated::Whole(chunk) => *chunk,
+                        Generated::NoiseFilled(_) => panic!("a fourth part"),
+                    }
                 }
             })
             .collect();

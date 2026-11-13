@@ -886,17 +886,25 @@ impl ChunkGenerator for VanillaTerrain {
             }
         }
     }
-    fn proto_rest(&self, worker: &mut GeneratorWorker, _x: i32, _z: i32, part: Proto) -> Proto {
+    fn proto_rest(
+        &self,
+        worker: &mut GeneratorWorker,
+        _x: i32,
+        _z: i32,
+        part: Proto,
+    ) -> Result<Proto, Proto> {
         let part = match part.downcast::<VanillaPart>() {
             Ok(part) => part,
-            Err(other) => return other,
+            Err(other) => return Ok(other),
         };
         let VanillaPart { x, z, filled } = *part;
-        match worker.generate_proto_rest(*filled) {
-            Ok(chunk) => Box::new(VanillaProto::Ready(Box::new(chunk))),
+        use horizon_world::worldgen::generator::Generated;
+        match worker.generate_proto_more(*filled) {
+            Ok(Generated::Whole(chunk)) => Ok(Box::new(VanillaProto::Ready(chunk))),
+            Ok(Generated::NoiseFilled(filled)) => Err(Box::new(VanillaPart { x, z, filled })),
             Err(e) => {
                 log::warn!("Horizon: generating chunk {x} {z} failed: {e}");
-                Box::new(VanillaProto::Failed(x, z))
+                Ok(Box::new(VanillaProto::Failed(x, z)))
             }
         }
     }

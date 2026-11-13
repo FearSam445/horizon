@@ -62,12 +62,17 @@ Fixed on Nov 13 (see `git log`):
 
 1. **iPad feedback**: it works at 60 fps; ask about anything else that differs
    in Safari (sound, input, longer play). Safari's console: on a Mac, Develop menu.
-2. **Speed**: profile with `{"profile": s}` at `THROTTLE=4` (the dev build has
-   function names). While walking, the time goes to terrain generation (~30%),
-   the server tick (~30%, half of it mob AI) and drawing (~13%). A single
-   chunk-generation job can't be split, so it can still make a 50-100 ms frame
-   at 4x; splitting `generate_proto` into stages is the next step there.
-   `wasm_bindgen.set_frame_budget(false)` turns the frame budget off to compare.
+2. **Speed**: profile with `{"profile": s}` at `THROTTLE=2` or `4` (the dev
+   build has function names; it is about half as fast as the shipped one).
+   The status line every 2 s gives the longest turn, server step and drawing,
+   and each chunk job kind's count/total/longest ms (`streaming::job_times`);
+   build with `HORIZON_SPIKES=40` for the slow-tick report. Chunk loading
+   stutter was fixed Nov 13 (generation in two jobs: `generate_noise` /
+   `generate_rest`; saves as pool jobs of 4 chunks: `InlineWrites`). Left:
+   an occasional generation half of 50-80 ms (chunks with structures),
+   decoration jobs of ~15 ms, mob AI in the server tick. Lower render
+   distance helps everything. `wasm_bindgen.set_frame_budget(false)` turns
+   the frame budget off to compare.
 3. **Memory**: the remaining peaks, from the "memory now" lines: the HUD atlas
    (96 MB of pixels while it is built; 4096x5120), the block sprites' mip chain
    (`gfx::mip_chain`, ~66 MB), `Sprites::lay_out`, facts.json read whole

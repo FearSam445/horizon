@@ -87,9 +87,16 @@ pub trait ChunkGenerator: Send + Sync + 'static {
     fn proto_part(&self, worker: &mut Self::Worker, x: i32, z: i32) -> Result<Proto, Proto> {
         Ok(self.proto(worker, x, z))
     }
-    /// Finishes the chunk at (x, z) [`ChunkGenerator::proto_part`] stopped making.
-    fn proto_rest(&self, _worker: &mut Self::Worker, _x: i32, _z: i32, part: Proto) -> Proto {
-        part
+    /// The next part of the chunk at (x, z) [`ChunkGenerator::proto_part`]
+    /// stopped making: `Ok` the chunk, `Err` a part for another job.
+    fn proto_rest(
+        &self,
+        _worker: &mut Self::Worker,
+        _x: i32,
+        _z: i32,
+        part: Proto,
+    ) -> Result<Proto, Proto> {
+        Ok(part)
     }
     fn decorates(&self) -> bool {
         false
@@ -981,7 +988,7 @@ impl<G: ChunkGenerator> Source for Jobs<G> {
     }
 }
 /// The kinds of streaming jobs, for [`job_times`].
-const JOB_KINDS: [&str; 8] = [
+const JOB_KINDS: [&str; 9] = [
     "generate",
     "decorate",
     "finish",
@@ -990,10 +997,11 @@ const JOB_KINDS: [&str; 8] = [
     "save",
     "light view",
     "free",
+    "generate rest",
 ];
 /// Per job kind: how many ran, their total and their longest time (µs), since
 /// the last [`job_times`].
-static JOB_TIMES: std::sync::Mutex<[(u32, u64, u64); 8]> = std::sync::Mutex::new([(0, 0, 0); 8]);
+static JOB_TIMES: std::sync::Mutex<[(u32, u64, u64); 9]> = std::sync::Mutex::new([(0, 0, 0); 9]);
 
 /// Each job kind's count, total and longest time in ms since the last call: the
 /// browser build's status line, which shows what a long frame was.
@@ -1005,7 +1013,7 @@ pub fn job_times() -> Vec<(&'static str, u32, f32, f32)> {
         .filter(|(_, t)| t.0 > 0)
         .map(|(name, &(n, total, max))| (*name, n, total as f32 / 1000.0, max as f32 / 1000.0))
         .collect();
-    *times = [(0, 0, 0); 8];
+    *times = [(0, 0, 0); 9];
     out
 }
 
@@ -1013,7 +1021,8 @@ impl<G: ChunkGenerator> Jobs<G> {
     /// `Err`: a job to queue again in this one's place (a generation's rest).
     fn run_job(&self, job: Job, local: &mut WorkerLocal<G::Worker>) -> Result<Option<Done>, Job> {
         let kind = match &job {
-            Job::Generate(..) | Job::GenerateRest(..) => 0,
+            Job::Generate(..) => 0,
+            Job::GenerateRest(..) => 8,
             Job::Decorate(..) => 1,
             Job::Finish(..) => 2,
             Job::Light(..) => 3,
@@ -1064,7 +1073,10 @@ impl<G: ChunkGenerator> Jobs<G> {
                 }
             },
             Job::GenerateRest(x, z, part) => {
-                let proto = generator.proto_rest(&mut *worker, x, z, part);
+                let proto = match generator.proto_rest(&mut *worker, x, z, part) {
+                    Ok(proto) => proto,
+                    Err(part) => return Err(Job::GenerateRest(x, z, part)),
+                };
                 let decorated = generator.is_decorated(&proto);
                 Done::Proto(x, z, proto, decorated)
             }
