@@ -32,6 +32,9 @@
       // movementX/Y from defineProperty'd runner events are copied too.
       try { Object.defineProperty(ev, 'movementX', { value: e.movementX || 0 }); } catch (_) {}
       try { Object.defineProperty(ev, 'movementY', { value: e.movementY || 0 }); } catch (_) {}
+      // winit reads a move's motion from getCoalescedEvents(), which is empty for an
+      // event made by a script (Chrome, current Safari): the look would never turn.
+      try { Object.defineProperty(ev, 'getCoalescedEvents', { value: function () { return [ev]; } }); } catch (_) {}
       target.dispatchEvent(ev);
     }, true);
   });
