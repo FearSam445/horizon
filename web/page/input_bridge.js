@@ -50,7 +50,7 @@
   }, true);
   ['keydown', 'keyup'].forEach(function (type) {
     window.addEventListener(type, function (e) {
-      if (e[MARK] || e.code === 'Backquote') return;
+      if (e[MARK] || pauseKey(e) || realEscape(e)) return;
       var target = canvas();
       if (!target || e.target === target) return;
       // A key typed into the page's own controls (the file picker) stays there.
@@ -65,17 +65,34 @@
       target.dispatchEvent(ev);
     }, true);
   });
-  // Many iPad keyboards have no Escape key, which the game's menus need: the
-  // backquote key (`) works as Escape too, as in Eaglercraft.
+  // The pause key is ~ (the ` key, with or without Shift): it works as Escape
+  // (pause, close a menu), as in Eaglercraft, and many iPad keyboards have no
+  // Escape key. Matched by the key's place and by what it types, as keyboards
+  // of other layouts name it differently.
+  function pauseKey(e) {
+    return e.code === 'Backquote' || e.key === '`' || e.key === '~' ||
+      (e.key === 'Dead' && e.code === 'Backquote');
+  }
+  // The keyboard's own Escape doesn't reach the game (the owner's choice: ~
+  // pauses); a runner's controller still pauses through its synthetic Escape.
+  function realEscape(e) {
+    return e.isTrusted && (e.key === 'Escape' || e.code === 'Escape');
+  }
   ['keydown', 'keyup'].forEach(function (type) {
     document.addEventListener(type, function (e) {
-      if (e[MARK] || e.code !== 'Backquote') return;
+      if (e[MARK]) return;
       var target = canvas();
       if (!target) return;
+      if (realEscape(e)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
+      if (!pauseKey(e)) return;
       e.preventDefault();
       e.stopImmediatePropagation();
       var ev = new KeyboardEvent(type, {
-        key: 'Escape', code: 'Escape', bubbles: true, cancelable: true, composed: true
+        key: 'Escape', code: 'Escape', repeat: e.repeat, bubbles: true, cancelable: true, composed: true
       });
       ev[MARK] = true;
       target.dispatchEvent(ev);

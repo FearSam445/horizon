@@ -26,7 +26,8 @@ again and worlds last until the page closes.
 
 - One thread does everything: the world, the chunks and the drawing take turns
   in each frame. A new world's spawn area takes a few seconds on a computer.
-- Many iPad keyboards have no Escape key: the backquote key (`) works as Escape.
+- The pause key is ~ (the ` key): it pauses and closes menus, as Escape does elsewhere.
+  The keyboard's own Escape key does nothing (a runner's controller still pauses).
 - Sound plays through Web Audio once you tap or press a key (browsers start a
   page muted). Each sound is read from your zip the first time it plays, so
   keep the zip where the page found it. Music and records don't play: a track

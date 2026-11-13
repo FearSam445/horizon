@@ -111,8 +111,9 @@ the audio unlock, which must run before the glue), `loader.js` (unpacks the
 gzip+base64 wasm, asks for the zip, names the withheld sounds, answers the
 game's file requests, keeps worlds), `zip_reader.js` (hands over only the files
 the game uses; `withheld` reads one entry on demand), `input_bridge.js` (the
-runner's synthetic mouse/key events to what winit listens for; backquote works
-as Escape).
+runner's synthetic mouse/key events to what winit listens for; ~ / ` is the
+pause key, sent as Escape, and the keyboard's real Escape is dropped: the owner
+asked for ~ to pause, not Esc).
 
 Sound: `audio.rs` on wasm decodes a static sound on the game's thread once
 `horizon_fs::fetch` says its file is here (`pump_waiting` each tick), then drops
