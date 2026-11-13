@@ -43,7 +43,7 @@ again and worlds last until the page closes.
 
 ```bash
 python3 web/build.py --dev   # quick: profile web-dev, no wasm-opt
-python3 web/build.py         # the shipped file: profile web (opt-level z, fat LTO), wasm-opt -Oz
+python3 web/build.py         # the shipped file: profile web (opt-level 2, fat LTO), wasm-opt -O2: speed over size
 ```
 
 Output: `web/out/horizon.html`. Needs the `wasm32-unknown-unknown` target,

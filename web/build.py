@@ -45,8 +45,8 @@ def main():
     # and write a module browsers refuse. WASM_OPT names one (npm's binaryen works).
     wasm_opt = os.environ.get("WASM_OPT") or shutil.which("wasm-opt")
     if not args.dev and wasm_opt:
-        # HORIZON_WASM_OPT picks the level (-O2 for speed); -Oz, the smallest, by default.
-        level = os.environ.get("HORIZON_WASM_OPT", "-Oz")
+        # HORIZON_WASM_OPT picks the level: -O2 (speed, as the profile) by default, -Oz the smallest.
+        level = os.environ.get("HORIZON_WASM_OPT", "-O2")
         run([wasm_opt, level, "--enable-bulk-memory", "--enable-sign-ext", "--enable-mutable-globals",
              "--enable-nontrapping-float-to-int", "--enable-multivalue", "--enable-reference-types",
              "--strip-debug", "--strip-producers", bg, "-o", bg])

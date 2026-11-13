@@ -134,7 +134,7 @@ set WASM_OPT=%APPDATA%\npm\wasm-opt.cmd
 python web\build.py            # the shipped file: profile `web` (fat LTO), wasm-opt (about 15 min here)
 ```
 
-`HORIZON_WASM_OPT` picks wasm-opt's level (default `-Oz`); cargo's
+`HORIZON_WASM_OPT` picks wasm-opt's level (default `-O2`; `-Oz` with `CARGO_PROFILE_WEB_OPT_LEVEL=z` is 25% smaller and half as fast); cargo's
 `CARGO_PROFILE_WEB_OPT_LEVEL` overrides the profile's. Never edit the sources
 while a build of the same checkout runs: it compiles what it finds.
 
